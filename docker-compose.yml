@@ -1,11 +1,18 @@
 services:
+  nginx:
+    build: ./nginx
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend
+
   db:
     image: postgres:16
     restart: always
-    environment:
-      POSTGRES_DB: email_marketing
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "email@123"
+    env_file:
+      - ./backend/.env
     ports:
       - "5432:5432"
     volumes:
@@ -20,11 +27,8 @@ services:
   backend:
     build: ./backend
     restart: always
-    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./backend:/app
-    ports:
-      - "8000:8000"
     env_file:
       - ./backend/.env
     depends_on:
@@ -59,11 +63,8 @@ services:
 
   frontend:
     build: ./frontend
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    restart: always
+    # Removed volumes mapping to not use local source code for production
 
 volumes:
   postgres_data:

@@ -10,7 +10,11 @@ git pull origin main
 echo "🏗️ Rebuilding Docker containers..."
 docker compose up -d --build
 
-# 3. Clean up old unused Docker images to save disk space
+# 3. Run database migrations
+echo "🗄️ Running database migrations..."
+docker compose exec backend python manage.py migrate
+
+# 4. Clean up old unused Docker images to save disk space
 echo "🧹 Cleaning up old unused images..."
 docker image prune -f
 

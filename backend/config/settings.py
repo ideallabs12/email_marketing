@@ -24,7 +24,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*'] # Ideally, change this to ['outreach.idealab-vizag.com', 'localhost'] in the .env later, but keeping '*' for ease of initial VPS deployment since the Nginx proxy handles the domain filtering.
 
 
 # Application definition
@@ -50,6 +50,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -130,6 +131,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Celery Configuration
 CELERY_BROKER_URL = config('CELERY_BROKER_URL')
@@ -174,5 +177,7 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'http://outreach.idealab-vizag.com',
+    'https://outreach.idealab-vizag.com',
 ]
 CORS_ALLOW_CREDENTIALS = True
