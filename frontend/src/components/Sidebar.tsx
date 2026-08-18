@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, Mail, Users, FileText, ChevronLeft, ChevronRight, MailWarning } from 'lucide-react';
+import { Home, Mail, Users, FileText, ChevronLeft, ChevronRight, MailWarning, LogOut } from 'lucide-react';
+import { apiClient } from '@/services/apiClient';
 import { useState } from 'react';
 
 export default function Sidebar() {
@@ -40,6 +41,14 @@ export default function Sidebar() {
           <MailWarning size={18} />
           {!isCollapsed && <span>Bounced Mails</span>}
         </Link>
+        <button 
+          onClick={apiClient.logout}
+          title="Logout" 
+          className={`flex items-center p-2 w-full mt-auto hover:bg-foreground hover:text-background rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}
+        >
+          <LogOut size={18} />
+          {!isCollapsed && <span>Logout</span>}
+        </button>
       </nav>
     </div>
   );

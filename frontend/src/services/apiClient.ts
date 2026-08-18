@@ -87,4 +87,12 @@ export const apiClient = {
     }
     return data.token;
   },
+
+  logout: () => {
+    if (typeof window !== 'undefined') {
+      document.cookie = 'auth_token=; path=/; max-age=0; SameSite=Lax';
+      localStorage.removeItem('auth_token');
+      window.location.href = '/login';
+    }
+  },
 };
