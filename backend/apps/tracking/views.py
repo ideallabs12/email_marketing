@@ -11,7 +11,7 @@ from apps.campaigns.models import Campaign
 
 
 class CampaignPerformanceViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = CampaignPerformance.objects.all()
+    queryset = CampaignPerformance.objects.all().order_by('-campaign_id')
     serializer_class = CampaignPerformanceSerializer
 
 
