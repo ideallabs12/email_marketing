@@ -65,7 +65,7 @@ def send_campaign_emails(self, campaign_id: int):
             text_content = strip_tags(html_content)
 
             from_email = None
-            if 'wynxtalks' in campaign.template.name.lower():
+            if 'wynx' in campaign.template.name.lower():
                 from_email = 'WYNxTALKS <contact@wynxtalks.com>'
 
             email = EmailMultiAlternatives(
