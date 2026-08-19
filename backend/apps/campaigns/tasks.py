@@ -50,21 +50,28 @@ def send_campaign_emails(self, campaign_id: int):
     failed_count = 0
     for contact in contacts:
         try:
-            context = {
-                'first_name': contact.first_name or 'Speaker',
-                'last_name': contact.last_name or '',
-                'email': contact.email,
-                'subject': subject_template,
-            }
+            context = {}
             if isinstance(campaign.template.variables, dict):
                 context.update(campaign.template.variables)
+            
+            context.update({
+                'first_name': contact.first_name or context.get('first_name', 'Speaker'),
+                'last_name': contact.last_name or context.get('last_name', ''),
+                'email': contact.email,
+                'subject': subject_template,
+            })
             
             html_content = render_template(layout_template, context)
             text_content = strip_tags(html_content)
 
+            from_email = None
+            if 'wynxtalks' in campaign.template.name.lower():
+                from_email = 'WYNxTALKS <contact@wynxtalks.com>'
+
             email = EmailMultiAlternatives(
                 subject=render_template(subject_template, context),
                 body=text_content,
+                from_email=from_email,
                 to=[contact.email],
                 # Brevo returns this tag with webhook events for attribution.
                 headers={'X-Mailin-Tag': f'campaign-{campaign.id}'},
