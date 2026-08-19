@@ -50,11 +50,11 @@ class ContactViewSet(viewsets.ModelViewSet):
                 return Response({'error': 'CSV file is empty.'}, status=status.HTTP_400_BAD_REQUEST)
 
             headers = [h.strip().lower() for h in headers]
-            expected_headers = ['first_name', 'last_name', 'email']
+            required_headers = {'first_name', 'last_name', 'email'}
             
-            if headers != expected_headers:
+            if not required_headers.issubset(set(headers)):
                 return Response({
-                    'error': f"Invalid CSV format. Columns must be exactly 'first_name, last_name, email' in that exact order."
+                    'error': f"Invalid CSV format. Missing required columns. Found: {', '.join(headers)}. Expected at least: first_name, last_name, email"
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             target_list = None
@@ -87,7 +87,8 @@ class ContactViewSet(viewsets.ModelViewSet):
                 first_name = row_data.get('first_name', '').strip()
                 last_name = row_data.get('last_name', '').strip()
                 
-                is_subscribed = True
+                is_subscribed_str = row_data.get('is_subscribed', 'true').strip().lower()
+                is_subscribed = is_subscribed_str in ['true', '1', 'yes', 'y']
 
                 contact, created = Contact.objects.update_or_create(
                     email=email,
