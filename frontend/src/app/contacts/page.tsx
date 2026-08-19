@@ -106,7 +106,7 @@ export default function ContactsPage() {
         headers['Authorization'] = `Token ${token}`;
       }
 
-      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
       const response = await fetch(`${API_BASE_URL}/api/v1/contacts/import-csv/`, {
         method: 'POST',
         headers,
