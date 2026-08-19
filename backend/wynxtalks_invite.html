@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You're Invited to Share Your Perspective</title>
+    <style>
+        /* CSS Reset for Emails */
+        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+        table { border-collapse: collapse !important; }
+        body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f8f9fa; }
+        
+        /* Typography */
+        p, h1, h2, h3, h4, li, a { color: #1a1e36; } /* Deep navy / dark text */
+        a { color: #d61f69; text-decoration: none; } /* WYNx pink / magenta */
+        
+        /* Container */
+        .email-container { max-width: 680px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        
+        /* Top Bar */
+        .top-bar { padding: 12px 24px; font-size: 11px; color: #888888; background-color: #ffffff; }
+        .top-bar-left { text-align: left; }
+        .top-bar-right { text-align: right; }
+        
+        /* Content Area */
+        .content-area { padding: 40px 48px; }
+        
+        /* Typography */
+        h2 { font-size: 20px; font-weight: 600; letter-spacing: 1px; color: #d61f69; text-transform: uppercase; margin-bottom: 24px; text-align: center; }
+        p { font-size: 16px; line-height: 1.6; margin-bottom: 24px; }
+        
+        /* Info Cards */
+        .info-card { background-color: #fff9fa; border: 1px solid #ffd1e3; border-radius: 12px; padding: 32px 24px; margin: 40px 0; }
+        .info-card h3 { font-size: 16px; font-weight: 600; color: #d61f69; letter-spacing: 1px; text-transform: uppercase; text-align: center; margin-top: 0; margin-bottom: 24px; }
+        
+        /* Columns */
+        .three-columns { width: 100%; }
+        .three-columns th { font-weight: normal; font-size: 14px; text-align: center; vertical-align: top; padding: 0 10px; width: 33.33%; color: #1a1e36; }
+        .column-icon { margin-bottom: 12px; height: 32px; width: 32px; }
+        .column-title { font-size: 12px; color: #d61f69; font-weight: 600; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; }
+        .column-text { font-size: 14px; font-weight: 500; line-height: 1.4; }
+        
+        /* Points List */
+        .points-list { width: 100%; margin-top: 24px; }
+        .point-item { padding-bottom: 20px; }
+        .point-title { font-size: 14px; font-weight: 600; color: #1a1e36; margin-bottom: 6px; }
+        .point-text { font-size: 15px; color: #4a4d60; line-height: 1.5; }
+        
+        /* CTA Card */
+        .cta-card { border: 1px solid #e0e2eb; border-radius: 12px; padding: 40px; text-align: center; margin: 48px 0; background-color: #ffffff; }
+        .cta-heading { font-size: 18px; font-weight: 600; color: #1a1e36; letter-spacing: 1px; margin-bottom: 16px; text-transform: uppercase; }
+        .cta-text { font-size: 16px; color: #4a4d60; margin-bottom: 32px; }
+        
+        /* Button */
+        .button-wrapper { text-align: center; }
+        .cta-button { display: inline-block; background-color: #d61f69; color: #ffffff !important; font-size: 16px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; text-decoration: none; border-radius: 6px; padding: 16px 36px; line-height: 1; }
+        
+        /* Footer */
+        .footer { background-color: #121526; color: #ffffff; padding: 48px 40px; text-align: center; }
+        .footer p, .footer a { color: #b0b4c9; font-size: 13px; margin-bottom: 16px; }
+        .footer-logo-text { font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 8px; letter-spacing: 1px; }
+        .footer-tagline { font-size: 12px; color: #d61f69; letter-spacing: 2px; margin-bottom: 32px; }
+        .social-icons { margin-bottom: 32px; }
+        .social-icons a { display: inline-block; margin: 0 8px; }
+        .social-icons img { width: 24px; height: 24px; opacity: 0.8; }
+        .unsubscribe { font-size: 11px; margin-top: 32px; color: #6a6f8c !important; }
+        
+        /* Mobile Styles */
+        @media screen and (max-width: 600px) {
+            .email-container { width: 100% !important; border-radius: 0; }
+            .content-area { padding: 32px 24px; }
+            .top-bar-left, .top-bar-right { display: block; text-align: center; width: 100%; padding: 4px 0; }
+            
+            .three-columns th { display: block; width: 100%; margin-bottom: 24px; }
+            .three-columns th:last-child { margin-bottom: 0; }
+            
+            .cta-card { padding: 32px 24px; }
+            .cta-button { padding: 16px 24px; display: block; }
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8f9fa;">
+    
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8f9fa; padding: 20px 0;">
+        <tr>
+            <td align="center">
+                
+                <!--[if mso | IE]>
+                <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="680" align="center" style="width:680px;">
+                    <tr>
+                        <td>
+                <![endif]-->
+                <table class="email-container" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 680px; background-color: #ffffff; margin: 0 auto;">
+                    
+                    <!-- Top Bar -->
+                    <tr>
+                        <td class="top-bar">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td class="top-bar-left" style="font-size: 11px; color: #888888; text-align: left;">
+                                        You're invited to share your perspective.
+                                    </td>
+                                    <td class="top-bar-right" style="font-size: 11px; color: #888888; text-align: right;">
+                                        <a href="#" style="color: #888888; text-decoration: underline;">View in browser</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Hero Image -->
+                    <tr>
+                        <td>
+                            <img src="https://pzalalbpxlwtcnmkaegb.supabase.co/storage/v1/object/public/wynxtaks_email_template/wynxtalks_hero_with_content.png" alt="ARAB WOMEN Hi-RISE CONCLAVE 2026 - November 23-29, Dubai" width="100%" style="width: 100%; max-width: 680px; height: auto; display: block; border: 0;" />
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                        <td class="content-area">
+                            
+                            <p>Dear {{First Name}},</p>
+                            
+                            <p>WYNx Award Winning Talks is reaching out to invite you to a conversation about the ARAB WOMEN Hi-RISE CONCLAVE 2026, taking place in Dubai from November 23–29, 2026.</p>
+                            
+                            <p>The gathering brings together women from different fields to exchange perspectives, experiences and ideas around leadership, influence and meaningful change.</p>
+                            
+                            <p>We would value the opportunity to learn more about your work and explore whether your perspective could contribute to the conversations taking place during the conclave.</p>
+                            
+                            <!-- Event Details Card -->
+                            <table class="info-card" border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td>
+                                        <h3>Event Details</h3>
+                                        
+                                        <table class="three-columns" border="0" cellpadding="0" cellspacing="0" width="100%">
+                                            <tr>
+                                                <th>
+                                                    <img src="https://cdn-icons-png.flaticon.com/512/2838/2838779.png" class="column-icon" alt="Date" />
+                                                    <div class="column-title">Date</div>
+                                                    <div class="column-text">November 23–29,<br>2026</div>
+                                                </th>
+                                                <th>
+                                                    <img src="https://cdn-icons-png.flaticon.com/512/2838/2838912.png" class="column-icon" alt="Location" />
+                                                    <div class="column-title">Location</div>
+                                                    <div class="column-text">Dubai,<br>UAE</div>
+                                                </th>
+                                                <th>
+                                                    <img src="https://cdn-icons-png.flaticon.com/512/10419/10419385.png" class="column-icon" alt="Conference" />
+                                                    <div class="column-title">Conference</div>
+                                                    <div class="column-text">ARAB WOMEN<br>Hi-RISE CONCLAVE 2026</div>
+                                                </th>
+                                            </tr>
+                                        </table>
+                                        
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Speaker Conversation -->
+                            <h2>A Conversation Around Your Perspective</h2>
+                            
+                            <p>We are interested in hearing your perspective, experience and ideas.</p>
+                            <p>A conversation with our team would allow us to share more about the event and understand how your work may fit within the programme.</p>
+                            
+                            <table class="points-list" border="0" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td class="point-item">
+                                        <div class="point-title">YOUR PERSPECTIVE</div>
+                                        <div class="point-text">Share ideas and experiences relevant to the conversation.</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="point-item">
+                                        <div class="point-title">MEANINGFUL DIALOGUE</div>
+                                        <div class="point-text">Exchange perspectives with professionals from different fields.</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="point-item">
+                                        <div class="point-title">SHARED CONNECTIONS</div>
+                                        <div class="point-text">Explore conversations and connections that may continue beyond the event.</div>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <div style="height: 32px;"></div>
+                            
+                            <!-- Event Message -->
+                            <h2>Where Women Rise, Ideas Transform</h2>
+                            
+                            <p>The ARAB WOMEN Hi-RISE CONCLAVE is designed as a space for women to exchange ideas, discuss experiences and explore the changing landscape of leadership and influence.</p>
+                            
+                            <p>Your perspective can add another dimension to that conversation.</p>
+                            
+                            <!-- CTA Card -->
+                            <table class="cta-card" border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td>
+                                        <div class="cta-heading">LET'S CONNECT</div>
+                                        <div class="cta-text">
+                                            We would be happy to personally share the speaker participation details and answer any questions you may have.<br><br>
+                                            Choose a convenient time for a short conversation with our team.
+                                        </div>
+                                        
+                                        <div class="button-wrapper">
+                                            <!--[if mso]>
+                                            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://calendly.com/wynxtalks/15min" style="height:48px;v-text-anchor:middle;width:240px;" arcsize="13%" stroke="f" fillcolor="#d61f69">
+                                              <w:anchorlock/>
+                                              <center>
+                                            <![endif]-->
+                                                <a href="https://calendly.com/wynxtalks/15min" class="cta-button">BOOK A CALL</a>
+                                            <!--[if mso]>
+                                              </center>
+                                            </v:roundrect>
+                                            <![endif]-->
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Closing -->
+                            <p>We look forward to connecting with you and sharing more about the conversation taking place in Dubai.</p>
+                            
+                            <p style="margin-bottom: 8px;">Warm regards,</p>
+                            <p style="font-weight: 600; color: #1a1e36;">WYNx Award Winning Talks Team</p>
+                            <p><a href="https://www.wynxtalks.com" style="color: #d61f69; text-decoration: underline;">www.wynxtalks.com</a></p>
+                            
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td class="footer">
+                            <div class="footer-logo-text">WYNx Talks</div>
+                            <div class="footer-tagline">INSPIRE. CONNECT. TRANSFORM.</div>
+                            
+                            <p>Website: <a href="https://www.wynxtalks.com" style="color: #ffffff; text-decoration: underline;">www.wynxtalks.com</a></p>
+                            
+                            <div class="social-icons">
+                                <a href="#"><img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="LinkedIn" /></a>
+                                <a href="#"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" /></a>
+                                <a href="#"><img src="https://cdn-icons-png.flaticon.com/512/5969/5969020.png" alt="X" /></a>
+                                <a href="#"><img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YouTube" /></a>
+                            </div>
+                            
+                            <p>If you no longer wish to receive these emails, you can <a href="{{Unsubscribe Link}}" class="unsubscribe" style="text-decoration: underline;">unsubscribe</a>.</p>
+                        </td>
+                    </tr>
+                    
+                </table>
+                <!--[if mso | IE]>
+                        </td>
+                    </tr>
+                </table>
+                <![endif]-->
+                
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
