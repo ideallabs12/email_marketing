@@ -11,8 +11,14 @@ class Campaign(models.Model):
         ('failed', 'Failed'),
     )
 
+    SENDER_CHOICES = (
+        ('global@signaturetalks.org', 'Signature Talks (global@signaturetalks.org)'),
+        ('contact@wynxtalks.com', 'WYNx Talks (contact@wynxtalks.com)'),
+    )
+
     name = models.CharField(max_length=255)
     subject = models.CharField(max_length=255, blank=True, help_text="Overrides template subject if provided")
+    from_email = models.CharField(max_length=100, choices=SENDER_CHOICES, default='global@signaturetalks.org')
     template = models.ForeignKey(EmailTemplate, on_delete=models.PROTECT)
     target_list = models.ForeignKey(ContactList, on_delete=models.PROTECT)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')

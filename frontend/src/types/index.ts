@@ -43,6 +43,7 @@ export interface Campaign {
   template: number;
   target_list: number;
   status: 'draft' | 'scheduled' | 'sending' | 'sent' | 'failed';
+  from_email: string;
   scheduled_at: string | null;
   sent_at: string | null;
   created_at: string;
