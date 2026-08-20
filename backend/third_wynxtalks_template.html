@@ -6,9 +6,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="color-scheme" content="light">
-    <meta name="supported-color-schemes" content="light">
-    <title>WYNx Award Winning Talks — International Women's Day Conclave 2027</title>
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
+    <title>Speaker Opportunity WYNxTALKS</title>
     <!--[if mso]>
 <noscript>
 <xml>
@@ -90,28 +90,56 @@
             .accept-btn {
                 width: 100% !important;
             }
-
-            .wa-btn {
-                width: 100% !important;
-                margin-top: 10px !important;
-            }
         }
 
-        /*
-          Dark mode: intentionally NOT switching text colors.
-          All text stays the same dark/black tones in both light and dark mode
-          so nothing goes invisible or flips to white on a light background.
-          Background colors are also left unchanged for the same reason —
-          mixing dark backgrounds with forced-black text would hurt readability.
-        */
+        @media (prefers-color-scheme: dark) {
+
+            body,
+            .email-container {
+                background-color: #17181c !important;
+            }
+
+            .force-white,
+            td.sans {
+                color: #e7e7ea !important;
+            }
+
+            /* Hero sits on a light photo — force pure black regardless of system dark mode */
+            .hero-title,
+            .hero-subtitle,
+            .hero-label {
+                color: #000000 !important;
+            }
+
+            .hero-highlight {
+                color: #D61F69 !important;
+            }
+
+            /* Adjust specific dark mode backgrounds */
+            .follow-bar {
+                background-color: #1f2025 !important;
+                border-top: 1px solid #2a2b30 !important;
+            }
+
+            .follow-bar a {
+                color: #e7e7ea !important;
+            }
+
+            .card-col {
+                border-color: #33343a !important;
+            }
+
+            .signature-name {
+                color: #ffffff !important;
+            }
+        }
     </style>
 </head>
 
 <body style="margin:0; padding:0; background-color:#FFFFFF;">
 
     <div style="display:none; max-height:0; overflow:hidden; mso-hide:all;">
-        WYNx Award Winning Talks invites you to speak at the International Women's Day Conclave — Paris, March 08–14,
-        2027.
+        You're invited to speak at the WYNx International Women's Day Conclave — Paris, March 8–14, 2027.
     </div>
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF;">
@@ -132,7 +160,7 @@
                                     </td>
                                     <td align="right" class="sans"
                                         style="color:#D98FB6; font-size:11px; letter-spacing:1px;">
-                                        Global Speaker Invitation
+                                        Global Conclaves &nbsp;•&nbsp; Visionary Women
                                     </td>
                                 </tr>
                             </table>
@@ -143,63 +171,59 @@
                     <tr>
                         <td class="fluid-pad"
                             background="https://pzalalbpxlwtcnmkaegb.supabase.co/storage/v1/object/public/wynxtaks_email_template/wynx_paris.png"
-                            style="background-color:#2B0F22; background-image:url('https://pzalalbpxlwtcnmkaegb.supabase.co/storage/v1/object/public/wynxtaks_email_template/wynx_paris.png'); background-repeat:no-repeat; background-position:center center; background-size:cover; -webkit-background-size:cover; height:300px; padding:36px 40px 24px 40px;">
+                            style="background-color:#2B0F22; background-image:url('https://pzalalbpxlwtcnmkaegb.supabase.co/storage/v1/object/public/wynxtaks_email_template/wynx_paris.png'); background-repeat:no-repeat; background-position:center center; background-size:cover; -webkit-background-size:cover; padding:75px 40px 28px 40px;">
                             <!--[if gte mso 9]>
-            <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:600px;height:300px;">
+            <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:600px;height:160px;">
               <v:fill type="tile" src="https://pzalalbpxlwtcnmkaegb.supabase.co/storage/v1/object/public/wynxtaks_email_template/wynx_paris.png" />
               <v:textbox inset="0,0,0,0">
             <![endif]-->
-                            <!--[if mso]>
-                            <table role="presentation" width="360" cellpadding="0" cellspacing="0"><tr><td>
-                            <![endif]-->
-                            <table role="presentation" width="60%" cellpadding="0" cellspacing="0"
-                                style="max-width:340px;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
-                                    <td>
-                                        <table role="presentation" cellpadding="0" cellspacing="0">
+                                    <!-- TEXT COLUMN — ~68% width, remaining space left open over the photo -->
+                                    <td width="68%" valign="top" style="width:68%;">
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                                             <tr>
-                                                <td
-                                                    style="width:4px; background-color:#D61F69; line-height:1px; font-size:0;">
-                                                    &nbsp;</td>
-                                                <td style="width:10px;">&nbsp;</td>
-                                                <td class="hero-label"
-                                                    style="color:#A8134F; font-family:Arial,Helvetica,sans-serif; font-size:12px; letter-spacing:3px; text-transform:uppercase; font-weight:bold;">
-                                                    Global Speaker Invitation
+                                                <td>
+                                                    <table role="presentation" cellpadding="0" cellspacing="0">
+                                                        <tr>
+                                                            <td
+                                                                style="width:4px; background-color:#D61F69; line-height:1px; font-size:0;">
+                                                                &nbsp;</td>
+                                                            <td style="width:10px;">&nbsp;</td>
+                                                            <td class="hero-label"
+                                                                style="color:#000000; font-family:Arial,Helvetica,sans-serif; font-size:12px; letter-spacing:3px; text-transform:uppercase; font-weight:bold;">
+                                                                Speaker Invitation
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="hero-title"
+                                                    style="color:#000000; font-size:28px; line-height:36px; font-weight:normal; padding-top:12px; max-width:300px;">
+                                                    International Women's Day Conclave&nbsp;<span class="hero-highlight"
+                                                        style="color:#D61F69;">2027</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding-top:8px;">
+                                                    <div
+                                                        style="width:56px; height:2px; background-color:#D61F69; line-height:2px; font-size:0;">
+                                                        &nbsp;</div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="hero-subtitle"
+                                                    style="color:#000000; font-family:Arial,Helvetica,sans-serif; font-size:13px; line-height:18px; letter-spacing:0.5px; padding-top:10px; max-width:300px;">
+                                                    A Global Movement for Women's Empowerment &amp; Mental Wellbeing
                                                 </td>
                                             </tr>
                                         </table>
                                     </td>
-                                </tr>
-                                <tr>
-                                    <td class="hero-title"
-                                        style="color:#2B0F22; font-size:28px; line-height:36px; font-weight:normal; padding-top:12px;">
-                                        International Women's<br>Day <span class="hero-highlight"
-                                            style="color:#D61F69;">Conclave</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding-top:8px;">
-                                        <div
-                                            style="width:56px; height:2px; background-color:#D61F69; line-height:2px; font-size:0;">
-                                            &nbsp;</div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="hero-subtitle"
-                                        style="color:#5C3B4E; font-family:Arial,Helvetica,sans-serif; font-size:13px; letter-spacing:1px; padding-top:10px; line-height:19px;">
-                                        A Global Movement for Women's Empowerment &amp; Mental Wellbeing
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="hero-meta"
-                                        style="color:#2B0F22; font-family:Arial,Helvetica,sans-serif; font-size:12px; font-weight:bold; letter-spacing:0.5px; padding-top:10px;">
-                                        March 08&ndash;14, 2027<br>Paris, France
-                                    </td>
+                                    <!-- OPEN COLUMN — ~32% width left clear so the photo shows through -->
+                                    <td width="32%" style="width:32%;">&nbsp;</td>
                                 </tr>
                             </table>
-                            <!--[if mso]>
-                            </td></tr></table>
-                            <![endif]-->
                             <!--[if gte mso 9]>
               </v:textbox>
             </v:rect>
@@ -219,7 +243,7 @@
                                 <tr>
                                     <td class="sans"
                                         style="color:#2B0F22; font-size:16px; font-weight:bold; padding-bottom:12px;">
-                                        Dear {{ first_name }},
+                                        Dear Esteemed Leader,
                                     </td>
                                 </tr>
                                 <tr>
@@ -262,7 +286,7 @@
                                                         <tr>
                                                             <td class="sans card-text"
                                                                 style="color:#2B0F22; font-size:13px; line-height:20px; padding-bottom:4px;">
-                                                                <strong>Date</strong><br>March 08&ndash;14, 2027
+                                                                <strong>Date</strong><br>March 08–14, 2027
                                                             </td>
                                                         </tr>
                                                         <tr>
@@ -286,7 +310,7 @@
 
                                     <td width="4%" style="font-size:0; line-height:0;">&nbsp;</td>
 
-                                    <!-- WHY BE PART -->
+                                    <!-- WHY BE PART OF THIS MOVEMENT -->
                                     <td class="card-col" width="48%" valign="top"
                                         style="border:1px solid #EBD9E4; padding:16px;">
                                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
@@ -302,8 +326,8 @@
                                                             <td class="sans card-text"
                                                                 style="color:#3B3752; font-size:12px; line-height:16px; padding-bottom:6px;">
                                                                 <span style="color:#D61F69;">&#10022;</span>&nbsp;
-                                                                <strong>Share</strong> — Put your voice and expertise on
-                                                                a global stage
+                                                                <strong>Share</strong> — Put your voice and expertise
+                                                                on a global stage
                                                             </td>
                                                         </tr>
                                                         <tr>
@@ -350,11 +374,9 @@
                                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                                             <tr>
                                                 <td valign="middle">
-                                                    <div class="sans"
-                                                        style="color:#FEFEFE; font-size:14px; line-height:22px; font-style:italic; font-weight:normal;">
-                                                        "Where women rise, the world moves forward." Be part of a
-                                                        global movement where leadership meets wellbeing, experience
-                                                        inspires action, and women's voices create lasting impact.
+                                                    <div class="sans force-white"
+                                                        style="color:#FEFEFE; font-size:14px; line-height:22px; font-style:italic; font-weight:normal; text-transform:uppercase; letter-spacing:0.5px;">
+                                                        "Where women rise, the world moves forward."
                                                     </div>
                                                 </td>
                                             </tr>
@@ -365,57 +387,48 @@
                         </td>
                     </tr>
 
-                    <!-- CTA SECTION -->
+                    <!-- SUPPORTING LINE -->
+                    <tr>
+                        <td class="fluid-pad" style="padding:16px 48px 6px 48px;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td class="sans" style="color:#3B3752; font-size:14px; line-height:22px;">
+                                        Be part of a global movement where leadership meets wellbeing, experience
+                                        inspires action, and women's voices create lasting impact.
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- CTA LINE -->
                     <tr>
                         <td class="fluid-pad" style="padding:20px 48px 6px 48px;">
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
                                     <td class="sans"
-                                        style="color:#2B0F22; font-size:15px; font-weight:bold; padding-bottom:8px;">
+                                        style="color:#2B0F22; font-size:15px; font-weight:bold; padding-bottom:10px;">
                                         Ready to Join Us?
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="sans"
-                                        style="color:#3B3752; font-size:14px; line-height:22px; padding-bottom:16px;">
+                                        style="color:#3B3752; font-size:14px; line-height:22px; padding-bottom:14px;">
                                         We would be delighted to connect with you and personally share the WYNx
                                         speaker opportunity and participation details. Schedule a convenient time
-                                        with our Scientific Advisor, or reach out to us directly on WhatsApp:
+                                        with our Scientific Advisor:
                                     </td>
                                 </tr>
                                 <tr>
                                     <td>
-                                        <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" class="accept-btn">
                                             <tr>
-                                                <td class="stack" style="padding-right:8px; padding-bottom:8px;">
-                                                    <table role="presentation" cellpadding="0" cellspacing="0"
-                                                        class="accept-btn">
-                                                        <tr>
-                                                            <td align="center" bgcolor="#D61F69"
-                                                                style="border-radius:2px;">
-                                                                <a href="https://calendly.com/wynxtalks/15min"
-                                                                    target="_blank" class="sans"
-                                                                    style="display:inline-block; padding:12px 26px; color:#FFFFFF; font-size:13px; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">
-                                                                    Schedule a Call
-                                                                </a>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                                <td class="stack" style="padding-bottom:8px;">
-                                                    <table role="presentation" cellpadding="0" cellspacing="0"
-                                                        class="wa-btn">
-                                                        <tr>
-                                                            <td align="center" bgcolor="#25D366"
-                                                                style="border-radius:2px;">
-                                                                <a href="https://wa.me/918125756608?text=Hi%2C%20I%27m%20interested%20in%20the%20WYNx%20International%20Women%27s%20Day%20Conclave%20speaker%20invitation."
-                                                                    target="_blank" class="sans"
-                                                                    style="display:inline-block; padding:12px 26px; color:#FFFFFF; font-size:13px; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">
-                                                                    Chat on WhatsApp
-                                                                </a>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
+                                                <td align="center" bgcolor="#D61F69" style="border-radius:2px;">
+                                                    <a href="https://calendly.com/wynxtalks/15min" target="_blank"
+                                                        class="sans"
+                                                        style="display:inline-block; padding:12px 28px; color:#FFFFFF; font-size:13px; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">
+                                                        Schedule a Call
+                                                    </a>
                                                 </td>
                                             </tr>
                                         </table>
@@ -430,13 +443,9 @@
                         <td class="fluid-pad" style="padding:16px 48px 24px 48px;">
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
-                                    <td class="sans"
-                                        style="color:#3B3752; font-size:14px; line-height:22px; font-style:italic; padding-bottom:14px;">
-                                        Your voice matters. Your journey matters. Your impact matters.
-                                    </td>
-                                </tr>
-                                <tr>
                                     <td class="sans" style="color:#3B3752; font-size:14px; line-height:22px;">
+                                        Your voice matters. Your journey matters. Your impact matters.
+                                        <br><br>
                                         Warm regards,<br>
                                         <strong style="color:#2B0F22;">WYNx Award Winning Talks Team</strong>
                                     </td>
@@ -480,11 +489,6 @@
                                     <td align="center" class="sans"
                                         style="color:#B792A6; font-size:11px; line-height:16px;">
                                         © 2027 WYNx Award Winning Talks. All rights reserved.<br>
-                                        BLVD Heights, Dubai Opera District, Dubai, United Arab Emirates<br>
-                                        &#128231;&nbsp;<a href="mailto:contact@wynxtalks.com"
-                                            style="color:#D98FB6;">contact@wynxtalks.com</a>
-                                        &nbsp;&nbsp;&#128222;&nbsp;<a href="tel:+918125756608"
-                                            style="color:#D98FB6;">+91 81257 56608</a><br>
                                         This email was sent to <a href="#" style="color:#D98FB6;">{{ email }}</a>.
                                         &nbsp;<a href="{{Unsubscribe Link}}" style="color:#D98FB6;">Unsubscribe</a>
                                     </td>
