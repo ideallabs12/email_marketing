@@ -21,7 +21,7 @@ export default function CampaignsPage() {
   const [subject, setSubject] = useState('');
   const [targetList, setTargetList] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('');
-  const [fromEmail, setFromEmail] = useState('global@signaturetalks.org');
+  const [fromEmail, setFromEmail] = useState('Signature Talks <global@signaturetalks.org>');
   const [createError, setCreateError] = useState('');
 
   const [actionError, setActionError] = useState('');
@@ -101,7 +101,7 @@ export default function CampaignsPage() {
       setSubject('');
       setTargetList('');
       setSelectedTemplate('');
-      setFromEmail('global@signaturetalks.org');
+      setFromEmail('Signature Talks <global@signaturetalks.org>');
       loadInitialData();
     } catch (err: any) {
       setCreateError(err.message || 'Failed to create campaign.');
@@ -287,8 +287,8 @@ export default function CampaignsPage() {
                   className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
                   required
                 >
-                  <option value="global@signaturetalks.org">Signature Talks (global@signaturetalks.org)</option>
-                  <option value="contact@wynxtalks.com">WYNx Talks (contact@wynxtalks.com)</option>
+                  <option value="Signature Talks <global@signaturetalks.org>">Signature Talks (global@signaturetalks.org)</option>
+                  <option value="WYNxTALKS <contact@wynxtalks.com>">WYNx Talks (contact@wynxtalks.com)</option>
                 </select>
               </div>
 
