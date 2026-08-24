@@ -99,6 +99,54 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
             'recipients': recipients,
         })
 
+    @action(detail=True, methods=['get'])
+    def export(self, request, pk=None):
+        import csv
+        from django.http import HttpResponse
+        from urllib.parse import urlparse
+
+        campaign = self.get_object()
+        
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="campaign_{campaign.id}_analytics.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow(['SPEAKER_NAME', 'EMAIL', 'DELIVERY_STATUS', 'LINKS_CLICKED'])
+
+        contacts = campaign.target_list.contacts.filter(is_subscribed=True).order_by('email')
+        recipient_statuses = CampaignRecipientStatus.objects.filter(
+            campaign=campaign, contact__in=contacts,
+        ).select_related('contact')
+
+        by_contact = {item.contact_id: item for item in recipient_statuses}
+
+        for contact in contacts:
+            item = by_contact.get(contact.id)
+            speaker_name = f"{contact.first_name} {contact.last_name}".strip()
+            email = contact.email
+            
+            if item:
+                status = item.status
+                links = []
+                for link in item.clicked_links:
+                    try:
+                        domain = urlparse(link).netloc
+                        domain = domain.replace('www.', '')
+                        domain = domain.split('.')[0] if domain else str(link)
+                        if domain and domain not in links:
+                            links.append(domain)
+                    except Exception:
+                        if link and str(link) not in links:
+                            links.append(str(link))
+                links_str = ", ".join(links)
+            else:
+                status = 'pending'
+                links_str = ''
+            
+            writer.writerow([speaker_name, email, status, links_str])
+
+        return response
+
 
 class BrevoWebhookView(views.APIView):
     permission_classes = [AllowAny]
@@ -136,7 +184,8 @@ class BrevoWebhookView(views.APIView):
             elif event_type in ('opened', 'unique_opened', 'first_opening', 'proxy_open'):
                 performance.total_opens += 1
                 if recipient:
-                    recipient.status = 'opened'
+                    if recipient.status not in ('clicked', 'unsubscribed', 'complaint', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error', 'failed'):
+                        recipient.status = 'opened'
                     recipient.opened_at = recipient.opened_at or now
                     if 'ip' in data:
                         recipient.metadata['ip'] = data['ip']
