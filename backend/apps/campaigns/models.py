@@ -15,6 +15,7 @@ class Campaign(models.Model):
     SENDER_CHOICES = (
         ('Signature Talks <global@signaturetalks.org>', 'Signature Talks (global@signaturetalks.org)'),
         ('WYNxTALKS <contact@wynxtalks.com>', 'WYNx Talks (contact@wynxtalks.com)'),
+        ('VOICETALKS <info@voicetalks.org>', 'Voice Talks (info@voicetalks.org)'),
     )
 
     name = models.CharField(max_length=255)
