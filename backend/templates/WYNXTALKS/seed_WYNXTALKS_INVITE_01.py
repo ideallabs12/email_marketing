@@ -6,14 +6,16 @@ Run inside the backend Docker container:
 import os
 import sys
 import django
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
-from pathlib import Path
 from apps.templates.models import EmailTemplate
 
-TEMPLATE_FILE = Path(__file__).resolve().parent / 'speaker_invitation_template.html'
+TEMPLATE_FILE = Path(__file__).resolve().parent / 'WYNXTALKS_INVITE_01.html'
 
 if not TEMPLATE_FILE.exists():
     print(f"ERROR: Template file not found at {TEMPLATE_FILE}")
