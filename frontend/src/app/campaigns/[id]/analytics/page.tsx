@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { use, useEffect, useState } from 'react';
-import { ArrowLeft, CheckCircle2, CircleX, Eye, MailCheck, MousePointerClick, RefreshCw, UserMinus, ShieldAlert, Clock, MailWarning, AlertTriangle, Link as LinkIcon, MonitorSmartphone } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, CircleX, Eye, MailCheck, MousePointerClick, RefreshCw, UserMinus, ShieldAlert, Clock, MailWarning, AlertTriangle, Link as LinkIcon, MonitorSmartphone, Download } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import Card from '../../../../components/Card';
 import { apiClient } from '../../../../services/apiClient';
@@ -86,6 +86,30 @@ export default function CampaignAnalyticsPage({ params }: { params: Promise<{ id
     setRefreshKey((value) => value + 1);
   };
 
+  const exportCSV = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/campaign-analytics/${campaignId}/export/`, {
+        headers: {
+          'Authorization': `Token ${localStorage.getItem('auth_token')}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to export CSV');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `campaign_${campaignId}_analytics.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to export CSV. Please try again.');
+    }
+  };
+
   const summary = analytics?.summary;
   const delivered = summary?.delivered ?? 0;
   const opened = summary?.opened ?? 0;
@@ -143,13 +167,22 @@ export default function CampaignAnalyticsPage({ params }: { params: Promise<{ id
             <h1 className="text-3xl font-bold tracking-tight">Campaign Analytics</h1>
             <p className="text-foreground/50 mt-1 text-sm">{analytics?.campaign.name || 'Loading campaign…'}</p>
           </div>
-          <button
-            type="button"
-            onClick={refresh}
-            className="inline-flex items-center gap-2 border border-border rounded-md px-3 py-2 text-sm hover:bg-foreground hover:text-background transition-colors"
-          >
-            <RefreshCw size={15} className={loading ? 'animate-spin' : ''} /> Refresh
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={exportCSV}
+              className="inline-flex items-center gap-2 border border-border rounded-md px-3 py-2 text-sm hover:bg-foreground hover:text-background transition-colors"
+            >
+              <Download size={15} /> Export CSV
+            </button>
+            <button
+              type="button"
+              onClick={refresh}
+              className="inline-flex items-center gap-2 border border-border rounded-md px-3 py-2 text-sm hover:bg-foreground hover:text-background transition-colors"
+            >
+              <RefreshCw size={15} className={loading ? 'animate-spin' : ''} /> Refresh
+            </button>
+          </div>
         </div>
       </div>
 
