@@ -289,6 +289,7 @@ export default function CampaignsPage() {
                 >
                   <option value="Signature Talks <global@signaturetalks.org>">Signature Talks (global@signaturetalks.org)</option>
                   <option value="WYNxTALKS <contact@wynxtalks.com>">WYNx Talks (contact@wynxtalks.com)</option>
+                  <option value="VOICETALKS <info@voicetalks.org>">Voice Talks (info@voicetalks.org)</option>
                 </select>
               </div>
 
