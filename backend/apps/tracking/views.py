@@ -151,8 +151,9 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
         ws.column_dimensions['C'].width = 20
         ws.column_dimensions['D'].width = 50
 
+        safe_name = "".join(c if c.isalnum() else "_" for c in campaign.name).lower()
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = f'attachment; filename="campaign_{campaign.id}_analytics.xlsx"'
+        response['Content-Disposition'] = f'attachment; filename="{safe_name}_analytics.xlsx"'
         wb.save(response)
 
         return response

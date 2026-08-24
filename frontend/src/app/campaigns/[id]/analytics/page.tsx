@@ -99,7 +99,10 @@ export default function CampaignAnalyticsPage({ params }: { params: Promise<{ id
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `campaign_${campaignId}_analytics.xlsx`;
+      const safeCampaignName = analytics?.campaign?.name 
+        ? analytics.campaign.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() 
+        : `campaign_${campaignId}`;
+      a.download = `${safeCampaignName}_analytics.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
