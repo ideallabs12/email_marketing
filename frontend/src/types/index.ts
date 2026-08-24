@@ -46,6 +46,7 @@ export interface Campaign {
   from_email: string;
   scheduled_at: string | null;
   sent_at: string | null;
+  share_token?: string;
   created_at: string;
   updated_at: string;
 }
@@ -83,7 +84,7 @@ export interface CampaignRecipientStatus {
 }
 
 export interface CampaignAnalytics {
-  campaign: Pick<Campaign, 'id' | 'name' | 'status'>;
+  campaign: Pick<Campaign, 'id' | 'name' | 'status' | 'share_token'>;
   summary: {
     total_recipients: number;
     sent: number;
