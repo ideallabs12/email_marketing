@@ -101,17 +101,18 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=True, methods=['get'])
     def export(self, request, pk=None):
-        import csv
+        import openpyxl
         from django.http import HttpResponse
         from urllib.parse import urlparse
 
         campaign = self.get_object()
         
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = f'attachment; filename="campaign_{campaign.id}_analytics.csv"'
-        
-        writer = csv.writer(response)
-        writer.writerow(['SPEAKER_NAME', 'EMAIL', 'DELIVERY_STATUS', 'LINKS_CLICKED'])
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Analytics"
+
+        headers = ['SPEAKER_NAME', 'EMAIL', 'DELIVERY_STATUS', 'LINKS_CLICKED']
+        ws.append(headers)
 
         contacts = campaign.target_list.contacts.filter(is_subscribed=True).order_by('email')
         recipient_statuses = CampaignRecipientStatus.objects.filter(
@@ -143,7 +144,16 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
                 status = 'pending'
                 links_str = ''
             
-            writer.writerow([speaker_name, email, status, links_str])
+            ws.append([speaker_name, email, status, links_str])
+
+        ws.column_dimensions['A'].width = 30
+        ws.column_dimensions['B'].width = 40
+        ws.column_dimensions['C'].width = 20
+        ws.column_dimensions['D'].width = 50
+
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename="campaign_{campaign.id}_analytics.xlsx"'
+        wb.save(response)
 
         return response
 

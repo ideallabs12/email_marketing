@@ -86,27 +86,27 @@ export default function CampaignAnalyticsPage({ params }: { params: Promise<{ id
     setRefreshKey((value) => value + 1);
   };
 
-  const exportCSV = async () => {
+  const exportExcel = async () => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/campaign-analytics/${campaignId}/export/`, {
         headers: {
           'Authorization': `Token ${localStorage.getItem('auth_token')}`
         }
       });
-      if (!response.ok) throw new Error('Failed to export CSV');
+      if (!response.ok) throw new Error('Failed to export Excel');
       
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `campaign_${campaignId}_analytics.csv`;
+      a.download = `campaign_${campaignId}_analytics.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err) {
       console.error(err);
-      alert('Failed to export CSV. Please try again.');
+      alert('Failed to export Excel. Please try again.');
     }
   };
 
@@ -170,10 +170,10 @@ export default function CampaignAnalyticsPage({ params }: { params: Promise<{ id
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={exportCSV}
+              onClick={exportExcel}
               className="inline-flex items-center gap-2 border border-border rounded-md px-3 py-2 text-sm hover:bg-foreground hover:text-background transition-colors"
             >
-              <Download size={15} /> Export CSV
+              <Download size={15} /> Export Excel
             </button>
             <button
               type="button"
