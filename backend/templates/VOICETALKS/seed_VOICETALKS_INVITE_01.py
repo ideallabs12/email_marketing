@@ -1,7 +1,7 @@
 """
-Seed script: inserts the second WYNx Talks Speaker Invitation email template into the database.
+Seed script: inserts the VOICE Talks Speaker Invitation email template into the database.
 Run inside the backend Docker container:
-    docker compose exec backend python seed_second_wynx_temp.py
+    docker compose exec backend python templates/VOICETALKS/seed_VOICETALKS_INVITE_01.py
 """
 import os
 import sys
@@ -13,7 +13,7 @@ django.setup()
 from pathlib import Path
 from apps.templates.models import EmailTemplate
 
-TEMPLATE_FILE = Path(__file__).resolve().parent / 'second_wynx_temp.html'
+TEMPLATE_FILE = Path(__file__).resolve().parent / 'VOICETALKS_INVITE_01.html'
 
 if not TEMPLATE_FILE.exists():
     print(f"ERROR: Template file not found at {TEMPLATE_FILE}")
@@ -21,8 +21,8 @@ if not TEMPLATE_FILE.exists():
 
 html_content = TEMPLATE_FILE.read_text(encoding='utf-8')
 
-TEMPLATE_NAME = "second_wynx_temp"
-SUBJECT       = "Speaking opportunity — Arab Women Hi-Rise Conclave 2026"
+TEMPLATE_NAME = "VOICETALKS_INVITE_01"
+SUBJECT       = "Speaker Opportunity — VOICE Global Summit 2027"
 
 obj, created = EmailTemplate.objects.get_or_create(
     name=TEMPLATE_NAME,

@@ -1,7 +1,7 @@
 """
-Seed script: inserts the third WYNx Talks Speaker Invitation email template into the database.
+Seed script: inserts the Inbox Landing Test email template into the database.
 Run inside the backend Docker container:
-    docker compose exec backend python seed_third_wynxtalks_temp.py
+    docker compose exec backend python templates/SGC/seed_SGC_INVITE_01.py
 """
 import os
 import sys
@@ -13,7 +13,7 @@ django.setup()
 from pathlib import Path
 from apps.templates.models import EmailTemplate
 
-TEMPLATE_FILE = Path(__file__).resolve().parent / 'third_wynxtalks_template.html'
+TEMPLATE_FILE = Path(__file__).resolve().parent / 'SGC_INVITE_01.html'
 
 if not TEMPLATE_FILE.exists():
     print(f"ERROR: Template file not found at {TEMPLATE_FILE}")
@@ -21,7 +21,7 @@ if not TEMPLATE_FILE.exists():
 
 html_content = TEMPLATE_FILE.read_text(encoding='utf-8')
 
-TEMPLATE_NAME = "third_wynxtalks_template"
+TEMPLATE_NAME = "inbox_landing_test"
 SUBJECT       = "Speaking opportunity — WYNx Talks"  # Update this subject if needed
 
 obj, created = EmailTemplate.objects.get_or_create(
@@ -31,7 +31,7 @@ obj, created = EmailTemplate.objects.get_or_create(
         'html_content': html_content,
         'body':         '',
         'variables':    {
-            'first_name': 'Speaker',
+            'first_name': 'Test User',
             'last_name':  '',
         },
     },
