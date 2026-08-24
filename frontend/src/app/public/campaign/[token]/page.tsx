@@ -19,6 +19,7 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
     let isCurrent = true;
@@ -100,14 +101,29 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
           <h1 className="text-xl font-bold text-gray-900">{analytics?.campaign_name} - Analytics</h1>
           <p className="text-xs text-gray-500 mt-1">Live Spreadsheet View</p>
         </div>
-        <button
-          type="button"
-          onClick={refresh}
-          className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
-        >
-          <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
-          {loading ? 'Syncing...' : 'Sync Data'}
-        </button>
+        <div className="flex items-center gap-4">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="all">All Statuses</option>
+            <option value="delivered">Delivered</option>
+            <option value="opened">Opened</option>
+            <option value="clicked">Clicked</option>
+            <option value="sent">Sent</option>
+            <option value="pending">Pending</option>
+            <option value="failed">Failed</option>
+          </select>
+          <button
+            type="button"
+            onClick={refresh}
+            className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+          >
+            <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+            {loading ? 'Syncing...' : 'Sync Data'}
+          </button>
+        </div>
       </div>
 
       {/* Spreadsheet Table */}
@@ -123,7 +139,9 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {analytics?.data.map((row, index) => (
+            {analytics?.data
+              .filter((row) => statusFilter === 'all' || row.delivery_status === statusFilter)
+              .map((row, index) => (
               <tr key={index} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-3 border-r border-gray-200 text-center text-gray-400 bg-gray-50/50">{index + 1}</td>
                 <td className="px-6 py-3 border-r border-gray-200 font-medium text-gray-900">{row.speaker_name || '—'}</td>
@@ -148,13 +166,19 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
                 </td>
               </tr>
             ))}
-            {analytics?.data.length === 0 && (
+            {analytics?.data.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
                   No recipients found for this campaign yet.
                 </td>
               </tr>
-            )}
+            ) : analytics?.data.filter((row) => statusFilter === 'all' || row.delivery_status === statusFilter).length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                  No recipients found matching the selected status.
+                </td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
       </div>
