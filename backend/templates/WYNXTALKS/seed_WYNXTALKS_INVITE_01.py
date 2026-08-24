@@ -25,7 +25,7 @@ if not TEMPLATE_FILE.exists():
 
 html_content = TEMPLATE_FILE.read_text(encoding='utf-8')
 
-TEMPLATE_NAME = "WTLS 2027 Speaker Invitation (v2)"
+TEMPLATE_NAME = "WYNXTALKS_INVITE_01"
 SUBJECT       = "You're Invited to Speak at WTLS 2027"
 
 obj, created = EmailTemplate.objects.get_or_create(
