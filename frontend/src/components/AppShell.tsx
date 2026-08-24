@@ -7,8 +7,9 @@ import Sidebar from './Sidebar';
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLoginPage = pathname === '/login';
+  const isPublicPage = pathname.startsWith('/public/');
 
-  if (isLoginPage) {
+  if (isLoginPage || isPublicPage) {
     return <div className="min-h-screen w-full bg-background text-foreground">{children}</div>;
   }
 

@@ -15,7 +15,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (!token && !isLoginPage) {
+  const isPublicPage = request.nextUrl.pathname.startsWith('/public/');
+
+  if (!token && !isLoginPage && !isPublicPage) {
     const loginUrl = new URL('/login', request.url);
     return NextResponse.redirect(loginUrl);
   }
