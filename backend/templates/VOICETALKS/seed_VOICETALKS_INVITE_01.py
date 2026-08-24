@@ -6,6 +6,10 @@ Run inside the backend Docker container:
 import os
 import sys
 import django
+from pathlib import Path
+
+# Add the 'backend' directory to sys.path so 'config.settings' can be found
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
