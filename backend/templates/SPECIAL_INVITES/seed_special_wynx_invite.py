@@ -1,11 +1,15 @@
 """
-Seed script: inserts the Inbox Landing Test email template into the database.
+Seed script: inserts the special WYNx Invite email template into the database.
 Run inside the backend Docker container:
-    docker compose exec backend python seed_inbox_landing_test.py
+    docker compose exec backend python templates/SPECIAL_INVITES/seed_special_wynx_invite.py
 """
 import os
 import sys
 import django
+from pathlib import Path
+
+# Add the 'backend' directory to sys.path so 'config.settings' can be found
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
@@ -13,7 +17,7 @@ django.setup()
 from pathlib import Path
 from apps.templates.models import EmailTemplate
 
-TEMPLATE_FILE = Path(__file__).resolve().parent / 'inbox_landing_test.html'
+TEMPLATE_FILE = Path(__file__).resolve().parent / 'special_wynx_invite.html'
 
 if not TEMPLATE_FILE.exists():
     print(f"ERROR: Template file not found at {TEMPLATE_FILE}")
@@ -21,7 +25,7 @@ if not TEMPLATE_FILE.exists():
 
 html_content = TEMPLATE_FILE.read_text(encoding='utf-8')
 
-TEMPLATE_NAME = "inbox_landing_test"
+TEMPLATE_NAME = "special_wynx_invite"
 SUBJECT       = "Speaking opportunity — WYNx Talks"  # Update this subject if needed
 
 obj, created = EmailTemplate.objects.get_or_create(
@@ -31,7 +35,7 @@ obj, created = EmailTemplate.objects.get_or_create(
         'html_content': html_content,
         'body':         '',
         'variables':    {
-            'first_name': 'Test User',
+            'first_name': 'Speaker',
             'last_name':  '',
         },
     },

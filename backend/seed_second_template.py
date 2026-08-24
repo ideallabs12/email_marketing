@@ -1,7 +1,7 @@
 """
-Seed script: inserts the Inbox Landing Test email template into the database.
+Seed script: inserts the Speaker Invitation email template into the database.
 Run inside the backend Docker container:
-    docker compose exec backend python seed_inbox_landing_test.py
+    docker compose exec backend python seed_second_template.py
 """
 import os
 import sys
@@ -13,7 +13,7 @@ django.setup()
 from pathlib import Path
 from apps.templates.models import EmailTemplate
 
-TEMPLATE_FILE = Path(__file__).resolve().parent / 'inbox_landing_test.html'
+TEMPLATE_FILE = Path(__file__).resolve().parent / 'speaker_invitation_template.html'
 
 if not TEMPLATE_FILE.exists():
     print(f"ERROR: Template file not found at {TEMPLATE_FILE}")
@@ -21,8 +21,8 @@ if not TEMPLATE_FILE.exists():
 
 html_content = TEMPLATE_FILE.read_text(encoding='utf-8')
 
-TEMPLATE_NAME = "inbox_landing_test"
-SUBJECT       = "Speaking opportunity — WYNx Talks"  # Update this subject if needed
+TEMPLATE_NAME = "WTLS 2027 Speaker Invitation (v2)"
+SUBJECT       = "You're Invited to Speak at WTLS 2027"
 
 obj, created = EmailTemplate.objects.get_or_create(
     name=TEMPLATE_NAME,
@@ -31,7 +31,7 @@ obj, created = EmailTemplate.objects.get_or_create(
         'html_content': html_content,
         'body':         '',
         'variables':    {
-            'first_name': 'Test User',
+            'first_name': 'Speaker',
             'last_name':  '',
         },
     },

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
+    <title>You're Invited to Share Your Perspective</title>
+    <style>
+        /* CSS Reset for Emails */
+        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; display: block; }
+        table { border-collapse: collapse !important; }
+        body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f8f9fa; }
+        
+        /* Dark Mode overrides to prevent weird auto-inversions */
+        :root {
+            color-scheme: light dark;
+            supported-color-schemes: light dark;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            body, .bg-outer { background-color: #121526 !important; }
+            .email-container, .content-area { background-color: #1a1e36 !important; }
+            h1, h2, h3, p, div, td, a { color: #ffffff !important; }
+            
+            /* Avoid muddy inverted pinks */
+            .event-card { background-color: #2a2e4a !important; border: 1px solid #d61f69 !important; }
+            .icon-circle { background-color: #3b3f5c !important; }
+            .cta-card { background-color: #2a2e4a !important; border: 1px solid #d61f69 !important; }
+            
+            /* Keep pink text readable */
+            .text-pink { color: #ff85b3 !important; }
+            .border-pink { border-color: #ff85b3 !important; }
+        }
+        
+        /* Container */
+        .email-container { max-width: 680px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        
+        /* Top Bar */
+        .top-bar { padding: 12px 24px; font-size: 11px; color: #888888; background-color: #ffffff; border-bottom: 1px solid #f0f0f0; }
+        
+        /* Content Area */
+        .content-area { padding: 40px 48px; }
+        
+        /* Mobile Styles */
+        @media screen and (max-width: 600px) {
+            .email-container { width: 100% !important; border-radius: 0; }
+            .content-area { padding: 24px 20px; }
+            .top-bar td { display: block; text-align: center !important; width: 100%; padding: 4px 0; }
+            
+            .three-columns th { display: block; width: 100% !important; margin-bottom: 24px; border-left: none !important; border-right: none !important; border-bottom: 1px solid #ffd1e3; padding-bottom: 24px; }
+            .three-columns th:last-child { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+            
+            .cta-card-inner { padding: 24px 20px !important; }
+            .cta-icon-cell { display: block; width: 100%; text-align: center; margin-bottom: 20px; }
+            .cta-text-cell { display: block; width: 100%; padding-left: 0 !important; text-align: center !important; }
+            .cta-text-cell h3, .cta-text-cell p { text-align: center !important; }
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8f9fa;" class="bg-outer">
+    
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8f9fa; padding: 20px 0;">
+        <tr>
+            <td align="center">
+                
+                <!--[if mso | IE]>
+                <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="680" align="center" style="width:680px;">
+                    <tr>
+                        <td>
+                <![endif]-->
+                <table class="email-container" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 680px; background-color: #ffffff; margin: 0 auto;">
+                    
+                    <!-- Top Bar Removed -->
+                    
+                    <!-- Hero Image -->
+                    <tr>
+                        <td>
+                            <a href="https://wynxtalks.com/arabwomen" target="_blank" style="text-decoration: none;">
+                                <img src="https://pzalalbpxlwtcnmkaegb.supabase.co/storage/v1/object/public/wynxtaks_email_template/wynxtalks_hero_basheer.jpg" alt="ARAB WOMEN Hi-RISE CONCLAVE 2026 - November 23-29, Dubai" width="100%" style="width: 100%; max-width: 680px; height: auto; display: block; border: 0;" />
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                        <td class="content-area">
+                            
+                            <p style="font-size: 14px; color: #1a1e36; margin: 0 0 16px 0;"><strong>Dear {{first_name}},</strong></p>
+                            
+                            <p style="font-size: 13px; color: #1a1e36; line-height: 1.6; margin: 0 0 16px 0;">WYNx Award Winning Talks is delighted to invite you to be part of the <strong>ARAB WOMEN Hi-RISE CONCLAVE 2026</strong> — a global gathering celebrating visionary women, breakthrough thinkers, influential leaders, and award-winning voices who are shaping the future.</p>
+                            
+                            <p style="font-size: 13px; color: #1a1e36; line-height: 1.6; margin: 0 0 24px 0;">Join us in Dubai from <strong>November 23–29, 2026</strong>, for an inspiring international experience designed to bring exceptional women together to share ideas, create meaningful connections, and amplify their impact.</p>
+                            
+                            <!-- Event Details Card -->
+                            <table class="event-card" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffffff; border: 1px solid #ffd1e3; border-radius: 8px; margin: 32px 0;">
+                                <tr>
+                                    <td style="padding: 24px 16px;">
+                                        <h3 style="font-size: 14px; font-weight: 600; color: #d61f69; letter-spacing: 1px; text-transform: uppercase; text-align: center; margin: 0 0 20px 0;">Event Details</h3>
+                                        
+                                        <table class="three-columns" border="0" cellpadding="0" cellspacing="0" width="100%">
+                                            <tr>
+                                                <th style="font-weight: normal; text-align: center; vertical-align: top; padding: 0 8px; width: 33.33%;">
+                                                    <div class="icon-circle" style="background-color: #fff0f5; width: 44px; height: 44px; border-radius: 50%; display: inline-block; line-height: 44px; margin-bottom: 10px;">
+                                                        <img src="https://cdn-icons-png.flaticon.com/512/2693/2693507.png" style="width: 22px; vertical-align: middle; display: inline-block;" alt="Date" />
+                                                    </div>
+                                                    <div style="font-size: 11px; color: #1a1e36; font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase;">Date</div>
+                                                    <div style="font-size: 12px; color: #1a1e36; line-height: 1.4;">November 23–29,<br>2026</div>
+                                                </th>
+                                                <th style="font-weight: normal; text-align: center; vertical-align: top; padding: 0 8px; width: 33.33%; border-left: 1px solid #ffd1e3; border-right: 1px solid #ffd1e3;">
+                                                    <div class="icon-circle" style="background-color: #fff0f5; width: 44px; height: 44px; border-radius: 50%; display: inline-block; line-height: 44px; margin-bottom: 10px;">
+                                                        <img src="https://cdn-icons-png.flaticon.com/512/2838/2838912.png" style="width: 22px; vertical-align: middle; display: inline-block;" alt="Location" />
+                                                    </div>
+                                                    <div style="font-size: 11px; color: #1a1e36; font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase;">Location</div>
+                                                    <div style="font-size: 12px; color: #1a1e36; line-height: 1.4;">Dubai,<br>UAE</div>
+                                                </th>
+                                                <th style="font-weight: normal; text-align: center; vertical-align: top; padding: 0 8px; width: 33.33%;">
+                                                    <div class="icon-circle" style="background-color: #fff0f5; width: 44px; height: 44px; border-radius: 50%; display: inline-block; line-height: 44px; margin-bottom: 10px;">
+                                                        <img src="https://cdn-icons-png.flaticon.com/512/10419/10419385.png" style="width: 22px; vertical-align: middle; display: inline-block;" alt="Conference" />
+                                                    </div>
+                                                    <div style="font-size: 11px; color: #1a1e36; font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase;">Conference</div>
+                                                    <div style="font-size: 12px; color: #1a1e36; line-height: 1.4;">ARAB WOMEN<br>Hi-RISE CONCLAVE 2026</div>
+                                                </th>
+                                            </tr>
+                                        </table>
+                                        
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- The WYNx Opportunity -->
+                            <h2 style="font-size: 16px; color: #d61f69; text-transform: uppercase; margin: 0 0 16px 0; text-align: left;">THE WYNx OPPORTUNITY</h2>
+                            
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 32px;">
+                                <tr>
+                                    <td width="24" valign="top" style="padding-top: 2px;"><img src="https://cdn-icons-png.flaticon.com/512/5290/5290058.png" width="16" alt="check" style="display: block;"></td>
+                                    <td style="font-size: 13px; color: #1a1e36; padding-bottom: 12px; line-height: 1.4;">Share your expertise and story on an international stage</td>
+                                </tr>
+                                <tr>
+                                    <td width="24" valign="top" style="padding-top: 2px;"><img src="https://cdn-icons-png.flaticon.com/512/5290/5290058.png" width="16" alt="check" style="display: block;"></td>
+                                    <td style="font-size: 13px; color: #1a1e36; padding-bottom: 12px; line-height: 1.4;">Connect with accomplished women and global thought leaders</td>
+                                </tr>
+                                <tr>
+                                    <td width="24" valign="top" style="padding-top: 2px;"><img src="https://cdn-icons-png.flaticon.com/512/5290/5290058.png" width="16" alt="check" style="display: block;"></td>
+                                    <td style="font-size: 13px; color: #1a1e36; padding-bottom: 12px; line-height: 1.4;">Expand your professional visibility and international network</td>
+                                </tr>
+                                <tr>
+                                    <td width="24" valign="top" style="padding-top: 2px;"><img src="https://cdn-icons-png.flaticon.com/512/5290/5290058.png" width="16" alt="check" style="display: block;"></td>
+                                    <td style="font-size: 13px; color: #1a1e36; padding-bottom: 12px; line-height: 1.4;">Create meaningful opportunities for collaboration</td>
+                                </tr>
+                                <tr>
+                                    <td width="24" valign="top" style="padding-top: 2px;"><img src="https://cdn-icons-png.flaticon.com/512/5290/5290058.png" width="16" alt="check" style="display: block;"></td>
+                                    <td style="font-size: 13px; color: #1a1e36; padding-bottom: 0; line-height: 1.4;">Inspire others through your journey, knowledge, and achievements</td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Event Message -->
+                            <h2 style="font-size: 16px; color: #d61f69; text-transform: uppercase; margin: 0 0 16px 0; text-align: left;">WHERE WOMEN RISE, IDEAS TRANSFORM</h2>
+                            
+                            <p style="font-size: 13px; color: #1a1e36; line-height: 1.5; margin: 0 0 24px 0;">The <strong>ARAB WOMEN Hi-RISE CONCLAVE</strong> is more than a conference — it is a platform for women who are leading change, challenging boundaries, building influence, and creating a meaningful impact across industries and communities.</p>
+                            
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-top: 1px solid #ffd1e3; border-bottom: 1px solid #ffd1e3; padding: 16px 0; margin-bottom: 40px;">
+                                <tr>
+                                    <td width="33.33%" align="center" style="padding: 16px 4px;">
+                                        <table border="0" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td valign="middle" style="padding-right: 8px;"><img src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png" width="24" alt="voice" style="display: block;"></td>
+                                                <td valign="middle" style="font-size: 10px; color: #1a1e36; line-height: 1.3; text-align: left;">Your voice<br>can inspire.</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td width="33.33%" align="center" style="padding: 16px 4px; border-left: 1px solid #ffd1e3; border-right: 1px solid #ffd1e3;">
+                                        <table border="0" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td valign="middle" style="padding-right: 8px;"><img src="https://cdn-icons-png.flaticon.com/512/1256/1256650.png" width="24" alt="experience" style="display: block;"></td>
+                                                <td valign="middle" style="font-size: 10px; color: #1a1e36; line-height: 1.3; text-align: left;">Your experience<br>can empower.</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td width="33.33%" align="center" style="padding: 16px 4px;">
+                                        <table border="0" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td valign="middle" style="padding-right: 8px;"><img src="https://cdn-icons-png.flaticon.com/512/1828/1828884.png" width="24" alt="ideas" style="display: block;"></td>
+                                                <td valign="middle" style="font-size: 10px; color: #1a1e36; line-height: 1.3; text-align: left;">Your ideas<br>can create change.</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- CTA Card -->
+                            <table class="cta-card" border="0" cellpadding="0" cellspacing="0" width="100%" style="border: 1px solid #ffd1e3; border-radius: 12px; background-color: #fff9fa; margin-bottom: 40px;">
+                                <tr>
+                                    <td style="padding: 24px;" class="cta-card-inner">
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                            <tr>
+                                                <td width="120" align="center" valign="middle" class="cta-icon-cell">
+                                                    <div class="icon-circle" style="background-color: #ffffff; width: 80px; height: 80px; border-radius: 50%; display: inline-block; line-height: 80px; box-shadow: 0 4px 12px rgba(214,31,105,0.08);">
+                                                        <img src="https://cdn-icons-png.flaticon.com/512/2693/2693507.png" width="40" style="vertical-align: middle; display: inline-block;" alt="Calendar">
+                                                    </div>
+                                                </td>
+                                                <td valign="top" style="padding-left: 24px;" class="cta-text-cell">
+                                                    <h3 style="font-size: 15px; color: #d61f69; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1px; text-align: left;">LET'S CONNECT</h3>
+                                                    <p style="font-size: 13px; color: #1a1e36; line-height: 1.5; margin: 0 0 10px 0; text-align: left;">We would be delighted to personally share the speaker opportunity and participation details with you.</p>
+                                                    <p style="font-size: 13px; color: #1a1e36; margin: 0 0 16px 0; text-align: left;">Schedule a convenient time to speak with Scientific Advisor</p>
+                                                    
+                                                    <div style="text-align: left;">
+                                                        <!--[if mso]>
+                                                        <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://calendly.com/wynxtalks/15min" style="height:40px;v-text-anchor:middle;width:200px;" arcsize="10%" stroke="f" fillcolor="#d61f69">
+                                                          <w:anchorlock/>
+                                                          <center>
+                                                        <![endif]-->
+                                                            <a href="https://calendly.com/wynxtalks/15min" style="display: inline-block; background-color: #d61f69; color: #ffffff !important; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; padding: 12px 24px;">SCHEDULE A CALL</a>
+                                                        <!--[if mso]>
+                                                          </center>
+                                                        </v:roundrect>
+                                                        <![endif]-->
+                                                    </div>
+                                                    <p style="margin: 10px 0 0 0; text-align: left;"><a href="https://calendly.com/wynxtalks/15min" style="color: #d61f69; font-size: 11px; text-decoration: none;">calendly.com/wynxtalks/15min</a></p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Closing -->
+                            <p style="font-size: 13px; color: #1a1e36; line-height: 1.5; margin: 0 0 24px 0;">We look forward to connecting with you and exploring the possibility<br>of welcoming you to the WYNx stage in Dubai.</p>
+                            
+                            <p style="font-size: 13px; color: #1a1e36; margin: 0 0 6px 0;">Warm regards,</p>
+                            <p style="font-size: 13px; font-weight: 600; color: #d61f69; margin: 0 0 32px 0;">WYNx Award Winning Talks Team</p>
+                            
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td class="footer" style="background-color: #121526; padding: 24px; text-align: center;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px;">
+                                <tr>
+                                    <td align="center">
+                                        <!-- Footer Text Logo -->
+                                        <div style="font-size: 22px; font-weight: 700; color: #ffffff; letter-spacing: 1px; margin-bottom: 2px;">WYNx</div>
+                                        <div style="font-size: 9px; color: #d61f69; font-weight: 600; letter-spacing: 1px;">AWARD WINNING TALKS</div>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <div style="font-size: 11px; font-weight: 600; color: #ffffff; letter-spacing: 2px; margin-bottom: 16px;">INSPIRE. CONNECT. TRANSFORM.</div>
+                            
+                            <div class="social-icons" style="margin-bottom: 20px;">
+                                <a href="https://www.wynxtalks.com" style="display: inline-block; margin: 0 8px;">
+                                    <img src="https://img.icons8.com/ios-filled/512/ffffff/domain.png" style="width: 24px; height: 24px; border: 0; display: inline-block; opacity: 1;" alt="Website" />
+                                </a>
+                                <a href="https://www.linkedin.com/company/wynxtalks/" style="display: inline-block; margin: 0 8px;">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" style="width: 24px; height: 24px; border: 0; display: inline-block; opacity: 1;" alt="LinkedIn" />
+                                </a>
+                                <a href="https://www.instagram.com/wynxtalks/" style="display: inline-block; margin: 0 8px;">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/1384/1384063.png" style="width: 24px; height: 24px; border: 0; display: inline-block; opacity: 1;" alt="Instagram" />
+                                </a>
+                                <a href="https://x.com/WYNxTalks" style="display: inline-block; margin: 0 8px;">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/5969/5969020.png" style="width: 24px; height: 24px; border: 0; display: inline-block; opacity: 1;" alt="X" />
+                                </a>
+                                <a href="https://www.facebook.com/share/1EAtCu6AcN/?mibextid=wwXIfr" style="display: inline-block; margin: 0 8px;">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" style="width: 24px; height: 24px; border: 0; display: inline-block; opacity: 1;" alt="Facebook" />
+                                </a>
+                            </div>
+                            
+                            <p style="font-size: 10px; color: #888888; margin: 0;">If you no longer wish to receive these emails, you can <a href="{{Unsubscribe Link}}" style="color: #888888; text-decoration: underline;">unsubscribe</a>.</p>
+                        </td>
+                    </tr>
+                    
+                </table>
+                <!--[if mso | IE]>
+                        </td>
+                    </tr>
+                </table>
+                <![endif]-->
+                
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

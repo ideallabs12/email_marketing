@@ -1,15 +1,11 @@
 """
 Seed script: inserts the Speaker Invitation email template into the database.
 Run inside the backend Docker container:
-    docker compose exec backend python templates/WYNXTALKS/seed_WYNXTALKS_INVITE_01.py
+    docker compose exec backend python seed_speaker_invitation_template.py
 """
 import os
 import sys
 import django
-from pathlib import Path
-
-# Add the 'backend' directory to sys.path so 'config.settings' can be found
-sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
@@ -17,7 +13,7 @@ django.setup()
 from pathlib import Path
 from apps.templates.models import EmailTemplate
 
-TEMPLATE_FILE = Path(__file__).resolve().parent / 'WYNXTALKS_INVITE_01.html'
+TEMPLATE_FILE = Path(__file__).resolve().parent / 'speaker_invitation_template.html'
 
 if not TEMPLATE_FILE.exists():
     print(f"ERROR: Template file not found at {TEMPLATE_FILE}")
@@ -25,7 +21,7 @@ if not TEMPLATE_FILE.exists():
 
 html_content = TEMPLATE_FILE.read_text(encoding='utf-8')
 
-TEMPLATE_NAME = "WYNXTALKS_INVITE_01"
+TEMPLATE_NAME = "WTLS 2027 Speaker Invitation (v2)"
 SUBJECT       = "You're Invited to Speak at WTLS 2027"
 
 obj, created = EmailTemplate.objects.get_or_create(
