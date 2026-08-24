@@ -9,6 +9,56 @@ from .models import CampaignPerformance, CampaignRecipientStatus
 from .serializers import CampaignPerformanceSerializer, CampaignRecipientStatusSerializer, BouncedEmailSerializer
 from apps.campaigns.models import Campaign
 
+from django.shortcuts import get_object_or_404
+from urllib.parse import urlparse
+
+class PublicCampaignAnalyticsView(views.APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        campaign = get_object_or_404(Campaign, share_token=token)
+        contacts = campaign.target_list.contacts.filter(is_subscribed=True).order_by('email')
+        recipient_statuses = CampaignRecipientStatus.objects.filter(
+            campaign=campaign, contact__in=contacts,
+        ).select_related('contact')
+
+        by_contact = {item.contact_id: item for item in recipient_statuses}
+
+        rows = []
+        for contact in contacts:
+            item = by_contact.get(contact.id)
+            speaker_name = f"{contact.first_name} {contact.last_name}".strip()
+            email = contact.email
+            
+            if item:
+                status_val = item.status
+                links = []
+                for link in item.clicked_links:
+                    try:
+                        domain = urlparse(link).netloc
+                        domain = domain.replace('www.', '')
+                        domain = domain.split('.')[0] if domain else str(link)
+                        if domain and domain not in links:
+                            links.append(domain)
+                    except Exception:
+                        if link and str(link) not in links:
+                            links.append(str(link))
+                links_str = ", ".join(links)
+            else:
+                status_val = 'pending'
+                links_str = ''
+            
+            rows.append({
+                "speaker_name": speaker_name,
+                "email": email,
+                "delivery_status": status_val,
+                "links_clicked": links_str
+            })
+
+        return Response({
+            "campaign_name": campaign.name,
+            "data": rows
+        })
 
 class CampaignPerformanceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CampaignPerformance.objects.all().order_by('-campaign_id')
@@ -93,7 +143,7 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
         counts['pending'] = max(counts['total_recipients'] - counts['sent'] - counts['failed'], 0)
 
         return Response({
-            'campaign': {'id': campaign.id, 'name': campaign.name, 'status': campaign.status},
+            'campaign': {'id': campaign.id, 'name': campaign.name, 'status': campaign.status, 'share_token': campaign.share_token},
             'summary': counts,
             'filter': status_filter,
             'recipients': recipients,

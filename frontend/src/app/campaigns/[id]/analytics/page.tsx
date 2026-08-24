@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { use, useEffect, useState } from 'react';
-import { ArrowLeft, CheckCircle2, CircleX, Eye, MailCheck, MousePointerClick, RefreshCw, UserMinus, ShieldAlert, Clock, MailWarning, AlertTriangle, Link as LinkIcon, MonitorSmartphone, Download } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, CircleX, Eye, MailCheck, MousePointerClick, RefreshCw, UserMinus, ShieldAlert, Clock, MailWarning, AlertTriangle, Link as LinkIcon, MonitorSmartphone, Download, Share2, Check } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import Card from '../../../../components/Card';
 import { apiClient } from '../../../../services/apiClient';
@@ -53,6 +53,7 @@ export default function CampaignAnalyticsPage({ params }: { params: Promise<{ id
   const [activeFilter, setActiveFilter] = useState<CampaignRecipientFilter>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -113,6 +114,15 @@ export default function CampaignAnalyticsPage({ params }: { params: Promise<{ id
     }
   };
 
+  const copyShareLink = () => {
+    if (!analytics?.campaign?.share_token) return;
+    const shareUrl = `${window.location.origin}/public/campaign/${analytics.campaign.share_token}`;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   const summary = analytics?.summary;
   const delivered = summary?.delivered ?? 0;
   const opened = summary?.opened ?? 0;
@@ -171,6 +181,16 @@ export default function CampaignAnalyticsPage({ params }: { params: Promise<{ id
             <p className="text-foreground/50 mt-1 text-sm">{analytics?.campaign.name || 'Loading campaign…'}</p>
           </div>
           <div className="flex items-center gap-3">
+            {analytics?.campaign?.share_token && (
+              <button
+                type="button"
+                onClick={copyShareLink}
+                className="inline-flex items-center gap-2 border border-border rounded-md px-3 py-2 text-sm hover:bg-foreground hover:text-background transition-colors"
+              >
+                {copied ? <Check size={15} className="text-green-500" /> : <Share2 size={15} />} 
+                {copied ? 'Copied Link' : 'Copy Live Link'}
+              </button>
+            )}
             <button
               type="button"
               onClick={exportExcel}
