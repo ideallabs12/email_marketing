@@ -1,7 +1,7 @@
 """
-Seed script: inserts the Inbox Landing Test email template into the database.
+Seed script: inserts the WYNx Talks email template into the database.
 Run inside the backend Docker container:
-    docker compose exec backend python seed_inbox_landing_test.py
+    docker compose exec backend python seed_SGC_INVITE_01.py
 """
 import os
 import sys
@@ -24,7 +24,7 @@ if not TEMPLATE_FILE.exists():
 
 html_content = TEMPLATE_FILE.read_text(encoding='utf-8')
 
-TEMPLATE_NAME = "inbox_landing_test"
+TEMPLATE_NAME = "WYNXTALKS_INVITE"
 SUBJECT       = "Speaking opportunity — WYNx Talks"  # Update this subject if needed
 
 obj, created = EmailTemplate.objects.get_or_create(
