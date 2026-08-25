@@ -1,5 +1,5 @@
 """
-Seed script: inserts the WYNx Talks email template into the database.
+Seed script: inserts the Signature Global Conferences email template into the database.
 Run inside the backend Docker container:
     docker compose exec backend python seed_SGC_INVITE_01.py
 """
@@ -24,8 +24,8 @@ if not TEMPLATE_FILE.exists():
 
 html_content = TEMPLATE_FILE.read_text(encoding='utf-8')
 
-TEMPLATE_NAME = "WYNXTALKS_INVITE_01"
-SUBJECT       = "Speaking opportunity — WYNx Talks"  # Update this subject if needed
+TEMPLATE_NAME = "SGC_INVITE_01"
+SUBJECT       = "Speaking opportunity — Signature Global Conferences"  # Update this subject if needed
 
 obj, created = EmailTemplate.objects.get_or_create(
     name=TEMPLATE_NAME,
