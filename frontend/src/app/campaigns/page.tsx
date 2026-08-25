@@ -148,7 +148,8 @@ export default function CampaignsPage() {
                 <div key={c.id} className="grid grid-cols-12 py-3 text-sm items-center">
                   <div className="col-span-3 flex flex-col pr-2">
                     <span className="font-medium truncate">{c.name}</span>
-                    <span className="text-[10px] text-foreground/40 mt-0.5 truncate">{getTemplateName(c.template)}</span>
+                    <span className="text-[10px] text-foreground/40 mt-1 truncate font-medium">Template: {getTemplateName(c.template)}</span>
+                    <span className="text-[10px] text-foreground/40 mt-0.5 truncate">From: {c.from_email}</span>
                   </div>
                   <span className="col-span-2 capitalize text-xs">
                     <span className={`px-2 py-0.5 border rounded-full inline-flex items-center space-x-1 ${

@@ -14,7 +14,7 @@ class Campaign(models.Model):
 
     SENDER_CHOICES = (
         ('Signature Talks <global@signaturetalks.org>', 'Signature Talks (global@signaturetalks.org)'),
-        ('WYNxTALKS <contact@wynxtalks.com>', 'WYNx Talks (contact@wynxtalks.com)'),
+        ('WYNxTALKS <info@wynxtalks.com>', 'WYNx Talks (info@wynxtalks.com)'),
         ('VOICETALKS <info@voicetalks.org>', 'Voice Talks (info@voicetalks.org)'),
     )
 
