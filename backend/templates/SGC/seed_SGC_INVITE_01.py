@@ -24,7 +24,7 @@ if not TEMPLATE_FILE.exists():
 
 html_content = TEMPLATE_FILE.read_text(encoding='utf-8')
 
-TEMPLATE_NAME = "WYNXTALKS_INVITE"
+TEMPLATE_NAME = "inbox_landing_test"
 SUBJECT       = "Speaking opportunity — WYNx Talks"  # Update this subject if needed
 
 obj, created = EmailTemplate.objects.get_or_create(
