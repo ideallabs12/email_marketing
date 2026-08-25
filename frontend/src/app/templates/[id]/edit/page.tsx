@@ -24,7 +24,7 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [viewMode, setViewMode] = useState<'edit' | 'view'>('edit');
+  const [viewMode, setViewMode] = useState<'edit' | 'view'>('view');
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [testFirstName, setTestFirstName] = useState('Nithin');
   const [testLastName, setTestLastName] = useState('Varma');
@@ -71,6 +71,17 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
     
     setDetectedVariables(Array.from(foundVars));
   }, [template, body, subject]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        router.push('/templates');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [router]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();

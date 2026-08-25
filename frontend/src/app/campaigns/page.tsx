@@ -15,14 +15,6 @@ export default function CampaignsPage() {
   const [loading, setLoading] = useState(true);
   const [polling, setPolling] = useState(false);
 
-  const [showCreateModal, setShowCreateModal] = useState(false);
-
-  const [name, setName] = useState('');
-  const [subject, setSubject] = useState('');
-  const [targetList, setTargetList] = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState('');
-  const [fromEmail, setFromEmail] = useState('Signature Talks <global@signaturetalks.org>');
-  const [createError, setCreateError] = useState('');
 
   const [actionError, setActionError] = useState('');
 
@@ -78,36 +70,6 @@ export default function CampaignsPage() {
     }
   }
 
-  const handleCreateCampaign = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCreateError('');
-
-    if (!name.trim() || !targetList || !selectedTemplate) {
-      setCreateError('Please fill in all required fields.');
-      return;
-    }
-
-    try {
-      await apiClient.post('/api/v1/campaigns/', {
-        name,
-        subject: subject.trim() || undefined,
-        from_email: fromEmail,
-        target_list: Number(targetList),
-        template: Number(selectedTemplate),
-        status: 'draft',
-      });
-      setShowCreateModal(false);
-      setName('');
-      setSubject('');
-      setTargetList('');
-      setSelectedTemplate('');
-      setFromEmail('Signature Talks <global@signaturetalks.org>');
-      loadInitialData();
-    } catch (err: any) {
-      setCreateError(err.message || 'Failed to create campaign.');
-    }
-  };
-
   const handleSendCampaign = async (campaignId: number) => {
     setActionError('');
     const confirmed = window.confirm('Are you sure you want to send this campaign now? This will immediately mail all contacts in the target list.');
@@ -149,10 +111,12 @@ export default function CampaignsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Campaigns</h1>
           <p className="text-foreground/50 mt-1 text-sm">Manage and send your email campaigns.</p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>
-          <Plus size={16} />
-          <span>New Campaign</span>
-        </Button>
+        <Link href="/campaigns/new">
+          <Button>
+            <Plus size={16} />
+            <span>New Campaign</span>
+          </Button>
+        </Link>
       </div>
 
       {actionError && (
@@ -243,91 +207,6 @@ export default function CampaignsPage() {
           )}
         </div>
       </Card>
-
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md p-6 border border-border bg-background shadow-lg relative">
-            <button className="absolute top-4 right-4 text-foreground/50 hover:text-foreground" onClick={() => setShowCreateModal(false)}>
-              <X size={20} />
-            </button>
-            <h2 className="text-xl font-bold mb-4">Launch New Campaign</h2>
-            <form onSubmit={handleCreateCampaign} className="space-y-4">
-              {createError && <div className="text-xs text-red-500">{createError}</div>}
-              
-              <div className="space-y-1">
-                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Campaign Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-                  placeholder="e.g. WTLS 2027 Speaker Outreach"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">
-                  Email Subject Override <span className="text-[10px] lowercase text-foreground/30">(Optional)</span>
-                </label>
-                <input
-                  type="text"
-                  value={subject}
-                  onChange={e => setSubject(e.target.value)}
-                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-                  placeholder="Defaults to template subject"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Sender Email</label>
-                <select
-                  value={fromEmail}
-                  onChange={e => setFromEmail(e.target.value)}
-                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-                  required
-                >
-                  <option value="Signature Talks <global@signaturetalks.org>">Signature Talks (global@signaturetalks.org)</option>
-                  <option value="WYNxTALKS <contact@wynxtalks.com>">WYNx Talks (contact@wynxtalks.com)</option>
-                  <option value="VOICETALKS <info@voicetalks.org>">Voice Talks (info@voicetalks.org)</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Email Template</label>
-                <select
-                  value={selectedTemplate}
-                  onChange={e => setSelectedTemplate(e.target.value)}
-                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-                  required
-                >
-                  <option value="">-- Select Template --</option>
-                  {templates.map(t => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Target List</label>
-                <select
-                  value={targetList}
-                  onChange={e => setTargetList(e.target.value)}
-                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-                  required
-                >
-                  <option value="">-- Select Target List --</option>
-                  {lists.map(l => (
-                    <option key={l.id} value={l.id}>{l.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <Button type="submit" className="w-full py-2.5 mt-4">Create Campaign</Button>
-            </form>
-          </Card>
-        </div>
-      )}
     </div>
   );
 }
