@@ -6,6 +6,7 @@ import Button from '../../components/Button';
 import { Plus, Upload, Search, X, Check, AlertCircle, Trash2 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 import { Contact, ContactList } from '../../types';
+import Link from 'next/link';
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -202,14 +203,22 @@ export default function ContactsPage() {
             <Plus size={16} />
             <span>Create List</span>
           </Button>
-          <Button variant="outline" onClick={() => setShowImportModal(true)}>
-            <Upload size={16} />
-            <span>Import CSV</span>
-          </Button>
-          <Button onClick={() => setShowAddModal(true)}>
-            <Plus size={16} />
-            <span>Add Contact</span>
-          </Button>
+          <div className="flex gap-2">
+            <Link href="/contacts/ignored">
+              <Button variant="secondary" className="flex items-center gap-2">
+                <AlertCircle size={18} />
+                Ignored Contacts
+              </Button>
+            </Link>
+            <Button onClick={() => setShowImportModal(true)} variant="secondary" className="flex items-center gap-2">
+              <Upload size={18} />
+              Import Contacts
+            </Button>
+            <Button onClick={() => setShowAddModal(true)} className="flex items-center gap-2">
+              <Plus size={18} />
+              Add Contact
+            </Button>
+          </div>
         </div>
       </div>
 

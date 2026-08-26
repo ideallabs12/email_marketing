@@ -3,8 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 import csv
 import io
-from .models import Contact, ContactList
-from .serializers import ContactSerializer, ContactListSerializer
+from .models import Contact, ContactList, IgnoredContact
+from .serializers import ContactSerializer, ContactListSerializer, IgnoredContactSerializer
 from django.db.models import ProtectedError
 
 class ContactListViewSet(viewsets.ModelViewSet):
@@ -79,13 +79,20 @@ class ContactViewSet(viewsets.ModelViewSet):
                 row_data = dict(zip(headers, row))
                 
                 email = row_data.get('email', '').strip()
-                if not email or '@' not in email:
-                    skipped_count += 1
-                    skipped_emails.append(f"Row {row_idx}: {email or '(empty)'}")
-                    continue
-
                 first_name = row_data.get('first_name', '').strip()
                 last_name = row_data.get('last_name', '').strip()
+
+                if not email or '@' not in email:
+                    skipped_count += 1
+                    reason = 'Missing or invalid email format'
+                    skipped_emails.append(f"Row {row_idx}: {email or '(empty)'}")
+                    IgnoredContact.objects.create(
+                        email=email,
+                        first_name=first_name,
+                        last_name=last_name,
+                        reason=f"Row {row_idx}: {reason}"
+                    )
+                    continue
                 
                 is_subscribed_str = row_data.get('is_subscribed', 'true').strip().lower()
                 is_subscribed = is_subscribed_str in ['true', '1', 'yes', 'y']
@@ -115,4 +122,11 @@ class ContactViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({'error': f"Failed to parse CSV: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
+class IgnoredContactViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = IgnoredContact.objects.all().order_by('-imported_at')
+    serializer_class = IgnoredContactSerializer
 
+    @action(detail=False, methods=['delete'], url_path='clear-all')
+    def clear_all(self, request):
+        count, _ = IgnoredContact.objects.all().delete()
+        return Response({'message': f'Successfully cleared {count} ignored contacts.'}, status=status.HTTP_200_OK)

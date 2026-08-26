@@ -22,3 +22,13 @@ class Contact(models.Model):
     def __str__(self):
         return self.email
 
+class IgnoredContact(models.Model):
+    email = models.CharField(max_length=255, blank=True)
+    first_name = models.CharField(max_length=255, blank=True)
+    last_name = models.CharField(max_length=255, blank=True)
+    reason = models.TextField()
+    imported_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.email or 'No Email'} - {self.reason}"
+
