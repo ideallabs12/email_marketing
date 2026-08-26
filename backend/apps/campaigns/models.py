@@ -16,6 +16,7 @@ class Campaign(models.Model):
         ('Signature Talks <global@signaturetalks.org>', 'Signature Talks (global@signaturetalks.org)'),
         ('WYNxTALKS <info@wynxtalks.com>', 'WYNx Talks (info@wynxtalks.com)'),
         ('VOICETALKS <info@voicetalks.org>', 'Voice Talks (info@voicetalks.org)'),
+        ('ICON Conferences <contact@iconconferences.org>', 'ICON Conferences (contact@iconconferences.org)'),
     )
 
     name = models.CharField(max_length=255)
