@@ -205,12 +205,12 @@ export default function ContactsPage() {
           </Button>
           <div className="flex gap-2">
             <Link href="/contacts/ignored">
-              <Button variant="secondary" className="flex items-center gap-2">
+              <Button variant="outline" className="flex items-center gap-2 text-red-500 hover:bg-red-50 hover:border-red-200">
                 <AlertCircle size={18} />
                 Ignored Contacts
               </Button>
             </Link>
-            <Button onClick={() => setShowImportModal(true)} variant="secondary" className="flex items-center gap-2">
+            <Button onClick={() => setShowImportModal(true)} variant="outline" className="flex items-center gap-2">
               <Upload size={18} />
               Import Contacts
             </Button>

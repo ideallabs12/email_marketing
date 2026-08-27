@@ -71,10 +71,10 @@ export default function IgnoredContactsPage() {
         </div>
         <div>
           <Button 
-            variant="danger" 
+            variant="outline" 
             onClick={handleClearAll} 
             disabled={ignoredContacts.length === 0 || clearing}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 text-red-500 hover:bg-red-50 hover:border-red-200"
           >
             <Trash2 size={18} />
             {clearing ? 'Clearing...' : 'Clear List'}
