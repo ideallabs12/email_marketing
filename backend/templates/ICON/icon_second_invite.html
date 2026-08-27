@@ -53,17 +53,6 @@
             font-family: Arial, Helvetica, sans-serif;
         }
 
-        /* Hero text sits on a light image — force black in ALL modes,
-           not only when prefers-color-scheme fires, since several mobile
-           mail apps invert text color without triggering that query. */
-        .hero-title,
-        .hero-subtitle,
-        .hero-label,
-        .hero-highlight {
-            color: #000000 !important;
-            -webkit-text-fill-color: #000000 !important;
-        }
-
         @media only screen and (max-width:600px) {
             .email-container {
                 width: 100% !important;
@@ -74,17 +63,28 @@
                 padding-right: 24px !important;
             }
 
-            .hero-pad {
-                padding-top: 24px !important;
-                padding-bottom: 28px !important;
-                padding-left: 16px !important;
-                padding-right: 100px !important;
-                background-position: right 15% !important;
+            .hero-text-col {
+                padding: 20px 14px 20px 16px !important;
             }
 
-            .stack {
-                display: block !important;
+            .hero-img-col {
+                padding: 12px 12px 12px 0 !important;
+            }
+
+            .hero-img-col img {
                 width: 100% !important;
+                border-radius: 4px !important;
+            }
+
+            .hero-label {
+                font-size: 10px !important;
+                letter-spacing: 2px !important;
+            }
+
+            .hero-subtitle {
+                font-size: 11px !important;
+                letter-spacing: 0.5px !important;
+                line-height: 16px !important;
             }
 
             .card-col {
@@ -102,8 +102,8 @@
             }
 
             .hero-title {
-                font-size: 24px !important;
-                line-height: 30px !important;
+                font-size: 17px !important;
+                line-height: 22px !important;
             }
 
             .accept-btn {
@@ -123,14 +123,8 @@
                 color: #e7e9ea !important;
             }
 
-            /* Hero text must stay dark because the background image is light */
-            .hero-title,
-            .hero-subtitle,
-            .hero-label,
-            .hero-highlight {
-                color: #000000 !important;
-                -webkit-text-fill-color: #000000 !important;
-            }
+            /* Hero text now lives in its own solid navy panel (white/gold
+               text), so no forced override is needed here anymore. */
 
             /* Adjust specific dark mode backgrounds */
             .follow-bar {
@@ -149,22 +143,6 @@
             .signature-name {
                 color: #ffffff !important;
             }
-        }
-
-        /* Some mobile mail apps (Gmail, Outlook, Yahoo) auto-invert colors
-           and ignore the prefers-color-scheme query above. These selectors
-           target the attributes/markup those apps inject, so the hero text
-           stays dark even then, since the hero image itself stays light. */
-        [data-ogsc] .hero-title,
-        [data-ogsc] .hero-subtitle,
-        [data-ogsc] .hero-label,
-        [data-ogsc] .hero-highlight,
-        u+.body .hero-title,
-        u+.body .hero-subtitle,
-        u+.body .hero-label,
-        u+.body .hero-highlight {
-            color: #000000 !important;
-            -webkit-text-fill-color: #000000 !important;
         }
     </style>
 </head>
@@ -192,10 +170,6 @@
                                         style="color:#F3EFE6; font-size:14px; font-weight:bold; letter-spacing:2px; text-transform:uppercase;">
                                         ICON Conferences
                                     </td>
-                                    <td align="right" class="sans"
-                                        style="color:#C9A227; font-size:11px; letter-spacing:1px;">
-                                        Global Summits &nbsp;•&nbsp; Speaker Hub
-                                    </td>
                                 </tr>
                             </table>
                         </td>
@@ -203,17 +177,11 @@
 
                     <!-- HERO -->
                     <tr>
-                        <td class="fluid-pad hero-pad"
-                            background="https://pzalalbpxlwtcnmkaegb.supabase.co/storage/v1/object/public/wynxtaks_email_template/iconbanners/icon_banner_8.png"
-                            style="background-color:#0B2545; background-image:url('https://pzalalbpxlwtcnmkaegb.supabase.co/storage/v1/object/public/wynxtaks_email_template/iconbanners/icon_banner_8.png'); background-repeat:no-repeat; background-position:right 90%; background-size:cover; -webkit-background-size:cover; padding:130px 40px 58px 40px;">
-                            <!--[if gte mso 9]>
-            <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:600px;height:250px;">
-              <v:fill type="tile" src="https://pzalalbpxlwtcnmkaegb.supabase.co/storage/v1/object/public/wynxtaks_email_template/iconbanners/icon_banner_2.png" />
-              <v:textbox inset="0,0,0,0">
-            <![endif]-->
+                        <td style="background-color:#0B2545;">
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
-                                    <td>
+                                    <!-- TEXT PANEL -->
+                                    <td class="hero-text-col" width="54%" valign="middle" style="padding:40px 32px;">
                                         <table role="presentation" cellpadding="0" cellspacing="0">
                                             <tr>
                                                 <td
@@ -221,39 +189,48 @@
                                                     &nbsp;</td>
                                                 <td style="width:10px;">&nbsp;</td>
                                                 <td class="hero-label"
-                                                    style="color:#000000 !important; -webkit-text-fill-color:#000000 !important; font-family:Arial,Helvetica,sans-serif; font-size:12px; letter-spacing:3px; text-transform:uppercase; font-weight:bold;">
+                                                    style="color:#C9A227; font-family:Arial,Helvetica,sans-serif; font-size:12px; letter-spacing:3px; text-transform:uppercase; font-weight:bold;">
                                                     Speaker Invitation
                                                 </td>
                                             </tr>
                                         </table>
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td class="hero-title"
+                                                    style="color:#FFFFFF; font-size:26px; line-height:34px; font-weight:normal; padding-top:12px;">
+                                                    13th International Summit on Women's Leadership
+                                                    Excellence&nbsp;<span class="hero-highlight"
+                                                        style="color:#FFFFFF;">2026</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding-top:8px;">
+                                                    <div
+                                                        style="width:56px; height:2px; background-color:#C9A227; line-height:2px; font-size:0;">
+                                                        &nbsp;</div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="hero-subtitle"
+                                                    style="color:#EFE1B8; font-family:Arial,Helvetica,sans-serif; font-size:13px; letter-spacing:1px; padding-top:10px;">
+                                                    Rise: Next Level Strategies for Success
+                                                </td>
+                                            </tr>
+                                        </table>
                                     </td>
-                                </tr>
-                                <tr>
-                                    <td class="hero-title"
-                                        style="color:#000000 !important; -webkit-text-fill-color:#000000 !important; font-size:26px; line-height:34px; font-weight:normal; padding-top:12px;">
-                                        13th International Summit on<br>Women's Leadership<br>Excellence&nbsp;<span
-                                            class="hero-highlight"
-                                            style="color:#000000 !important; -webkit-text-fill-color:#000000 !important;">2026</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding-top:8px;">
-                                        <div
-                                            style="width:56px; height:2px; background-color:#C9A227; line-height:2px; font-size:0;">
-                                            &nbsp;</div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="hero-subtitle"
-                                        style="color:#000000 !important; -webkit-text-fill-color:#000000 !important; font-family:Arial,Helvetica,sans-serif; font-size:13px; letter-spacing:1px; padding-top:10px;">
-                                        Rise: Next Level Strategies for Success
+
+                                    <!-- ARTWORK: real <img>, not a CSS background, so it can never be
+                                         cropped or overlapped by text — it always displays in full,
+                                         and stays side-by-side with the text panel at every width,
+                                         inside the same navy hero panel so it reads as one section. -->
+                                    <td class="hero-img-col" width="46%" valign="middle"
+                                        style="padding:0; line-height:0; font-size:0;">
+                                        <img src="https://pzalalbpxlwtcnmkaegb.supabase.co/storage/v1/object/public/wynxtaks_email_template/iconbanners/icon_banner_9.png"
+                                            alt="ICON Conferences" width="100%"
+                                            style="display:block; width:100%; height:auto; max-width:100%;">
                                     </td>
                                 </tr>
                             </table>
-                            <!--[if gte mso 9]>
-              </v:textbox>
-            </v:rect>
-            <![endif]-->
                         </td>
                     </tr>
 
