@@ -17,6 +17,7 @@ export default function TemplateEditorPage({ params }: { params: Promise<{ id: s
   const [editor, setEditor] = useState<any>(null);
   const [template, setTemplate] = useState<EmailTemplate | null>(null);
   const [saving, setSaving] = useState(false);
+  const hasInitialized = useRef(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -33,8 +34,9 @@ export default function TemplateEditorPage({ params }: { params: Promise<{ id: s
   }, [templateId]);
 
   useEffect(() => {
-    if (!editorRef.current || !template || editor) return;
+    if (!editorRef.current || !template || editor || hasInitialized.current) return;
 
+    hasInitialized.current = true;
     let e: any = null;
 
     // Dynamically import to avoid SSR issues with window/document
@@ -121,8 +123,10 @@ export default function TemplateEditorPage({ params }: { params: Promise<{ id: s
       </div>
 
       {/* Editor Container */}
-      <div className="flex-grow relative overflow-hidden bg-white">
-        <div ref={editorRef} className="absolute inset-0"></div>
+      <div className="flex-grow relative overflow-hidden bg-white h-full min-h-[500px]">
+        <div className="absolute inset-0">
+          <div ref={editorRef} style={{ height: '100%', width: '100%' }}></div>
+        </div>
       </div>
     </div>
   );
