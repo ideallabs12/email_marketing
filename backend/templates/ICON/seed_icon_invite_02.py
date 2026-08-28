@@ -23,7 +23,7 @@ if not TEMPLATE_FILE.exists():
 html_content = TEMPLATE_FILE.read_text(encoding='utf-8')
 
 TEMPLATE_NAME = "ICON_SECOND_INVITE"
-SUBJECT       = "Speaker Opportunity — ICON Global Conferences"
+SUBJECT       = "Speaker Opportunity - ICON Conferences"
 
 obj, created = EmailTemplate.objects.get_or_create(
     name=TEMPLATE_NAME,
