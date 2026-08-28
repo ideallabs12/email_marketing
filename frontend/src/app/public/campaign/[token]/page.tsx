@@ -5,11 +5,19 @@ import { AlertTriangle, Download, RefreshCw } from 'lucide-react';
 
 interface PublicAnalyticsData {
   campaign_name: string;
+  totals?: {
+    total_recipients: number;
+    total_delivered: number;
+    total_opens: number;
+    total_clicks: number;
+  };
   data: Array<{
     speaker_name: string;
     email: string;
     delivery_status: string;
     links_clicked: string;
+    opened_at: string | null;
+    clicked_at: string | null;
   }>;
 }
 
@@ -100,6 +108,15 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
         <div>
           <h1 className="text-xl font-bold text-gray-900">{analytics?.campaign_name} - Analytics</h1>
           <p className="text-xs text-gray-500 mt-1">Live Spreadsheet View</p>
+          
+          {analytics?.totals && (
+            <div className="flex gap-4 mt-3 text-sm border-t border-gray-200 pt-3">
+              <div><span className="text-gray-500">Recipients:</span> <span className="font-semibold text-gray-900">{analytics.totals.total_recipients}</span></div>
+              <div><span className="text-gray-500">Delivered:</span> <span className="font-semibold text-gray-900">{analytics.totals.total_delivered}</span></div>
+              <div><span className="text-gray-500">Opens:</span> <span className="font-semibold text-gray-900">{analytics.totals.total_opens}</span></div>
+              <div><span className="text-gray-500">Clicks:</span> <span className="font-semibold text-gray-900">{analytics.totals.total_clicks}</span></div>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-4">
           <select
@@ -135,6 +152,8 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
               <th className="px-6 py-3 border-r border-gray-200">Speaker Name</th>
               <th className="px-6 py-3 border-r border-gray-200">Email</th>
               <th className="px-6 py-3 border-r border-gray-200">Delivery Status</th>
+              <th className="px-6 py-3 border-r border-gray-200">Opened At</th>
+              <th className="px-6 py-3 border-r border-gray-200">Clicked At</th>
               <th className="px-6 py-3">Links Clicked</th>
             </tr>
           </thead>
@@ -150,6 +169,12 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
                   <span className={`capitalize font-semibold ${statusColors[row.delivery_status] || 'text-gray-500'}`}>
                     {row.delivery_status}
                   </span>
+                </td>
+                <td className="px-6 py-3 border-r border-gray-200 text-gray-600">
+                  {row.opened_at ? new Date(row.opened_at).toLocaleString() : <span className="text-gray-400">—</span>}
+                </td>
+                <td className="px-6 py-3 border-r border-gray-200 text-gray-600">
+                  {row.clicked_at ? new Date(row.clicked_at).toLocaleString() : <span className="text-gray-400">—</span>}
                 </td>
                 <td className="px-6 py-3 text-gray-600">
                   {row.links_clicked ? (
@@ -168,13 +193,13 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
             ))}
             {analytics?.data.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                   No recipients found for this campaign yet.
                 </td>
               </tr>
             ) : analytics?.data.filter((row) => statusFilter === 'all' || row.delivery_status === statusFilter).length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                   No recipients found matching the selected status.
                 </td>
               </tr>

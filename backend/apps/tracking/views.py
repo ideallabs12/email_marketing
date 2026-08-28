@@ -44,19 +44,34 @@ class PublicCampaignAnalyticsView(views.APIView):
                         if link and str(link) not in links:
                             links.append(str(link))
                 links_str = ", ".join(links)
+                opened_at = item.opened_at.isoformat() if item.opened_at else None
+                clicked_at = item.clicked_at.isoformat() if item.clicked_at else None
             else:
                 status_val = 'pending'
                 links_str = ''
+                opened_at = None
+                clicked_at = None
             
             rows.append({
                 "speaker_name": speaker_name,
                 "email": email,
                 "delivery_status": status_val,
-                "links_clicked": links_str
+                "links_clicked": links_str,
+                "opened_at": opened_at,
+                "clicked_at": clicked_at
             })
+
+        performance = getattr(campaign, 'performance', None)
+        totals = {
+            "total_recipients": contacts.count(),
+            "total_delivered": performance.total_delivered if performance else 0,
+            "total_opens": performance.total_opens if performance else 0,
+            "total_clicks": performance.total_clicks if performance else 0,
+        }
 
         return Response({
             "campaign_name": campaign.name,
+            "totals": totals,
             "data": rows
         })
 
