@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
-import { Plus, Search, X, Trash2, Users } from 'lucide-react';
+import { Plus, Search, X, Trash2, Users, Upload, Check, AlertCircle } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 import { ContactList, Contact } from '../../types';
 
@@ -12,6 +12,22 @@ export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+
+  const [newEmail, setNewEmail] = useState('');
+  const [newFirstName, setNewFirstName] = useState('');
+  const [newLastName, setNewLastName] = useState('');
+  const [newSubscribed, setNewSubscribed] = useState(true);
+  const [newSelectedLists, setNewSelectedLists] = useState<number[]>([]);
+  const [addError, setAddError] = useState('');
+
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [targetListId, setTargetListId] = useState<string>('');
+  const [importError, setImportError] = useState('');
+  const [importSuccess, setImportSuccess] = useState('');
+  const [importing, setImporting] = useState(false);
 
   const [showListModal, setShowListModal] = useState(false);
   const [listName, setListName] = useState('');
@@ -37,6 +53,83 @@ export default function ContactsPage() {
       setLoading(false);
     }
   }
+
+  const handleAddContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddError('');
+    if (!newEmail || !newEmail.includes('@')) {
+      setAddError('Please enter a valid email address.');
+      return;
+    }
+
+    try {
+      await apiClient.post('/api/v1/contacts/', {
+        email: newEmail,
+        first_name: newFirstName,
+        last_name: newLastName,
+        is_subscribed: newSubscribed,
+        lists: newSelectedLists,
+      });
+      setShowAddModal(false);
+      setNewEmail('');
+      setNewFirstName('');
+      setNewLastName('');
+      setNewSubscribed(true);
+      setNewSelectedLists([]);
+      loadData();
+    } catch (err: any) {
+      setAddError(err.message || 'Failed to add contact.');
+    }
+  };
+
+  const handleImportCsv = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setImportError('');
+    setImportSuccess('');
+    if (!csvFile) {
+      setImportError('Please select a CSV file.');
+      return;
+    }
+
+    setImporting(true);
+    const formData = new FormData();
+    formData.append('file', csvFile);
+    if (targetListId) {
+      formData.append('list_id', targetListId);
+    }
+
+    try {
+      const token = document.cookie.match(new RegExp('(^| )auth_token=([^;]+)'))?.[2];
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Token ${token}`;
+      }
+
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${API_BASE_URL}/api/v1/contacts/import-csv/`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+
+      const resData = await response.json();
+      if (!response.ok) {
+        throw new Error(resData.error || 'CSV import failed.');
+      }
+
+      setImportSuccess(resData.message);
+      setCsvFile(null);
+      setTimeout(() => {
+        setShowImportModal(false);
+        setImportSuccess('');
+        loadData();
+      }, 3000);
+    } catch (err: any) {
+      setImportError(err.message || 'An error occurred during import.');
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const handleCreateList = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +179,15 @@ export default function ContactsPage() {
           </h1>
           <p className="text-foreground/50 mt-1 text-sm">Manage and organize your contact lists.</p>
         </div>
-        <div className="flex w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 w-full sm:w-auto mt-4 sm:mt-0">
+          <Button onClick={() => setShowImportModal(true)} variant="outline" className="w-full sm:w-auto flex items-center justify-center gap-2">
+            <Upload size={16} />
+            <span>Import CSV</span>
+          </Button>
+          <Button onClick={() => setShowAddModal(true)} variant="outline" className="w-full sm:w-auto flex items-center justify-center gap-2">
+            <Users size={16} />
+            <span>Add Contact</span>
+          </Button>
           <Button onClick={() => setShowListModal(true)} className="w-full sm:w-auto flex items-center justify-center gap-2">
             <Plus size={16} />
             <span>Create List</span>
@@ -188,6 +289,140 @@ export default function ContactsPage() {
                 />
               </div>
               <Button type="submit" className="w-full py-2">Create List</Button>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {showAddModal && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md p-6 border border-border bg-background shadow-lg relative">
+            <button className="absolute top-4 right-4 text-foreground/50 hover:text-foreground" onClick={() => setShowAddModal(false)}>
+              <X size={20} />
+            </button>
+            <h2 className="text-xl font-bold mb-4">Add Contact Manually</h2>
+            <form onSubmit={handleAddContact} className="space-y-4">
+              {addError && <div className="text-xs text-red-500">{addError}</div>}
+              <div className="space-y-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Email Address</label>
+                <input
+                  type="email"
+                  value={newEmail}
+                  onChange={e => setNewEmail(e.target.value)}
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                  placeholder="name@example.com"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">First Name</label>
+                  <input
+                    type="text"
+                    value={newFirstName}
+                    onChange={e => setNewFirstName(e.target.value)}
+                    className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                    placeholder="John"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Last Name</label>
+                  <input
+                    type="text"
+                    value={newLastName}
+                    onChange={e => setNewLastName(e.target.value)}
+                    className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                    placeholder="Doe"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Add to List</label>
+                <select
+                  multiple
+                  value={newSelectedLists.map(String)}
+                  onChange={e => {
+                    const vals = Array.from(e.target.selectedOptions, option => Number(option.value));
+                    setNewSelectedLists(vals);
+                  }}
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background min-h-[80px]"
+                >
+                  {lists.filter(l => !l.is_default).map(list => (
+                    <option key={list.id} value={list.id}>{list.name}</option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-foreground/40 mt-1">Hold Ctrl (Cmd) to select multiple lists.</p>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="subscribed"
+                  checked={newSubscribed}
+                  onChange={e => setNewSubscribed(e.target.checked)}
+                  className="rounded border-border text-foreground"
+                />
+                <label htmlFor="subscribed" className="text-sm font-medium">Subscribed to mailings</label>
+              </div>
+
+              <Button type="submit" className="w-full py-2 mt-4">Add Contact</Button>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {showImportModal && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md p-6 border border-border bg-background shadow-lg relative">
+            <button className="absolute top-4 right-4 text-foreground/50 hover:text-foreground" onClick={() => setShowImportModal(false)}>
+              <X size={20} />
+            </button>
+            <h2 className="text-xl font-bold mb-2">Import Contacts from CSV</h2>
+            <p className="text-xs text-foreground/50 mb-4">Upload a CSV file. Expected columns: <code className="bg-foreground/5 px-1 py-0.5 rounded">email</code>, <code className="bg-foreground/5 px-1 py-0.5 rounded">first_name</code>, <code className="bg-foreground/5 px-1 py-0.5 rounded">last_name</code>, <code className="bg-foreground/5 px-1 py-0.5 rounded">is_subscribed</code>.</p>
+            
+            <form onSubmit={handleImportCsv} className="space-y-4">
+              {importError && (
+                <div className="p-3 bg-red-950/20 text-red-500 text-xs rounded-md font-medium border border-red-900/30 flex items-start space-x-2">
+                  <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                  <span>{importError}</span>
+                </div>
+              )}
+              {importSuccess && (
+                <div className="p-3 bg-green-950/20 text-green-500 text-xs rounded-md font-medium border border-green-900/30 flex items-start space-x-2">
+                  <Check size={16} className="shrink-0 mt-0.5" />
+                  <span>{importSuccess}</span>
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Target List (Optional)</label>
+                <select
+                  value={targetListId}
+                  onChange={e => setTargetListId(e.target.value)}
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                >
+                  <option value="">-- None (Don't add to any list) --</option>
+                  {lists.filter(l => !l.is_default).map(list => (
+                    <option key={list.id} value={list.id}>{list.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50 font-medium">Select File</label>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={e => setCsvFile(e.target.files?.[0] || null)}
+                  className="w-full text-sm border border-border rounded-md p-2 bg-background"
+                  required
+                />
+              </div>
+
+              <Button type="submit" className="w-full py-2.5 mt-4" disabled={importing || !!importSuccess}>
+                {importing ? 'Importing contacts...' : 'Import CSV File'}
+              </Button>
             </form>
           </Card>
         </div>
