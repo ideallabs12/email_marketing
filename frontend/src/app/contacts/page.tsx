@@ -16,26 +16,6 @@ export default function ContactsPage() {
   const [loading, setLoading] = useState(true);
 
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [showListModal, setShowListModal] = useState(false);
-
-  const [newEmail, setNewEmail] = useState('');
-  const [newFirstName, setNewFirstName] = useState('');
-  const [newLastName, setNewLastName] = useState('');
-  const [newSubscribed, setNewSubscribed] = useState(true);
-  const [newSelectedLists, setNewSelectedLists] = useState<number[]>([]);
-  const [addError, setAddError] = useState('');
-
-  const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [targetListId, setTargetListId] = useState<string>('');
-  const [importError, setImportError] = useState('');
-  const [importSuccess, setImportSuccess] = useState('');
-  const [importing, setImporting] = useState(false);
-
-  const [listName, setListName] = useState('');
-  const [listDesc, setListDesc] = useState('');
-  const [listError, setListError] = useState('');
-
   useEffect(() => {
     loadData();
   }, []);
@@ -133,27 +113,7 @@ export default function ContactsPage() {
     }
   };
 
-  const handleCreateList = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setListError('');
-    if (!listName.trim()) {
-      setListError('Please enter a list name.');
-      return;
-    }
 
-    try {
-      await apiClient.post('/api/v1/contact-lists/', {
-        name: listName,
-        description: listDesc,
-      });
-      setShowListModal(false);
-      setListName('');
-      setListDesc('');
-      loadData();
-    } catch (err: any) {
-      setListError(err.message || 'Failed to create list.');
-    }
-  };
 
   const handleDeleteContact = async (id: number) => {
     if (!confirm('Are you sure you want to delete this contact?')) return;
@@ -166,19 +126,7 @@ export default function ContactsPage() {
     }
   };
 
-  const handleDeleteList = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this list? The contacts inside it will not be deleted.')) return;
-    try {
-      await apiClient.delete(`/api/v1/contact-lists/${id}/`);
-      if (selectedListFilter === id.toString()) {
-        setSelectedListFilter('all');
-      }
-      loadData();
-    } catch (err: any) {
-      console.error('Failed to delete list:', err);
-      alert('Failed to delete list.');
-    }
-  };
+
 
   const filteredContacts = contacts.filter(c => {
     const term = searchQuery.toLowerCase();
@@ -199,10 +147,6 @@ export default function ContactsPage() {
           <p className="text-foreground/50 mt-1 text-sm">Manage your lists and subscribers.</p>
         </div>
         <div className="flex flex-col sm:flex-row flex-wrap gap-3 mt-4 sm:mt-0">
-          <Button variant="outline" onClick={() => setShowListModal(true)} className="w-full sm:w-auto">
-            <Plus size={16} />
-            <span>Create List</span>
-          </Button>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Link href="/contacts/ignored" className="w-full sm:w-auto">
               <Button variant="outline" className="flex items-center justify-center gap-2 text-red-500 hover:bg-red-50 hover:border-red-200 w-full">
@@ -220,32 +164,6 @@ export default function ContactsPage() {
             </Button>
           </div>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4 relative group">
-          <h3 className="font-semibold text-lg pr-6">All Contacts</h3>
-          <p className="text-xs text-foreground/50 mt-1 line-clamp-1">Master list containing all contacts</p>
-          <div className="text-2xl font-bold mt-4">
-            {contacts.length} <span className="text-xs font-normal text-foreground/50">contacts</span>
-          </div>
-        </Card>
-        {lists.filter(list => !list.is_default).map(list => (
-          <Card key={list.id} className="p-4 relative group">
-            <button
-              onClick={() => handleDeleteList(list.id)}
-              className="absolute top-2 right-2 text-foreground/30 hover:text-red-500 transition-all p-1 opacity-50 hover:opacity-100"
-              title="Delete List"
-            >
-              <Trash2 size={16} />
-            </button>
-            <h3 className="font-semibold text-lg pr-6">{list.name}</h3>
-            <p className="text-xs text-foreground/50 mt-1 line-clamp-1">{list.description || 'No description'}</p>
-            <div className="text-2xl font-bold mt-4">
-              {contacts.filter(c => c.lists.includes(list.id)).length} <span className="text-xs font-normal text-foreground/50">contacts</span>
-            </div>
-          </Card>
-        ))}
       </div>
 
       <Card>
@@ -360,41 +278,7 @@ export default function ContactsPage() {
         </div>
       </Card>
 
-      {showListModal && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md p-6 border border-border bg-background shadow-lg relative">
-            <button className="absolute top-4 right-4 text-foreground/50 hover:text-foreground" onClick={() => setShowListModal(false)}>
-              <X size={20} />
-            </button>
-            <h2 className="text-xl font-bold mb-4">Create Contact List</h2>
-            <form onSubmit={handleCreateList} className="space-y-4">
-              {listError && <div className="text-xs text-red-500">{listError}</div>}
-              <div className="space-y-1">
-                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">List Name</label>
-                <input
-                  type="text"
-                  value={listName}
-                  onChange={e => setListName(e.target.value)}
-                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-                  placeholder="e.g. Speaker Invites"
-                  required
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Description</label>
-                <textarea
-                  value={listDesc}
-                  onChange={e => setListDesc(e.target.value)}
-                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-                  placeholder="Short explanation of this list..."
-                  rows={3}
-                />
-              </div>
-              <Button type="submit" className="w-full py-2">Create List</Button>
-            </form>
-          </Card>
-        </div>
-      )}
+
 
       {showAddModal && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
