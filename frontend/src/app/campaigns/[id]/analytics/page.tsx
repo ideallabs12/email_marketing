@@ -175,12 +175,12 @@ export default function CampaignAnalyticsPage({ params }: { params: Promise<{ id
         <Link href="/campaigns" className="inline-flex items-center gap-1 text-sm text-foreground/55 hover:text-foreground mb-5">
           <ArrowLeft size={16} /> Back to campaigns
         </Link>
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Campaign Analytics</h1>
             <p className="text-foreground/50 mt-1 text-sm">{analytics?.campaign.name || 'Loading campaign…'}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             {analytics?.campaign?.share_token && (
               <button
                 type="button"
@@ -288,7 +288,7 @@ export default function CampaignAnalyticsPage({ params }: { params: Promise<{ id
           ))}
         </div>
 
-        <div className="grid grid-cols-12 gap-3 text-xs font-medium uppercase tracking-widest text-foreground/40 py-4 border-b border-border">
+        <div className="hidden md:grid grid-cols-12 gap-3 text-xs font-medium uppercase tracking-widest text-foreground/40 py-4 border-b border-border">
           <span className="col-span-4">Contact</span>
           <span className="col-span-2">Status</span>
           <span className="col-span-3">Latest event</span>
@@ -302,25 +302,35 @@ export default function CampaignAnalyticsPage({ params }: { params: Promise<{ id
         ) : (
           <div className="divide-y divide-border">
             {analytics?.recipients.map((recipient) => (
-              <div key={recipient.contact_id} className="grid grid-cols-12 gap-3 py-4 text-sm items-center">
-                <div className="col-span-4 min-w-0">
+              <div key={recipient.contact_id} className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-3 py-4 md:py-3 text-sm items-start md:items-center hover:bg-foreground/5 rounded-md px-2 -mx-2 transition-colors">
+                <div className="md:col-span-4 flex flex-col min-w-0">
+                  <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Contact</span>
                   <p className="font-medium truncate">{[recipient.first_name, recipient.last_name].filter(Boolean).join(' ') || '—'}</p>
                   <p className="text-xs text-foreground/50 truncate mt-0.5">{recipient.email}</p>
                 </div>
-                <div className="col-span-2">
-                  <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs capitalize ${statusStyles[recipient.status]}`}>
-                    {recipient.status}
+                <div className="md:col-span-2 flex flex-col md:block">
+                  <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Status</span>
+                  <span>
+                    <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs capitalize ${statusStyles[recipient.status]}`}>
+                      {recipient.status}
+                    </span>
                   </span>
                 </div>
-                <span className="col-span-3 text-xs text-foreground/60">{formatDate(recipient.last_event_at)}</span>
-                <span className="col-span-3 text-xs text-foreground/60">
-                  <div className="truncate" title={recipient.error_message}>{recipient.error_message || '—'}</div>
-                  {recipient.metadata?.ip && (
-                    <div className="text-[10px] text-foreground/40 mt-1 flex items-center gap-1">
-                      <MonitorSmartphone size={10} /> IP: {recipient.metadata.ip}
-                    </div>
-                  )}
-                </span>
+                <div className="md:col-span-3 flex flex-col md:block">
+                  <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Latest event</span>
+                  <span className="text-xs text-foreground/60">{formatDate(recipient.last_event_at)}</span>
+                </div>
+                <div className="md:col-span-3 flex flex-col md:block">
+                  <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Details</span>
+                  <span className="text-xs text-foreground/60">
+                    <div className="truncate" title={recipient.error_message}>{recipient.error_message || '—'}</div>
+                    {recipient.metadata?.ip && (
+                      <div className="text-[10px] text-foreground/40 mt-1 flex items-center gap-1">
+                        <MonitorSmartphone size={10} /> IP: {recipient.metadata.ip}
+                      </div>
+                    )}
+                  </span>
+                </div>
               </div>
             ))}
           </div>

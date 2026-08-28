@@ -96,45 +96,56 @@ export default function IgnoredContactsPage() {
         </div>
       )}
 
-      <Card className="p-0 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-background-darker border-b border-background-light">
-                <th className="p-4 text-sm font-semibold text-text-muted">Email</th>
-                <th className="p-4 text-sm font-semibold text-text-muted">First Name</th>
-                <th className="p-4 text-sm font-semibold text-text-muted">Last Name</th>
-                <th className="p-4 text-sm font-semibold text-text-muted">Reason</th>
-                <th className="p-4 text-sm font-semibold text-text-muted">Imported At</th>
+      <Card className="p-0 overflow-hidden bg-transparent md:bg-background border-none md:border-solid">
+        <div className="w-full px-2 md:px-0 mt-2 md:mt-0">
+          <table className="w-full text-left md:border-collapse block md:table">
+            <thead className="hidden md:table-header-group">
+              <tr className="bg-foreground/5 border-b border-border">
+                <th className="p-4 text-sm font-semibold text-foreground/70">Email</th>
+                <th className="p-4 text-sm font-semibold text-foreground/70">First Name</th>
+                <th className="p-4 text-sm font-semibold text-foreground/70">Last Name</th>
+                <th className="p-4 text-sm font-semibold text-foreground/70">Reason</th>
+                <th className="p-4 text-sm font-semibold text-foreground/70">Imported At</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="block md:table-row-group space-y-4 md:space-y-0">
               {loading ? (
-                <tr>
-                  <td colSpan={5} className="p-8 text-center text-text-muted">
-                    <div className="inline-block w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2"></div>
+                <tr className="block md:table-row">
+                  <td colSpan={5} className="p-8 text-center text-foreground/50 block md:table-cell">
+                    <div className="inline-block w-6 h-6 border-2 border-foreground border-t-transparent rounded-full animate-spin mb-2"></div>
                     <p>Loading ignored contacts...</p>
                   </td>
                 </tr>
               ) : ignoredContacts.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="p-8 text-center text-text-muted">
+                <tr className="block md:table-row">
+                  <td colSpan={5} className="p-8 text-center text-foreground/50 block md:table-cell">
                     No ignored contacts found.
                   </td>
                 </tr>
               ) : (
                 ignoredContacts.map((contact) => (
-                  <tr key={contact.id} className="border-b border-background-light hover:bg-background-darker/50 transition-colors">
-                    <td className="p-4 text-text-main font-medium">{contact.email || '-'}</td>
-                    <td className="p-4 text-text-muted">{contact.first_name || '-'}</td>
-                    <td className="p-4 text-text-muted">{contact.last_name || '-'}</td>
-                    <td className="p-4 text-text-main">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20">
+                  <tr key={contact.id} className="flex flex-col md:table-row bg-background border border-border md:border-0 rounded-lg md:rounded-none md:border-b hover:bg-foreground/5 transition-colors p-4 md:p-0">
+                    <td className="flex justify-between items-center md:table-cell p-2 md:p-4 text-foreground font-medium border-b border-border/50 md:border-none">
+                      <span className="md:hidden text-xs font-semibold uppercase text-foreground/50">Email</span>
+                      <span className="truncate max-w-[60%] md:max-w-none">{contact.email || '-'}</span>
+                    </td>
+                    <td className="flex justify-between items-center md:table-cell p-2 md:p-4 text-foreground/70 border-b border-border/50 md:border-none">
+                      <span className="md:hidden text-xs font-semibold uppercase text-foreground/50">First Name</span>
+                      <span>{contact.first_name || '-'}</span>
+                    </td>
+                    <td className="flex justify-between items-center md:table-cell p-2 md:p-4 text-foreground/70 border-b border-border/50 md:border-none">
+                      <span className="md:hidden text-xs font-semibold uppercase text-foreground/50">Last Name</span>
+                      <span>{contact.last_name || '-'}</span>
+                    </td>
+                    <td className="flex justify-between items-center md:table-cell p-2 md:p-4 text-foreground border-b border-border/50 md:border-none">
+                      <span className="md:hidden text-xs font-semibold uppercase text-foreground/50">Reason</span>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-500 border border-red-500/20 max-w-[60%] md:max-w-none truncate text-right md:text-left">
                         {contact.reason}
                       </span>
                     </td>
-                    <td className="p-4 text-text-muted">
-                      {new Date(contact.imported_at).toLocaleString()}
+                    <td className="flex justify-between items-center md:table-cell p-2 md:p-4 text-foreground/70">
+                      <span className="md:hidden text-xs font-semibold uppercase text-foreground/50">Imported At</span>
+                      <span>{new Date(contact.imported_at).toLocaleString()}</span>
                     </td>
                   </tr>
                 ))

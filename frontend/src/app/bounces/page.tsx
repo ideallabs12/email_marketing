@@ -109,7 +109,7 @@ export default function BouncesPage() {
         </div>
 
         <div className="border-t border-border pt-4">
-          <div className="grid grid-cols-12 text-xs font-medium uppercase tracking-widest text-foreground/40 pb-3 border-b border-border mb-3 px-2">
+          <div className="hidden md:grid grid-cols-12 text-xs font-medium uppercase tracking-widest text-foreground/40 pb-3 border-b border-border mb-3 px-2">
             <span className="col-span-3">Email</span>
             <span className="col-span-2">Name</span>
             <span className="col-span-2">Campaign</span>
@@ -126,18 +126,31 @@ export default function BouncesPage() {
           ) : (
             <div className="divide-y divide-border">
               {filteredBounces.map(b => (
-                <div key={b.id} className="grid grid-cols-12 py-3 text-sm items-center hover:bg-red-500/5 rounded-md px-2 -mx-2 transition-colors">
-                  <span className="col-span-3 font-medium truncate">{b.email}</span>
-                  <span className="col-span-2 truncate">
-                    {b.first_name || b.last_name ? `${b.first_name} ${b.last_name}` : '—'}
-                  </span>
-                  <span className="col-span-2 truncate">{b.campaign_name || '—'}</span>
-                  <span className="col-span-3 text-red-500 text-xs truncate" title={b.error_message}>
-                    {b.error_message || 'Failed'}
-                  </span>
-                  <span className="col-span-2 text-right text-foreground/50 text-xs">
-                    {b.failed_at ? new Date(b.failed_at).toLocaleDateString() : '—'}
-                  </span>
+                <div key={b.id} className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-0 py-4 md:py-3 text-sm items-start md:items-center hover:bg-red-500/5 rounded-md px-2 -mx-2 transition-colors">
+                  <div className="md:col-span-3 flex flex-col min-w-0">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Email</span>
+                    <span className="font-medium truncate">{b.email}</span>
+                  </div>
+                  <div className="md:col-span-2 flex flex-col md:block truncate">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Name</span>
+                    <span>{b.first_name || b.last_name ? `${b.first_name} ${b.last_name}` : '—'}</span>
+                  </div>
+                  <div className="md:col-span-2 flex flex-col md:block truncate">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Campaign</span>
+                    <span>{b.campaign_name || '—'}</span>
+                  </div>
+                  <div className="md:col-span-3 flex flex-col md:block">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Error Details</span>
+                    <span className="text-red-500 text-xs truncate" title={b.error_message}>
+                      {b.error_message || 'Failed'}
+                    </span>
+                  </div>
+                  <div className="md:col-span-2 flex flex-col md:text-right mt-2 md:mt-0">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Failed At</span>
+                    <span className="text-foreground/50 text-xs">
+                      {b.failed_at ? new Date(b.failed_at).toLocaleDateString() : '—'}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>

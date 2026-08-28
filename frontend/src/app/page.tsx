@@ -110,7 +110,7 @@ export default function DashboardPage() {
       {/* Recent Campaigns */}
       <Card title="Recent Campaigns">
         <div className="border-t border-border pt-4">
-          <div className="grid grid-cols-4 text-xs font-medium uppercase tracking-widest text-foreground/40 pb-3 border-b border-border">
+          <div className="hidden md:grid grid-cols-4 text-xs font-medium uppercase tracking-widest text-foreground/40 pb-3 border-b border-border">
             <span>Name</span>
             <span>Status</span>
             <span>Target List</span>
@@ -125,14 +125,26 @@ export default function DashboardPage() {
           ) : (
             <div className="divide-y divide-border">
               {recentCampaigns.map((campaign) => (
-                <div key={campaign.id} className="grid grid-cols-4 py-3 text-sm items-center">
-                  <span className="font-medium">{campaign.name}</span>
-                  <span className="capitalize text-xs font-semibold px-2.5 py-0.5 rounded-full inline-block border w-fit" style={{
-                    borderColor: campaign.status === 'sent' ? 'currentColor' : 'var(--border)',
-                    opacity: campaign.status === 'sent' ? 1 : 0.6
-                  }}>{campaign.status}</span>
-                  <span>{listsMap[campaign.target_list] || `List #${campaign.target_list}`}</span>
-                  <span>{campaign.sent_at ? new Date(campaign.sent_at).toLocaleDateString() : '—'}</span>
+                <div key={campaign.id} className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-0 py-4 md:py-3 text-sm md:items-center">
+                  <div className="flex flex-col md:block">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Name</span>
+                    <span className="font-medium">{campaign.name}</span>
+                  </div>
+                  <div className="flex flex-col md:block">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Status</span>
+                    <span className="capitalize text-xs font-semibold px-2.5 py-0.5 rounded-full inline-block border w-fit" style={{
+                      borderColor: campaign.status === 'sent' ? 'currentColor' : 'var(--border)',
+                      opacity: campaign.status === 'sent' ? 1 : 0.6
+                    }}>{campaign.status}</span>
+                  </div>
+                  <div className="flex flex-col md:block">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Target List</span>
+                    <span>{listsMap[campaign.target_list] || `List #${campaign.target_list}`}</span>
+                  </div>
+                  <div className="flex flex-col md:block">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Sent At</span>
+                    <span>{campaign.sent_at ? new Date(campaign.sent_at).toLocaleDateString() : '—'}</span>
+                  </div>
                 </div>
               ))}
             </div>

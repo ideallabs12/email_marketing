@@ -198,23 +198,23 @@ export default function ContactsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Contacts</h1>
           <p className="text-foreground/50 mt-1 text-sm">Manage your lists and subscribers.</p>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <Button variant="outline" onClick={() => setShowListModal(true)}>
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 mt-4 sm:mt-0">
+          <Button variant="outline" onClick={() => setShowListModal(true)} className="w-full sm:w-auto">
             <Plus size={16} />
             <span>Create List</span>
           </Button>
-          <div className="flex gap-2">
-            <Link href="/contacts/ignored">
-              <Button variant="outline" className="flex items-center gap-2 text-red-500 hover:bg-red-50 hover:border-red-200">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Link href="/contacts/ignored" className="w-full sm:w-auto">
+              <Button variant="outline" className="flex items-center justify-center gap-2 text-red-500 hover:bg-red-50 hover:border-red-200 w-full">
                 <AlertCircle size={18} />
                 Ignored Contacts
               </Button>
             </Link>
-            <Button onClick={() => setShowImportModal(true)} variant="outline" className="flex items-center gap-2">
+            <Button onClick={() => setShowImportModal(true)} variant="outline" className="flex items-center justify-center gap-2 w-full sm:w-auto">
               <Upload size={18} />
-              Import Contacts
+              Import
             </Button>
-            <Button onClick={() => setShowAddModal(true)} className="flex items-center gap-2">
+            <Button onClick={() => setShowAddModal(true)} className="flex items-center justify-center gap-2 w-full sm:w-auto">
               <Plus size={18} />
               Add Contact
             </Button>
@@ -281,7 +281,7 @@ export default function ContactsPage() {
         </div>
 
         <div className="border-t border-border pt-4">
-          <div className="grid grid-cols-12 text-xs font-medium uppercase tracking-widest text-foreground/40 pb-3 border-b border-border mb-3 px-2">
+          <div className="hidden md:grid grid-cols-12 text-xs font-medium uppercase tracking-widest text-foreground/40 pb-3 border-b border-border mb-3 px-2">
             <span className="col-span-3">Email</span>
             <span className="col-span-2">First Name</span>
             <span className="col-span-2">Last Name</span>
@@ -299,33 +299,48 @@ export default function ContactsPage() {
           ) : (
             <div className="divide-y divide-border">
               {filteredContacts.map(c => (
-                <div key={c.id} className="grid grid-cols-12 py-3 text-sm items-center hover:bg-foreground/5 rounded-md px-2 -mx-2 transition-colors group">
-                  <span className="col-span-3 font-medium truncate">{c.email}</span>
-                  <span className="col-span-2 truncate">{c.first_name || '—'}</span>
-                  <span className="col-span-2 truncate">{c.last_name || '—'}</span>
-                  <span className="col-span-2 truncate" title={c.lists.map(listId => lists.find(l => l.id === listId)?.name).filter(Boolean).join(', ')}>
-                    {(() => {
-                      const listNames = c.lists.map(listId => lists.find(l => l.id === listId)?.name).filter(Boolean).join(', ');
-                      if (!listNames) return '—';
-                      return listNames.length > 15 ? listNames.slice(0, 15) + '...' : listNames;
-                    })()}
-                  </span>
-                  <span className="col-span-2 text-right">
-                    <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 border rounded-full ${
-                      c.is_subscribed ? 'border-foreground text-foreground' : 'border-border text-foreground/30'
-                    }`}>
-                      {c.is_subscribed ? 'Active' : 'Unsub'}
+                <div key={c.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-0 py-4 md:py-3 text-sm items-start md:items-center hover:bg-foreground/5 rounded-md px-2 -mx-2 transition-colors group">
+                  <div className="flex flex-col md:col-span-3 min-w-0">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Email</span>
+                    <span className="font-medium truncate">{c.email}</span>
+                  </div>
+                  <div className="flex flex-col md:col-span-2 truncate">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">First Name</span>
+                    <span>{c.first_name || '—'}</span>
+                  </div>
+                  <div className="flex flex-col md:col-span-2 truncate">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Last Name</span>
+                    <span>{c.last_name || '—'}</span>
+                  </div>
+                  <div className="flex flex-col md:col-span-2 truncate" title={c.lists.map(listId => lists.find(l => l.id === listId)?.name).filter(Boolean).join(', ')}>
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">List</span>
+                    <span>
+                      {(() => {
+                        const listNames = c.lists.map(listId => lists.find(l => l.id === listId)?.name).filter(Boolean).join(', ');
+                        if (!listNames) return '—';
+                        return listNames.length > 15 ? listNames.slice(0, 15) + '...' : listNames;
+                      })()}
                     </span>
-                  </span>
-                  <span className="col-span-1 text-right">
+                  </div>
+                  <div className="flex flex-col md:col-span-2 md:text-right">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Status</span>
+                    <span>
+                      <span className={`inline-block text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 border rounded-full ${
+                        c.is_subscribed ? 'border-foreground text-foreground' : 'border-border text-foreground/30'
+                      }`}>
+                        {c.is_subscribed ? 'Active' : 'Unsub'}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="md:col-span-1 text-right absolute right-4 md:relative md:right-0">
                     <button 
                       onClick={() => handleDeleteContact(c.id)}
-                      className="text-foreground/30 hover:text-red-500 transition-all p-1 opacity-50 hover:opacity-100"
+                      className="text-foreground/40 md:text-foreground/30 hover:text-red-500 transition-all p-2 md:p-1 md:opacity-50 hover:opacity-100"
                       title="Delete Contact"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={18} className="md:w-4 md:h-4" />
                     </button>
-                  </span>
+                  </div>
                 </div>
               ))}
             </div>

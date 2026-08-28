@@ -28,12 +28,12 @@ export default function TemplatesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4 sm:gap-0">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Templates</h1>
           <p className="text-foreground/50 mt-1 text-sm">Manage email layouts and templates loaded from code.</p>
         </div>
-        <div className="text-xs text-foreground/40 border border-border px-3 py-1.5 rounded-md font-medium">
+        <div className="text-xs text-foreground/40 border border-border px-3 py-1.5 rounded-md font-medium w-fit">
           Load new via: <code className="bg-foreground/5 px-1 py-0.5 rounded">load_templates</code>
         </div>
       </div>

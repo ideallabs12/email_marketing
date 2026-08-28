@@ -1,21 +1,51 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, Mail, Users, FileText, ChevronLeft, ChevronRight, MailWarning, LogOut } from 'lucide-react';
+import { Home, Mail, Users, FileText, ChevronLeft, ChevronRight, MailWarning, LogOut, X } from 'lucide-react';
 import { apiClient } from '@/services/apiClient';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
-export default function Sidebar() {
+export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?: boolean, setMobileMenuOpen?: (v: boolean) => void }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const pathname = usePathname();
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    if (setMobileMenuOpen) setMobileMenuOpen(false);
+  }, [pathname, setMobileMenuOpen]);
 
   return (
-    <div className={`border-r border-border h-screen sticky top-0 p-6 flex flex-col transition-all duration-300 relative ${isCollapsed ? 'w-20 items-center px-4' : 'w-64'}`}>
-      <button 
-        onClick={() => setIsCollapsed(!isCollapsed)} 
-        className="absolute -right-3 top-8 bg-background border border-border rounded-full p-1 hover:bg-foreground/5 z-10 text-foreground"
-      >
-        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-      </button>
+    <>
+      {/* Mobile Backdrop */}
+      {mobileMenuOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black/50 z-30 transition-opacity"
+          onClick={() => setMobileMenuOpen?.(false)}
+        />
+      )}
+
+      {/* Sidebar Container */}
+      <div className={`
+        fixed md:sticky top-0 h-screen bg-background border-r border-border p-6 flex flex-col transition-all duration-300 z-40
+        ${mobileMenuOpen ? 'left-0 translate-x-0' : '-translate-x-full md:translate-x-0'}
+        ${isCollapsed ? 'w-20 items-center px-4' : 'w-64'}
+      `}>
+        {/* Desktop Collapse Button */}
+        <button 
+          onClick={() => setIsCollapsed(!isCollapsed)} 
+          className="hidden md:block absolute -right-3 top-8 bg-background border border-border rounded-full p-1 hover:bg-foreground/5 z-10 text-foreground"
+        >
+          {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </button>
+
+        {/* Mobile Close Button */}
+        <button 
+          onClick={() => setMobileMenuOpen?.(false)} 
+          className="md:hidden absolute right-4 top-6 text-foreground/70 hover:text-foreground"
+        >
+          <X size={20} />
+        </button>
 
       <div className={`text-xl font-bold mb-10 tracking-tight flex items-center h-8 ${isCollapsed ? 'justify-center text-sm' : ''}`}>
         {isCollapsed ? 'EP.' : 'EmailPlatform.'}
@@ -50,6 +80,7 @@ export default function Sidebar() {
           {!isCollapsed && <span>Logout</span>}
         </button>
       </nav>
-    </div>
+      </div>
+    </>
   );
 }

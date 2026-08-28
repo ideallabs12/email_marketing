@@ -128,7 +128,7 @@ export default function CampaignsPage() {
 
       <Card className="p-4">
         <div className="border-t border-border pt-3">
-          <div className="grid grid-cols-12 text-xs font-medium uppercase tracking-widest text-foreground/40 pb-2 border-b border-border mb-2">
+          <div className="hidden md:grid grid-cols-12 text-xs font-medium uppercase tracking-widest text-foreground/40 pb-2 border-b border-border mb-2 px-2">
             <span className="col-span-3">Name</span>
             <span className="col-span-2">Status</span>
             <span className="col-span-3">Target List</span>
@@ -145,35 +145,45 @@ export default function CampaignsPage() {
           ) : (
             <div className="divide-y divide-border">
               {campaigns.map((c) => (
-                <div key={c.id} className="grid grid-cols-12 py-3 text-sm items-center">
-                  <div className="col-span-3 flex flex-col pr-2">
+                <div key={c.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-0 py-4 md:py-3 text-sm items-start md:items-center hover:bg-foreground/5 rounded-md px-2 -mx-2 transition-colors">
+                  <div className="md:col-span-3 flex flex-col pr-2 min-w-0">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Name</span>
                     <span className="font-medium truncate">{c.name}</span>
                     <span className="text-[10px] text-foreground/40 mt-1 truncate font-medium">Template: {getTemplateName(c.template)}</span>
                     <span className="text-[10px] text-foreground/40 mt-0.5 truncate">From: {c.from_email}</span>
                   </div>
-                  <span className="col-span-2 capitalize text-xs">
-                    <span className={`px-2 py-0.5 border rounded-full inline-flex items-center space-x-1 ${
-                      c.status === 'sent' ? 'border-foreground text-foreground font-bold' :
-                      c.status === 'sending' ? 'border-foreground/30 text-foreground/50 animate-pulse' :
-                      c.status === 'failed' ? 'border-red-900/40 text-red-500 font-bold' :
-                      'border-border text-foreground/40'
-                    }`}>
-                      {c.status === 'sending' && <RefreshCw size={10} className="animate-spin mr-1" />}
-                      <span>{c.status}</span>
+                  <div className="md:col-span-2 flex flex-col md:block">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Status</span>
+                    <span className="capitalize text-xs">
+                      <span className={`px-2 py-0.5 border rounded-full inline-flex items-center space-x-1 ${
+                        c.status === 'sent' ? 'border-foreground text-foreground font-bold' :
+                        c.status === 'sending' ? 'border-foreground/30 text-foreground/50 animate-pulse' :
+                        c.status === 'failed' ? 'border-red-900/40 text-red-500 font-bold' :
+                        'border-border text-foreground/40'
+                      }`}>
+                        {c.status === 'sending' && <RefreshCw size={10} className="animate-spin mr-1" />}
+                        <span>{c.status}</span>
+                      </span>
                     </span>
-                  </span>
-                  <span className="col-span-3 truncate">{getListName(c.target_list)}</span>
-                  <span className="col-span-2">{c.sent_at ? new Date(c.sent_at).toLocaleString() : '—'}</span>
-                  <div className="col-span-2 text-right">
+                  </div>
+                  <div className="md:col-span-3 flex flex-col md:block min-w-0">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Target List</span>
+                    <span className="truncate">{getListName(c.target_list)}</span>
+                  </div>
+                  <div className="md:col-span-2 flex flex-col md:block">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Sent At</span>
+                    <span>{c.sent_at ? new Date(c.sent_at).toLocaleString() : '—'}</span>
+                  </div>
+                  <div className="md:col-span-2 text-left md:text-right mt-2 md:mt-0">
                     {(c.status === 'draft' || c.status === 'failed') ? (
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="outline" className="py-1 px-3 text-xs" onClick={() => handleSendCampaign(c.id)}>
+                      <div className="flex items-center md:justify-end gap-2">
+                        <Button variant="outline" className="py-1 px-3 text-xs w-full md:w-auto justify-center" onClick={() => handleSendCampaign(c.id)}>
                           <Send size={12} />
                           <span>Send Now</span>
                         </Button>
                         <Button
                           variant="outline"
-                          className="py-1 px-2 text-red-600 border-red-600/40 hover:bg-red-600 hover:text-white hover:border-red-600"
+                          className="py-1 px-3 md:px-2 text-red-600 border-red-600/40 hover:bg-red-600 hover:text-white hover:border-red-600"
                           onClick={() => handleDeleteCampaign(c)}
                           title={`Delete ${c.name}`}
                         >
@@ -183,17 +193,17 @@ export default function CampaignsPage() {
                     ) : c.status === 'sending' ? (
                       <span className="text-xs text-foreground/40 italic">Sending...</span>
                     ) : (
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center md:justify-end gap-2">
                         <Link
                           href={`/campaigns/${c.id}/analytics`}
-                          className="inline-flex items-center gap-1 rounded-md border border-foreground bg-background px-3 py-1 text-xs font-medium hover:bg-foreground hover:text-background transition-colors"
+                          className="inline-flex items-center justify-center gap-1 w-full md:w-auto rounded-md border border-foreground bg-background px-3 py-1 text-xs font-medium hover:bg-foreground hover:text-background transition-colors"
                         >
                           <ChartNoAxesCombined size={13} />
                           View Analytics
                         </Link>
                         <Button
                           variant="outline"
-                          className="py-1 px-2 text-red-600 border-red-600/40 hover:bg-red-600 hover:text-white hover:border-red-600"
+                          className="py-1 px-3 md:px-2 text-red-600 border-red-600/40 hover:bg-red-600 hover:text-white hover:border-red-600"
                           onClick={() => handleDeleteCampaign(c)}
                           title={`Delete ${c.name}`}
                         >
