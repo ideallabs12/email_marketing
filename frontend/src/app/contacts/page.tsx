@@ -16,6 +16,20 @@ export default function ContactsPage() {
   const [loading, setLoading] = useState(true);
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+
+  const [newEmail, setNewEmail] = useState('');
+  const [newFirstName, setNewFirstName] = useState('');
+  const [newLastName, setNewLastName] = useState('');
+  const [newSubscribed, setNewSubscribed] = useState(true);
+  const [newSelectedLists, setNewSelectedLists] = useState<number[]>([]);
+  const [addError, setAddError] = useState('');
+
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [targetListId, setTargetListId] = useState<string>('');
+  const [importError, setImportError] = useState('');
+  const [importSuccess, setImportSuccess] = useState('');
+  const [importing, setImporting] = useState(false);
   useEffect(() => {
     loadData();
   }, []);
