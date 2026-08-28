@@ -61,12 +61,17 @@ class PublicCampaignAnalyticsView(views.APIView):
                 "clicked_at": clicked_at
             })
 
-        performance = getattr(campaign, 'performance', None)
+        counts = recipient_statuses.aggregate(
+            delivered=Count('id', filter=Q(status__in=['delivered', 'opened', 'clicked'])),
+            opened=Count('id', filter=Q(opened_at__isnull=False) | Q(status__in=['opened', 'clicked'])),
+            clicked=Count('id', filter=Q(clicked_at__isnull=False) | Q(status='clicked')),
+        )
+
         totals = {
             "total_recipients": contacts.count(),
-            "total_delivered": performance.total_delivered if performance else 0,
-            "total_opens": performance.total_opens if performance else 0,
-            "total_clicks": performance.total_clicks if performance else 0,
+            "total_delivered": counts['delivered'],
+            "total_opens": counts['opened'],
+            "total_clicks": counts['clicked'],
         }
 
         return Response({

@@ -101,6 +101,10 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
     );
   }
 
+  const showOpenedAt = ['all', 'opened'].includes(statusFilter);
+  const showClickedAt = ['clicked'].includes(statusFilter);
+  const showLinksClicked = ['clicked'].includes(statusFilter);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header bar */}
@@ -152,9 +156,9 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
               <th className="px-6 py-3 border-r border-gray-200">Speaker Name</th>
               <th className="px-6 py-3 border-r border-gray-200">Email</th>
               <th className="px-6 py-3 border-r border-gray-200">Delivery Status</th>
-              <th className="px-6 py-3 border-r border-gray-200">Opened At</th>
-              <th className="px-6 py-3 border-r border-gray-200">Clicked At</th>
-              <th className="px-6 py-3">Links Clicked</th>
+              {showOpenedAt && <th className="px-6 py-3 border-r border-gray-200">Opened At</th>}
+              {showClickedAt && <th className="px-6 py-3 border-r border-gray-200">Clicked At</th>}
+              {showLinksClicked && <th className="px-6 py-3">Links Clicked</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -170,36 +174,42 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
                     {row.delivery_status}
                   </span>
                 </td>
-                <td className="px-6 py-3 border-r border-gray-200 text-gray-600">
-                  {row.opened_at ? new Date(row.opened_at).toLocaleString() : <span className="text-gray-400">—</span>}
-                </td>
-                <td className="px-6 py-3 border-r border-gray-200 text-gray-600">
-                  {row.clicked_at ? new Date(row.clicked_at).toLocaleString() : <span className="text-gray-400">—</span>}
-                </td>
-                <td className="px-6 py-3 text-gray-600">
-                  {row.links_clicked ? (
-                    <div className="flex gap-2 items-center flex-wrap">
-                      {row.links_clicked.split(',').map((link, i) => (
-                        <span key={i} className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-md border border-blue-100">
-                          {link.trim()}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-gray-400">—</span>
-                  )}
-                </td>
+                {showOpenedAt && (
+                  <td className="px-6 py-3 border-r border-gray-200 text-gray-600">
+                    {row.opened_at ? new Date(row.opened_at).toLocaleString() : <span className="text-gray-400">—</span>}
+                  </td>
+                )}
+                {showClickedAt && (
+                  <td className="px-6 py-3 border-r border-gray-200 text-gray-600">
+                    {row.clicked_at ? new Date(row.clicked_at).toLocaleString() : <span className="text-gray-400">—</span>}
+                  </td>
+                )}
+                {showLinksClicked && (
+                  <td className="px-6 py-3 text-gray-600">
+                    {row.links_clicked ? (
+                      <div className="flex gap-2 items-center flex-wrap">
+                        {row.links_clicked.split(',').map((link, i) => (
+                          <span key={i} className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-md border border-blue-100">
+                            {link.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </td>
+                )}
               </tr>
             ))}
             {analytics?.data.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                <td colSpan={4 + (showOpenedAt ? 1 : 0) + (showClickedAt ? 1 : 0) + (showLinksClicked ? 1 : 0)} className="px-6 py-12 text-center text-gray-500">
                   No recipients found for this campaign yet.
                 </td>
               </tr>
             ) : analytics?.data.filter((row) => statusFilter === 'all' || row.delivery_status === statusFilter).length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                <td colSpan={4 + (showOpenedAt ? 1 : 0) + (showClickedAt ? 1 : 0) + (showLinksClicked ? 1 : 0)} className="px-6 py-12 text-center text-gray-500">
                   No recipients found matching the selected status.
                 </td>
               </tr>
