@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, Mail, Users, FileText, ChevronLeft, ChevronRight, MailWarning, LogOut, X, Library } from 'lucide-react';
+import { Home, Mail, Users, FileText, ChevronLeft, ChevronRight, MailWarning, LogOut, X, Library, LayoutTemplate } from 'lucide-react';
 import { apiClient } from '@/services/apiClient';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
@@ -58,6 +58,10 @@ export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: { mobileM
         <Link href="/campaigns" title="Campaigns" className={`flex items-center p-2 hover:bg-foreground hover:text-background rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
           <Mail size={18} />
           {!isCollapsed && <span>Campaigns</span>}
+        </Link>
+        <Link href="/templates" title="Templates" className={`flex items-center p-2 hover:bg-foreground hover:text-background rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
+          <LayoutTemplate size={18} />
+          {!isCollapsed && <span>Templates</span>}
         </Link>
         <Link href="/directory" title="User Directory" className={`flex items-center p-2 hover:bg-foreground hover:text-background rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
           <Library size={18} />
