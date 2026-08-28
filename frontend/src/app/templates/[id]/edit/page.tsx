@@ -1,119 +1,490 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Card from '../../../../components/Card';
+import Button from '../../../../components/Button';
+import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 import { apiClient } from '../../../../services/apiClient';
 import { EmailTemplate } from '../../../../types';
-import Button from '../../../../components/Button';
-import { Save, ArrowLeft, Loader2 } from 'lucide-react';
-import Link from 'next/link';
 
-// We must import grapesjs css
-import 'grapesjs/dist/css/grapes.min.css';
+interface EditTemplateProps {
+  params: Promise<{ id: string }>;
+}
 
-export default function TemplateEditorPage({ params }: { params: { id: string } }) {
-  const editorRef = useRef<HTMLDivElement>(null);
-  const [editor, setEditor] = useState<any>(null);
-  const [template, setTemplate] = useState<EmailTemplate | null>(null);
-  const [saving, setSaving] = useState(false);
+export default function EditTemplatePage({ params }: EditTemplateProps) {
+  const { id } = use(params);
   const router = useRouter();
 
-  useEffect(() => {
-    // Load the template
-    apiClient.get(`/api/v1/templates/${params.id}/`).then(res => {
-      setTemplate(res);
-    }).catch(err => {
-      console.error(err);
-      alert('Failed to load template');
-    });
-  }, [params.id]);
+  const [template, setTemplate] = useState<EmailTemplate | null>(null);
+  const [subject, setSubject] = useState('');
+  const [body, setBody] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [viewMode, setViewMode] = useState<'edit' | 'view'>('view');
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
+  const [testFirstName, setTestFirstName] = useState('Nithin');
+  const [testLastName, setTestLastName] = useState('Varma');
+  const [testEmail, setTestEmail] = useState('nithin.varma@example.com');
+  const [templateVariables, setTemplateVariables] = useState<Record<string, string>>({});
+  const [detectedVariables, setDetectedVariables] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!editorRef.current || !template || editor) return;
-
-    let e: any = null;
-
-    // Dynamically import to avoid SSR issues with window/document
-    Promise.all([
-      import('grapesjs'),
-      import('grapesjs-preset-newsletter')
-    ]).then(([grapesjs, gjsPresetNewsletter]) => {
-      e = grapesjs.default.init({
-        container: editorRef.current as HTMLElement,
-        fromElement: false,
-        height: '100%',
-        width: 'auto',
-        storageManager: false, // We'll handle saving manually
-        plugins: [gjsPresetNewsletter.default],
-        pluginsOpts: {
-          'gjs-preset-newsletter': {
-            // Options for the newsletter plugin
-          }
+    async function loadTemplate() {
+      try {
+        const res = await apiClient.get(`/api/v1/templates/${id}/`);
+        setTemplate(res);
+        setSubject(res.subject);
+        setBody(res.body);
+        if (res.variables) {
+          setTemplateVariables(res.variables);
         }
-      });
-
-      // Load existing HTML
-      if (template.html_content && template.html_content !== '<html><body></body></html>') {
-        e.setComponents(template.html_content);
+      } catch (err) {
+        console.error('Failed to load template:', err);
+        setError('Failed to load template.');
+      } finally {
+        setLoading(false);
       }
+    }
+    loadTemplate();
+  }, [id]);
 
-      setEditor(e);
+  useEffect(() => {
+    if (!template) return;
+    
+    const allText = template.html_content + ' ' + body + ' ' + subject;
+    const regex = /{{\s*([a-zA-Z0-9_]+)\s*}}/g;
+    const matches = Array.from(allText.matchAll(regex));
+    
+    const standardVars = ['first_name', 'last_name', 'email', 'body', 'subject'];
+    const foundVars = new Set<string>();
+    
+    matches.forEach(match => {
+      const varName = match[1];
+      if (!standardVars.includes(varName)) {
+        foundVars.add(varName);
+      }
     });
+    
+    setDetectedVariables(Array.from(foundVars));
+  }, [template, body, subject]);
 
-    return () => {
-      if (e) {
-        e.destroy();
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        router.push('/templates');
       }
     };
-  }, [template, editor]);
 
-  const handleSave = async () => {
-    if (!editor || !template) return;
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [router]);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
     setSaving(true);
-    
-    // grapesjs-preset-newsletter allows getting inline html for emails
-    const html = editor.runCommand('gjs-get-inlined-html');
-    
+
     try {
-      await apiClient.patch(`/api/v1/templates/${template.id}/`, {
-        ...template,
-        html_content: html,
+      await apiClient.patch(`/api/v1/templates/${id}/`, {
+        subject,
+        body,
+        variables: templateVariables,
       });
-      alert('Template saved successfully!');
+      setSuccess('Template saved successfully!');
+      setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      console.error(err);
-      alert('Failed to save template');
+      console.error('Failed to save template:', err);
+      setError('Failed to save template.');
     } finally {
       setSaving(false);
     }
   };
 
+  const getPreviewHtml = () => {
+    if (!template) return '';
+    let html = template.html_content;
+    
+    if (html.includes('{{ body }}')) {
+      html = html.replace('{{ body }}', body);
+    } else {
+      html = html + body;
+    }
+
+    const context: Record<string, string> = {
+      ...templateVariables,
+      first_name: testFirstName || 'Nithin',
+      last_name: testLastName || 'Varma',
+      email: testEmail || 'nithin.varma@example.com',
+      subject: subject,
+    };
+
+    for (const [key, val] of Object.entries(context)) {
+      const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'gi');
+      html = html.replace(regex, val);
+    }
+
+    html = html.replace(/{{\s*.*?\s*}}/g, '');
+
+    return html;
+  };
+
+  if (loading) {
+    return <div className="text-center py-12 text-foreground/50">Loading template editor...</div>;
+  }
+
   if (!template) {
-    return <div className="flex h-screen items-center justify-center -m-8 text-foreground/50">Loading editor...</div>;
+    return (
+      <div className="text-center py-12">
+        <p className="text-foreground/50">Template not found.</p>
+        <Link href="/templates" className="mt-4 inline-block underline">Back to templates</Link>
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] -m-8">
-      {/* Editor Header */}
-      <div className="h-[70px] bg-background border-b border-border flex items-center justify-between px-6 shrink-0 z-10 relative shadow-sm">
-        <div className="flex items-center gap-4">
-          <Link href="/templates" className="text-foreground/50 hover:text-foreground transition-colors p-2 rounded-full hover:bg-foreground/5">
-            <ArrowLeft size={20} />
-          </Link>
-          <div>
-            <h1 className="font-bold text-lg leading-tight">{template.name}</h1>
-            <p className="text-xs text-foreground/50">Subject: {template.subject}</p>
-          </div>
+    <div className="h-full flex flex-col">
+      <div className="flex items-center space-x-4 mb-6">
+        <Link href="/templates" className="text-foreground/50 hover:text-foreground">
+          <ArrowLeft size={20} />
+        </Link>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Edit Template</h1>
+          <p className="text-foreground/50 mt-1 text-sm">{template.name}</p>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="flex items-center gap-2">
-          {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-          <span>{saving ? 'Saving...' : 'Save Template'}</span>
-        </Button>
       </div>
 
-      {/* Editor Container */}
-      <div className="flex-grow relative overflow-hidden bg-white">
-        <div ref={editorRef} className="absolute inset-0"></div>
+      <div className="flex space-x-2 mb-6 border-b border-border pb-2">
+        <button
+          onClick={() => setViewMode('edit')}
+          className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+            viewMode === 'edit'
+              ? 'bg-foreground text-background'
+              : 'text-foreground/70 hover:bg-foreground/10'
+          }`}
+        >
+          Edit
+        </button>
+        <button
+          onClick={() => setViewMode('view')}
+          className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+            viewMode === 'view'
+              ? 'bg-foreground text-background'
+              : 'text-foreground/70 hover:bg-foreground/10'
+          }`}
+        >
+          View
+        </button>
+      </div>
+
+      <div className="flex-1">
+        {viewMode === 'edit' ? (
+          <div className="space-y-6 max-w-3xl mx-auto">
+            <Card>
+              <form onSubmit={handleSave} className="space-y-6">
+                {error && (
+                  <div className="p-3 bg-red-950/20 text-red-500 text-sm rounded-md font-medium border border-red-900/30">
+                    {error}
+                  </div>
+                )}
+                {success && (
+                  <div className="p-3 bg-green-950/20 text-green-500 text-sm rounded-md font-medium border border-green-900/30">
+                    {success}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">
+                    Email Subject
+                  </label>
+                  <input
+                    type="text"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:border-foreground transition-colors"
+                    placeholder="Subject Line"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">
+                      Email Body Content (HTML allowed)
+                    </label>
+                    <span className="text-[10px] text-foreground/40 font-medium">
+                      Placeholders: {'{{ first_name }}'}, {'{{ last_name }}'}, {'{{ email }}'}
+                    </span>
+                  </div>
+                  
+                  <div className="flex gap-2 pb-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const snippet = `\n<br><br>\n<div style="background-color: #f8fafc; padding: 24px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0; margin-top: 30px;">\n  <h3 style="margin-top: 0; color: #0f172a; font-size: 18px;">Contact Us</h3>\n  <p style="color: #475569; font-size: 14px; margin-bottom: 8px;">Have questions? We're here to help.</p>\n  <p style="margin: 4px 0; font-size: 14px;"><strong>Email:</strong> <a href="mailto:global@signaturetalks.org" style="color: #2563eb; text-decoration: none;">global@signaturetalks.org</a></p>\n  <p style="margin: 4px 0; font-size: 14px;"><strong>Website:</strong> <a href="https://signaturetalks.org" style="color: #2563eb; text-decoration: none;">signaturetalks.org</a></p>\n</div>\n`;
+                        setBody(prev => prev + snippet);
+                      }}
+                      className="text-[11px] px-2.5 py-1.5 bg-foreground/5 hover:bg-foreground/10 border border-border rounded font-medium text-foreground/70 transition-colors flex items-center"
+                    >
+                      + Add Contact Us Section
+                    </button>
+                  </div>
+
+                  <textarea
+                    value={body}
+                    onChange={(e) => setBody(e.target.value)}
+                    rows={14}
+                    className="w-full border border-border rounded-md px-3 py-2 text-sm font-mono bg-background text-foreground focus:outline-none focus:border-foreground transition-colors resize-y"
+                    placeholder="Dear {{ first_name }}, ..."
+                    required
+                  />
+                </div>
+
+                <div className="pt-2">
+                  <Button type="submit" className="w-full" disabled={saving}>
+                    {saving ? 'Saving changes...' : 'Save Template'}
+                  </Button>
+                </div>
+              </form>
+            </Card>
+            
+            <Card>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground/80 mb-4 pb-2 border-b border-border">
+                Test Data (Preview Variables)
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-foreground/50">
+                    {`{{ first_name }}`}
+                  </label>
+                  <input
+                    type="text"
+                    value={testFirstName}
+                    onChange={(e) => setTestFirstName(e.target.value)}
+                    className="w-full border border-border rounded-md px-3 py-1.5 text-sm bg-background text-foreground focus:outline-none focus:border-foreground transition-colors"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-foreground/50">
+                    {`{{ last_name }}`}
+                  </label>
+                  <input
+                    type="text"
+                    value={testLastName}
+                    onChange={(e) => setTestLastName(e.target.value)}
+                    className="w-full border border-border rounded-md px-3 py-1.5 text-sm bg-background text-foreground focus:outline-none focus:border-foreground transition-colors"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-foreground/50">
+                    {`{{ email }}`}
+                  </label>
+                  <input
+                    type="text"
+                    value={testEmail}
+                    onChange={(e) => setTestEmail(e.target.value)}
+                    className="w-full border border-border rounded-md px-3 py-1.5 text-sm bg-background text-foreground focus:outline-none focus:border-foreground transition-colors"
+                  />
+                </div>
+              </div>
+            </Card>
+
+            {detectedVariables.length > 0 && (
+              <Card>
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground/80 mb-4 pb-2 border-b border-border">
+                  Template Variables
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {detectedVariables.map(varName => (
+                    <div key={varName} className="space-y-1.5">
+                      <label className="text-[10px] font-semibold uppercase tracking-wider text-foreground/50">
+                        {`{{ ${varName} }}`}
+                      </label>
+                      <input
+                        type="text"
+                        value={templateVariables[varName] || ''}
+                        onChange={(e) => setTemplateVariables({...templateVariables, [varName]: e.target.value})}
+                        className="w-full border border-border rounded-md px-3 py-1.5 text-sm bg-background text-foreground focus:outline-none focus:border-foreground transition-colors"
+                        placeholder={`Value for ${varName}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+            
+            <div className="p-4 border border-border rounded-md text-xs text-foreground/50 bg-foreground/5">
+              <span className="font-semibold block mb-1">Theme & Design Locked</span>
+              The header, fonts, backgrounds, colors and email layout footer are set in code. Exposing only the subject and message body guarantees perfect email rendering.
+            </div>
+          </div>
+        ) : (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 50,
+              background: 'var(--background)',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            {/* ── Top bar ── */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 20px',
+                borderBottom: '1px solid var(--border)',
+                background: 'var(--background)',
+                flexShrink: 0,
+                gap: 12,
+                flexWrap: 'wrap',
+              }}
+            >
+              {/* Left: back + title */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <button
+                  onClick={() => setViewMode('edit')}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    color: 'var(--foreground)', opacity: 0.6,
+                    background: 'none', border: 'none', padding: 0,
+                  }}
+                >
+                  ← Back to Editor
+                </button>
+                <span style={{ opacity: 0.2, fontSize: 14 }}>|</span>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>{template.name}</span>
+              </div>
+
+              {/* Center: email meta */}
+              <div style={{ fontSize: 12, opacity: 0.5, textAlign: 'center', flex: 1, minWidth: 160 }}>
+                <span style={{ fontWeight: 600 }}>To:</span> {testFirstName} {testLastName} &lt;{testEmail}&gt;
+                &nbsp;&nbsp;
+                <span style={{ fontWeight: 600 }}>Subject:</span> {subject || '(No subject)'}
+              </div>
+
+              {/* Right: device toggle */}
+              <div
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  background: 'var(--foreground-5, rgba(255,255,255,0.06))',
+                  border: '1px solid var(--border)', borderRadius: 8, padding: 3,
+                }}
+              >
+                {(['desktop', 'mobile'] as const).map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => setPreviewDevice(d)}
+                    style={{
+                      padding: '5px 14px', fontSize: 12, fontWeight: 600,
+                      borderRadius: 6, border: 'none', cursor: 'pointer',
+                      transition: 'all 0.15s',
+                      background: previewDevice === d ? 'var(--foreground)' : 'transparent',
+                      color: previewDevice === d ? 'var(--background)' : 'var(--foreground)',
+                      opacity: previewDevice === d ? 1 : 0.5,
+                    }}
+                  >
+                    {d === 'desktop' ? '🖥  Desktop' : '📱 Mobile'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Preview canvas ── */}
+            <div
+              style={{
+                flex: 1,
+                overflow: 'auto',
+                background: '#e8eaed',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'flex-start',
+                padding: previewDevice === 'desktop' ? '32px 24px' : '40px 24px',
+              }}
+            >
+              {/* Device chrome wrapper */}
+              <div
+                style={{
+                  width: previewDevice === 'desktop' ? 640 : 390,
+                  minWidth: previewDevice === 'desktop' ? 640 : 390,
+                  boxShadow: '0 8px 40px rgba(0,0,0,0.22)',
+                  borderRadius: previewDevice === 'desktop' ? 8 : 36,
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  background: '#fff',
+                  border: previewDevice === 'mobile' ? '8px solid #1a1a2e' : '1px solid #ccc',
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                {/* Fake mobile notch */}
+                {previewDevice === 'mobile' && (
+                  <div
+                    style={{
+                      height: 24, background: '#1a1a2e',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    <div style={{ width: 60, height: 8, background: '#333', borderRadius: 4 }} />
+                  </div>
+                )}
+
+                {/* Fake email client top bar */}
+                <div
+                  style={{
+                    background: '#f8f9fa',
+                    borderBottom: '1px solid #e2e4e7',
+                    padding: '10px 16px',
+                    fontSize: previewDevice === 'mobile' ? 11 : 12,
+                  }}
+                >
+                  <div style={{ fontWeight: 700, color: '#111', marginBottom: 2 }}>
+                    {subject || '(No Subject)'}
+                  </div>
+                  <div style={{ color: '#666' }}>
+                    To: {testFirstName} {testLastName} &lt;{testEmail}&gt;
+                  </div>
+                </div>
+
+                {/* The actual email iframe */}
+                <iframe
+                  title="Template Preview"
+                  srcDoc={getPreviewHtml()}
+                  style={{
+                    width: '100%',
+                    height: previewDevice === 'desktop' ? 680 : 600,
+                    border: 'none',
+                    display: 'block',
+                    background: '#fff',
+                  }}
+                />
+
+                {/* Fake mobile home bar */}
+                {previewDevice === 'mobile' && (
+                  <div
+                    style={{
+                      height: 24, background: '#1a1a2e',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    <div style={{ width: 80, height: 4, background: '#555', borderRadius: 2 }} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
