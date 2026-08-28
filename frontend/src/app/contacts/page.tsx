@@ -282,9 +282,10 @@ export default function ContactsPage() {
 
         <div className="border-t border-border pt-4">
           <div className="grid grid-cols-12 text-xs font-medium uppercase tracking-widest text-foreground/40 pb-3 border-b border-border mb-3 px-2">
-            <span className="col-span-4">Email</span>
-            <span className="col-span-3">First Name</span>
+            <span className="col-span-3">Email</span>
+            <span className="col-span-2">First Name</span>
             <span className="col-span-2">Last Name</span>
+            <span className="col-span-2">List</span>
             <span className="col-span-2 text-right">Status</span>
             <span className="col-span-1 text-right"></span>
           </div>
@@ -299,9 +300,16 @@ export default function ContactsPage() {
             <div className="divide-y divide-border">
               {filteredContacts.map(c => (
                 <div key={c.id} className="grid grid-cols-12 py-3 text-sm items-center hover:bg-foreground/5 rounded-md px-2 -mx-2 transition-colors group">
-                  <span className="col-span-4 font-medium truncate">{c.email}</span>
-                  <span className="col-span-3 truncate">{c.first_name || '—'}</span>
+                  <span className="col-span-3 font-medium truncate">{c.email}</span>
+                  <span className="col-span-2 truncate">{c.first_name || '—'}</span>
                   <span className="col-span-2 truncate">{c.last_name || '—'}</span>
+                  <span className="col-span-2 truncate" title={c.lists.map(listId => lists.find(l => l.id === listId)?.name).filter(Boolean).join(', ')}>
+                    {(() => {
+                      const listNames = c.lists.map(listId => lists.find(l => l.id === listId)?.name).filter(Boolean).join(', ');
+                      if (!listNames) return '—';
+                      return listNames.length > 15 ? listNames.slice(0, 15) + '...' : listNames;
+                    })()}
+                  </span>
                   <span className="col-span-2 text-right">
                     <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 border rounded-full ${
                       c.is_subscribed ? 'border-foreground text-foreground' : 'border-border text-foreground/30'
