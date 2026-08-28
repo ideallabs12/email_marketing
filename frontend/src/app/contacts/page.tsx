@@ -299,46 +299,58 @@ export default function ContactsPage() {
           ) : (
             <div className="divide-y divide-border">
               {filteredContacts.map(c => (
-                <div key={c.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-0 py-4 md:py-3 text-sm items-start md:items-center hover:bg-foreground/5 rounded-md px-2 -mx-2 transition-colors group">
-                  <div className="flex flex-col md:col-span-3 min-w-0">
-                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Email</span>
-                    <span className="font-medium truncate">{c.email}</span>
+                <div key={c.id} className="flex flex-col md:grid md:grid-cols-12 gap-1 md:gap-0 py-4 md:py-3 text-sm items-start md:items-center hover:bg-foreground/5 rounded-lg md:rounded-md border border-border md:border-transparent bg-foreground/[0.02] md:bg-transparent px-3 md:px-2 -mx-3 md:-mx-2 mb-3 md:mb-0 transition-colors shadow-sm md:shadow-none group relative">
+                  
+                  {/* Mobile: Combined Email & Name */}
+                  <div className="flex flex-col md:col-span-3 min-w-0 pr-8 md:pr-0 w-full mb-2 md:mb-0">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Contact</span>
+                    <span className="font-bold md:font-medium text-base md:text-sm truncate text-foreground">{c.email}</span>
+                    <span className="text-xs text-foreground/50 mt-0.5 truncate md:hidden">
+                      {c.first_name || c.last_name ? `${c.first_name || ''} ${c.last_name || ''}`.trim() : 'No name provided'}
+                    </span>
                   </div>
-                  <div className="flex flex-col md:col-span-2 truncate">
-                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">First Name</span>
+
+                  {/* Desktop Only: Separate First/Last Name */}
+                  <div className="hidden md:flex flex-col md:col-span-2 truncate">
                     <span>{c.first_name || '—'}</span>
                   </div>
-                  <div className="flex flex-col md:col-span-2 truncate">
-                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Last Name</span>
+                  <div className="hidden md:flex flex-col md:col-span-2 truncate">
                     <span>{c.last_name || '—'}</span>
                   </div>
-                  <div className="flex flex-col md:col-span-2 truncate" title={c.lists.map(listId => lists.find(l => l.id === listId)?.name).filter(Boolean).join(', ')}>
-                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">List</span>
-                    <span>
-                      {(() => {
-                        const listNames = c.lists.map(listId => lists.find(l => l.id === listId)?.name).filter(Boolean).join(', ');
-                        if (!listNames) return '—';
-                        return listNames.length > 15 ? listNames.slice(0, 15) + '...' : listNames;
-                      })()}
-                    </span>
-                  </div>
-                  <div className="flex flex-col md:col-span-2 md:text-right">
-                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Status</span>
-                    <span>
-                      <span className={`inline-block text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 border rounded-full ${
-                        c.is_subscribed ? 'border-foreground text-foreground' : 'border-border text-foreground/30'
-                      }`}>
-                        {c.is_subscribed ? 'Active' : 'Unsub'}
+
+                  {/* Mobile: Status and List Row */}
+                  <div className="flex justify-between items-center w-full md:contents mt-1 md:mt-0 pt-2 md:pt-0 border-t border-border/50 md:border-0">
+                    <div className="flex flex-col md:col-span-2 md:text-right md:order-last">
+                      <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Status</span>
+                      <span>
+                        <span className={`inline-block text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 border rounded-full ${
+                          c.is_subscribed ? 'border-foreground text-foreground bg-foreground/5 md:bg-transparent' : 'border-border text-foreground/30'
+                        }`}>
+                          {c.is_subscribed ? 'Active' : 'Unsub'}
+                        </span>
                       </span>
-                    </span>
+                    </div>
+
+                    <div className="flex flex-col md:col-span-2 truncate text-right md:text-left" title={c.lists.map(listId => lists.find(l => l.id === listId)?.name).filter(Boolean).join(', ')}>
+                      <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">List</span>
+                      <span className="font-medium text-foreground/80">
+                        {(() => {
+                          const listNames = c.lists.map(listId => lists.find(l => l.id === listId)?.name).filter(Boolean).join(', ');
+                          if (!listNames) return '—';
+                          return listNames.length > 15 ? listNames.slice(0, 15) + '...' : listNames;
+                        })()}
+                      </span>
+                    </div>
                   </div>
-                  <div className="md:col-span-1 text-right absolute right-4 md:relative md:right-0">
+
+                  {/* Delete Action (Top right on mobile) */}
+                  <div className="absolute right-3 top-4 md:relative md:right-0 md:top-0 md:col-span-1 text-right">
                     <button 
                       onClick={() => handleDeleteContact(c.id)}
                       className="text-foreground/40 md:text-foreground/30 hover:text-red-500 transition-all p-2 md:p-1 md:opacity-50 hover:opacity-100"
                       title="Delete Contact"
                     >
-                      <Trash2 size={18} className="md:w-4 md:h-4" />
+                      <Trash2 size={16} className="md:w-4 md:h-4" />
                     </button>
                   </div>
                 </div>

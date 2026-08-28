@@ -211,17 +211,17 @@ export default function CampaignAnalyticsPage({ params }: { params: Promise<{ id
 
       {error && <div className="border border-red-600/30 text-red-600 rounded-md p-3 text-sm">{error}</div>}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-3 md:grid-cols-5 gap-2 md:gap-3">
         {stats.map(({ label, value, icon: Icon, rate }) => (
-          <Card key={label} className="p-4">
-            <Icon size={17} className="mb-4 text-foreground/55" />
-            <div className="flex items-end justify-between">
+          <Card key={label} className={`p-3 md:p-4 flex flex-col justify-between ${label === 'Complaints' ? 'hidden md:flex' : 'flex'}`}>
+            <Icon size={16} className="mb-2 md:mb-4 text-foreground/55 md:w-[17px] md:h-[17px]" />
+            <div className="flex flex-col md:flex-row md:items-end justify-between mt-auto gap-1 md:gap-0">
               <div>
-                <p className="text-2xl font-bold">{value.toLocaleString()}</p>
-                <p className="text-xs uppercase tracking-wider text-foreground/45 mt-1">{label}</p>
+                <p className="text-lg md:text-2xl font-bold leading-none md:leading-normal">{value.toLocaleString()}</p>
+                <p className="text-[9px] md:text-xs uppercase tracking-wider text-foreground/45 mt-1 truncate">{label}</p>
               </div>
               {rate && (
-                <div className="bg-foreground/5 text-foreground px-2 py-1 rounded-md text-xs font-bold">
+                <div className="bg-foreground/5 text-foreground px-1.5 py-0.5 md:px-2 md:py-1 rounded text-[10px] md:text-xs font-bold w-fit">
                   {rate}%
                 </div>
               )}
@@ -273,13 +273,13 @@ export default function CampaignAnalyticsPage({ params }: { params: Promise<{ id
       </div>
 
       <Card>
-        <div className="flex flex-wrap gap-2 pb-5 border-b border-border">
+        <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-1.5 md:gap-2 pb-5 border-b border-border">
           {filters.map(({ value, label }) => (
             <button
               key={value}
               type="button"
               onClick={() => setFilter(value)}
-              className={`px-3 py-1.5 rounded-full border text-xs font-semibold transition-colors ${
+              className={`px-1 md:px-3 py-1.5 rounded-md md:rounded-full border text-[10px] md:text-xs font-semibold transition-colors text-center truncate ${
                 activeFilter === value ? 'bg-foreground text-background border-foreground' : 'border-border hover:bg-foreground hover:text-background'
               }`}
             >
@@ -302,35 +302,42 @@ export default function CampaignAnalyticsPage({ params }: { params: Promise<{ id
         ) : (
           <div className="divide-y divide-border">
             {analytics?.recipients.map((recipient) => (
-              <div key={recipient.contact_id} className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-3 py-4 md:py-3 text-sm items-start md:items-center hover:bg-foreground/5 rounded-md px-2 -mx-2 transition-colors">
-                <div className="md:col-span-4 flex flex-col min-w-0">
-                  <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Contact</span>
-                  <p className="font-medium truncate">{[recipient.first_name, recipient.last_name].filter(Boolean).join(' ') || '—'}</p>
-                  <p className="text-xs text-foreground/50 truncate mt-0.5">{recipient.email}</p>
-                </div>
-                <div className="md:col-span-2 flex flex-col md:block">
-                  <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Status</span>
-                  <span>
-                    <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs capitalize ${statusStyles[recipient.status]}`}>
+              <div key={recipient.contact_id} className="flex flex-col md:grid md:grid-cols-12 gap-1 md:gap-3 py-4 md:py-3 text-sm items-start md:items-center hover:bg-foreground/5 rounded-lg md:rounded-md border border-border md:border-transparent bg-foreground/[0.02] md:bg-transparent px-3 md:px-2 -mx-3 md:-mx-2 mb-3 md:mb-0 transition-colors shadow-sm md:shadow-none">
+                
+                {/* Name, Email and Status group on Mobile */}
+                <div className="flex justify-between items-start w-full md:contents mb-2 md:mb-0">
+                  <div className="md:col-span-4 flex flex-col min-w-0 pr-2">
+                    <span className="font-bold md:font-medium text-base md:text-sm truncate text-foreground">
+                      {[recipient.first_name, recipient.last_name].filter(Boolean).join(' ') || '—'}
+                    </span>
+                    <span className="text-xs text-foreground/50 truncate mt-0.5">{recipient.email}</span>
+                  </div>
+                  <div className="md:col-span-2 flex flex-col md:block mt-1 md:mt-0">
+                    <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] md:text-xs capitalize font-bold md:font-medium ${statusStyles[recipient.status]}`}>
                       {recipient.status}
                     </span>
-                  </span>
+                  </div>
                 </div>
-                <div className="md:col-span-3 flex flex-col md:block">
-                  <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Latest event</span>
-                  <span className="text-xs text-foreground/60">{formatDate(recipient.last_event_at)}</span>
+
+                {/* Details and Date group on Mobile */}
+                <div className="flex justify-between items-center w-full md:contents pt-2 md:pt-0 border-t border-border/50 md:border-0 mt-2 md:mt-0">
+                  <div className="md:col-span-3 flex flex-col md:block">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Details</span>
+                    <span className="text-xs text-foreground/60 max-w-[150px] md:max-w-none">
+                      <div className="truncate text-foreground/80 font-medium" title={recipient.error_message}>{recipient.error_message || 'None'}</div>
+                      {recipient.metadata?.ip && (
+                        <div className="text-[10px] text-foreground/40 mt-1 flex items-center gap-1">
+                          <MonitorSmartphone size={10} /> IP: {recipient.metadata.ip}
+                        </div>
+                      )}
+                    </span>
+                  </div>
+                  <div className="md:col-span-3 flex flex-col md:block text-right md:text-left">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Latest Event</span>
+                    <span className="text-[11px] md:text-xs text-foreground/70">{formatDate(recipient.last_event_at)}</span>
+                  </div>
                 </div>
-                <div className="md:col-span-3 flex flex-col md:block">
-                  <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Details</span>
-                  <span className="text-xs text-foreground/60">
-                    <div className="truncate" title={recipient.error_message}>{recipient.error_message || '—'}</div>
-                    {recipient.metadata?.ip && (
-                      <div className="text-[10px] text-foreground/40 mt-1 flex items-center gap-1">
-                        <MonitorSmartphone size={10} /> IP: {recipient.metadata.ip}
-                      </div>
-                    )}
-                  </span>
-                </div>
+
               </div>
             ))}
           </div>

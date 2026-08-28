@@ -124,29 +124,40 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {recentCampaigns.map((campaign) => (
-                <div key={campaign.id} className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-0 py-4 md:py-3 text-sm md:items-center">
-                  <div className="flex flex-col md:block">
-                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Name</span>
-                    <span className="font-medium">{campaign.name}</span>
+              {recentCampaigns.map((campaign) => {
+                const dateObj = campaign.sent_at ? new Date(campaign.sent_at) : null;
+                const dateStr = dateObj ? `${dateObj.getDate()}-${dateObj.getMonth() + 1}-${dateObj.getFullYear().toString().slice(-2)}` : '—';
+                
+                return (
+                  <div key={campaign.id} className="flex flex-col md:grid md:grid-cols-4 gap-2 md:gap-0 py-3 md:py-3 text-sm md:items-center border-b border-border last:border-0 md:border-0 hover:bg-foreground/5 md:hover:bg-transparent rounded-md px-2 md:px-0 -mx-2 md:mx-0 transition-colors">
+                    {/* Mobile: Name & Status Group */}
+                    <div className="flex justify-between items-start md:contents">
+                      <div className="flex flex-col md:block md:col-span-1">
+                        <span className="font-medium text-foreground">{campaign.name}</span>
+                      </div>
+                      <div className="flex flex-col md:block md:col-span-1 md:mt-0">
+                        <span className="capitalize text-xs font-semibold px-2.5 py-0.5 rounded-full inline-block border bg-background/50 shadow-sm" style={{
+                          borderColor: campaign.status === 'sent' ? 'var(--foreground)' : 'var(--border)',
+                          color: campaign.status === 'sent' ? 'var(--foreground)' : 'currentColor',
+                          opacity: campaign.status === 'sent' ? 1 : 0.7
+                        }}>{campaign.status}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Mobile: Target List & Date Group */}
+                    <div className="flex justify-between items-center md:contents mt-1 md:mt-0">
+                      <div className="flex flex-col md:block md:col-span-1 text-foreground/70">
+                        <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-0.5">List</span>
+                        <span>{listsMap[campaign.target_list] || `List #${campaign.target_list}`}</span>
+                      </div>
+                      <div className="flex flex-col md:block md:col-span-1 text-foreground/70 text-right md:text-left">
+                        <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-0.5">Sent At</span>
+                        <span>{dateStr}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex flex-col md:block">
-                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Status</span>
-                    <span className="capitalize text-xs font-semibold px-2.5 py-0.5 rounded-full inline-block border w-fit" style={{
-                      borderColor: campaign.status === 'sent' ? 'currentColor' : 'var(--border)',
-                      opacity: campaign.status === 'sent' ? 1 : 0.6
-                    }}>{campaign.status}</span>
-                  </div>
-                  <div className="flex flex-col md:block">
-                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Target List</span>
-                    <span>{listsMap[campaign.target_list] || `List #${campaign.target_list}`}</span>
-                  </div>
-                  <div className="flex flex-col md:block">
-                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Sent At</span>
-                    <span>{campaign.sent_at ? new Date(campaign.sent_at).toLocaleDateString() : '—'}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
