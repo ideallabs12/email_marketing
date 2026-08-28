@@ -24,8 +24,11 @@ export default function TemplateEditorPage({ params }: { params: Promise<{ id: s
     apiClient.get(`/api/v1/templates/${templateId}/`).then(res => {
       setTemplate(res);
     }).catch(err => {
-      console.error(err);
-      alert('Failed to load template');
+      console.error('API Error:', err);
+      // Only alert if we haven't already loaded the template successfully
+      if (!template) {
+        alert('Failed to load template: ' + (err.message || 'Network error'));
+      }
     });
   }, [templateId]);
 
@@ -39,13 +42,15 @@ export default function TemplateEditorPage({ params }: { params: Promise<{ id: s
       import('grapesjs'),
       import('grapesjs-preset-newsletter')
     ]).then(([grapesjs, gjsPresetNewsletter]) => {
+      const presetPlugin = (gjsPresetNewsletter as any).default?.default || (gjsPresetNewsletter as any).default || gjsPresetNewsletter;
+
       e = grapesjs.default.init({
         container: editorRef.current as HTMLElement,
         fromElement: false,
         height: '100%',
         width: 'auto',
         storageManager: false, // We'll handle saving manually
-        plugins: [gjsPresetNewsletter.default],
+        plugins: [presetPlugin],
         pluginsOpts: {
           'gjs-preset-newsletter': {
             // Options for the newsletter plugin
@@ -59,6 +64,9 @@ export default function TemplateEditorPage({ params }: { params: Promise<{ id: s
       }
 
       setEditor(e);
+    }).catch(err => {
+      console.error('GrapesJS Init Error:', err);
+      alert('Failed to initialize editor: ' + (err.message || err));
     });
 
     return () => {
