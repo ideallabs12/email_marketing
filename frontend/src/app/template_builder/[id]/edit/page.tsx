@@ -11,7 +11,8 @@ import Link from 'next/link';
 // We must import grapesjs css
 import 'grapesjs/dist/css/grapes.min.css';
 
-export default function TemplateEditorPage({ params }: { params: { id: string } }) {
+export default function TemplateEditorPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: templateId } = React.use(params);
   const editorRef = useRef<HTMLDivElement>(null);
   const [editor, setEditor] = useState<any>(null);
   const [template, setTemplate] = useState<EmailTemplate | null>(null);
@@ -20,13 +21,13 @@ export default function TemplateEditorPage({ params }: { params: { id: string } 
 
   useEffect(() => {
     // Load the template
-    apiClient.get(`/api/v1/templates/${params.id}/`).then(res => {
+    apiClient.get(`/api/v1/templates/${templateId}/`).then(res => {
       setTemplate(res);
     }).catch(err => {
       console.error(err);
       alert('Failed to load template');
     });
-  }, [params.id]);
+  }, [templateId]);
 
   useEffect(() => {
     if (!editorRef.current || !template || editor) return;
