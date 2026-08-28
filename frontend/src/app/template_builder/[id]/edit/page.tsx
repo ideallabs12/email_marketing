@@ -72,11 +72,16 @@ export default function TemplateEditorPage({ params }: { params: Promise<{ id: s
     });
 
     return () => {
+      hasInitialized.current = false;
       if (e) {
-        e.destroy();
+        try {
+          e.destroy();
+        } catch (err) {
+          console.error('Error destroying grapesjs:', err);
+        }
       }
     };
-  }, [template, editor]);
+  }, [template]);
 
   const handleSave = async () => {
     if (!editor || !template) return;
