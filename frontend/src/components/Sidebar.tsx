@@ -59,13 +59,9 @@ export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: { mobileM
           <Mail size={18} />
           {!isCollapsed && <span>Campaigns</span>}
         </Link>
-        <Link href="/templates" title="Code Templates" className={`flex items-center p-2 hover:bg-foreground hover:text-background rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
+        <Link href="/templates" title="Templates" className={`flex items-center p-2 hover:bg-foreground hover:text-background rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
           <FileText size={18} />
-          {!isCollapsed && <span>Code Templates</span>}
-        </Link>
-        <Link href="/template_builder" title="Template Builder" className={`flex items-center p-2 hover:bg-foreground hover:text-background rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
-          <LayoutTemplate size={18} />
-          {!isCollapsed && <span>Template Builder</span>}
+          {!isCollapsed && <span>Templates</span>}
         </Link>
         <Link href="/directory" title="User Directory" className={`flex items-center p-2 hover:bg-foreground hover:text-background rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
           <Library size={18} />
@@ -75,10 +71,7 @@ export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: { mobileM
           <Users size={18} />
           {!isCollapsed && <span>Contacts</span>}
         </Link>
-        <Link href="/templates" title="Templates" className={`flex items-center p-2 hover:bg-foreground hover:text-background rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
-          <FileText size={18} />
-          {!isCollapsed && <span>Templates</span>}
-        </Link>
+
         <Link href="/bounces" title="Bounced Mails" className={`flex items-center p-2 hover:bg-red-600 hover:text-white text-red-500 rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
           <MailWarning size={18} />
           {!isCollapsed && <span>Bounced Mails</span>}
