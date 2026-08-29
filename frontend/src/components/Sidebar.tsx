@@ -25,9 +25,8 @@ export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: { mobileM
         />
       )}
 
-      {/* Sidebar Container */}
       <div className={`
-        fixed md:sticky top-0 h-screen bg-background border-r border-border p-6 flex flex-col transition-all duration-300 z-40
+        fixed md:sticky top-0 h-screen bg-surface border-r border-border p-6 flex flex-col transition-all duration-300 z-40
         ${mobileMenuOpen ? 'left-0 translate-x-0' : '-translate-x-full md:translate-x-0'}
         ${isCollapsed ? 'w-20 items-center px-4' : 'w-64'}
       `}>
@@ -51,23 +50,23 @@ export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: { mobileM
         {isCollapsed ? 'EP.' : 'EmailPlatform.'}
       </div>
       <nav className={`flex-1 space-y-2 ${isCollapsed ? 'w-full' : ''}`}>
-        <Link href="/" title="Dashboard" className={`flex items-center p-2 hover:bg-foreground hover:text-background rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
+        <Link href="/" title="Dashboard" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
           <Home size={18} />
           {!isCollapsed && <span>Dashboard</span>}
         </Link>
-        <Link href="/campaigns" title="Campaigns" className={`flex items-center p-2 hover:bg-foreground hover:text-background rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
+        <Link href="/campaigns" title="Campaigns" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
           <Mail size={18} />
           {!isCollapsed && <span>Campaigns</span>}
         </Link>
-        <Link href="/templates" title="Templates" className={`flex items-center p-2 hover:bg-foreground hover:text-background rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
+        <Link href="/templates" title="Templates" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
           <FileText size={18} />
           {!isCollapsed && <span>Templates</span>}
         </Link>
-        <Link href="/directory" title="User Directory" className={`flex items-center p-2 hover:bg-foreground hover:text-background rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
+        <Link href="/directory" title="User Directory" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
           <Library size={18} />
           {!isCollapsed && <span>User Directory</span>}
         </Link>
-        <Link href="/contacts" title="Contacts" className={`flex items-center p-2 hover:bg-foreground hover:text-background rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
+        <Link href="/contacts" title="Contacts" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
           <Users size={18} />
           {!isCollapsed && <span>Contacts</span>}
         </Link>
@@ -79,7 +78,7 @@ export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: { mobileM
         <button 
           onClick={apiClient.logout}
           title="Logout" 
-          className={`flex items-center p-2 w-full mt-auto hover:bg-foreground hover:text-background rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}
+          className={`flex items-center p-2 w-full mt-auto hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}
         >
           <LogOut size={18} />
           {!isCollapsed && <span>Logout</span>}
