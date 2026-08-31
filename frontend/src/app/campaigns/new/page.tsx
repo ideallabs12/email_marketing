@@ -20,6 +20,7 @@ export default function NewCampaignPage() {
   const [subject, setSubject] = useState('');
   const [targetList, setTargetList] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [templateCategory, setTemplateCategory] = useState('');
   const [fromEmail, setFromEmail] = useState('Signature Talks <global@signaturetalks.org>');
   const [createError, setCreateError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,6 +43,17 @@ export default function NewCampaignPage() {
     }
     loadData();
   }, []);
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setTemplateCategory(e.target.value);
+    setSelectedTemplate('');
+  };
+
+  const filteredTemplates = templates.filter(t => {
+    if (templateCategory === 'INVITE') return t.name.toLowerCase().includes('invite');
+    if (templateCategory === 'FOLLOWUP') return t.name.toLowerCase().includes('followup');
+    return true;
+  });
 
   const handleCreateCampaign = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,6 +146,19 @@ export default function NewCampaignPage() {
           </div>
 
           <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Template Category</label>
+            <select
+              value={templateCategory}
+              onChange={handleCategoryChange}
+              className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+            >
+              <option value="">All Templates</option>
+              <option value="INVITE">Invite Templates</option>
+              <option value="FOLLOWUP">Follow-up Templates</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Email Template</label>
             <select
               value={selectedTemplate}
@@ -142,7 +167,7 @@ export default function NewCampaignPage() {
               required
             >
               <option value="">-- Select Template --</option>
-              {templates.map(t => (
+              {filteredTemplates.map(t => (
                 <option key={t.id} value={t.id}>{t.name}</option>
               ))}
             </select>
