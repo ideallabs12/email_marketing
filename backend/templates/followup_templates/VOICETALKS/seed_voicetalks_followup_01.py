@@ -1,5 +1,5 @@
 """
-Seed script: inserts the NEXT Invite email template into the database.
+Seed script: inserts the VOICE Talks Speaker Follow-up email template into the database.
 """
 import os
 import sys
@@ -7,14 +7,15 @@ import django
 from pathlib import Path
 
 # Add the 'backend' directory to sys.path so 'config.settings' can be found
-sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
+from pathlib import Path
 from apps.templates.models import EmailTemplate
 
-TEMPLATE_FILE = Path(__file__).resolve().parent / 'next_invite_1.html'
+TEMPLATE_FILE = Path(__file__).resolve().parent / 'voicetalks_followup_01.html'
 
 if not TEMPLATE_FILE.exists():
     print(f"ERROR: Template file not found at {TEMPLATE_FILE}")
@@ -22,8 +23,8 @@ if not TEMPLATE_FILE.exists():
 
 html_content = TEMPLATE_FILE.read_text(encoding='utf-8')
 
-TEMPLATE_NAME = "NEXT_INVITE_1"
-SUBJECT       = "Invitation: NEXT"
+TEMPLATE_NAME = "VOICETALKS_FOLLOWUP_01"
+SUBJECT       = "Following up: Speaker Opportunity — VOICE Global Summit 2027"
 
 obj, created = EmailTemplate.objects.get_or_create(
     name=TEMPLATE_NAME,
@@ -32,7 +33,7 @@ obj, created = EmailTemplate.objects.get_or_create(
         'html_content': html_content,
         'body':         '',
         'variables':    {
-            'first_name': 'Guest',
+            'first_name': 'Speaker',
             'last_name':  '',
         },
     },

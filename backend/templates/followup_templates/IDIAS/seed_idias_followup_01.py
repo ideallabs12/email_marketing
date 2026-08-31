@@ -1,15 +1,12 @@
 """
-Seed script: inserts the VOICE Talks Speaker Invitation email template into the database.
-Run inside the backend Docker container:
-    docker compose exec backend python templates/VOICETALKS/seed_VOICETALKS_INVITE_01.py
+Seed script: inserts the IDIAS Follow-up email template into the database.
 """
 import os
 import sys
 import django
 from pathlib import Path
 
-# Add the 'backend' directory to sys.path so 'config.settings' can be found
-sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
@@ -17,7 +14,7 @@ django.setup()
 from pathlib import Path
 from apps.templates.models import EmailTemplate
 
-TEMPLATE_FILE = Path(__file__).resolve().parent / 'VOICETALKS_INVITE_01.html'
+TEMPLATE_FILE = Path(__file__).resolve().parent / 'idias_followup_01.html'
 
 if not TEMPLATE_FILE.exists():
     print(f"ERROR: Template file not found at {TEMPLATE_FILE}")
@@ -25,8 +22,8 @@ if not TEMPLATE_FILE.exists():
 
 html_content = TEMPLATE_FILE.read_text(encoding='utf-8')
 
-TEMPLATE_NAME = "VOICETALKS_INVITE_01"
-SUBJECT       = "Speaker Opportunity — VOICE Global Summit 2027"
+TEMPLATE_NAME = "IDIAS_FOLLOWUP_01"
+SUBJECT       = "Following up: Speaker Opportunity — IDIAS Global Conferences"
 
 obj, created = EmailTemplate.objects.get_or_create(
     name=TEMPLATE_NAME,
@@ -44,7 +41,6 @@ obj, created = EmailTemplate.objects.get_or_create(
 if created:
     print(f"Template created successfully (id={obj.id}): '{obj.name}'")
 else:
-    # Update html_content in case the file changed
     obj.html_content = html_content
     obj.subject      = SUBJECT
     obj.save()

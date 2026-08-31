@@ -1,14 +1,12 @@
 """
-Seed script: inserts the Signature Global Conferences email template into the database.
-Run inside the backend Docker container:
-    docker compose exec backend python seed_SGC_INVITE_01.py
+Seed script: inserts the ICON Follow-up email template into the database.
 """
 import os
 import sys
 import django
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
@@ -16,7 +14,7 @@ django.setup()
 from pathlib import Path
 from apps.templates.models import EmailTemplate
 
-TEMPLATE_FILE = Path(__file__).resolve().parent / 'SGC_INVITE_01.html'
+TEMPLATE_FILE = Path(__file__).resolve().parent / 'icon_followup_01.html'
 
 if not TEMPLATE_FILE.exists():
     print(f"ERROR: Template file not found at {TEMPLATE_FILE}")
@@ -24,8 +22,8 @@ if not TEMPLATE_FILE.exists():
 
 html_content = TEMPLATE_FILE.read_text(encoding='utf-8')
 
-TEMPLATE_NAME = "SGC_INVITE_01"
-SUBJECT       = "Speaking opportunity — Signature Global Conferences"  # Update this subject if needed
+TEMPLATE_NAME = "ICON_FOLLOWUP_01"
+SUBJECT       = "Following up: Speaker Opportunity — ICON Global Conferences"
 
 obj, created = EmailTemplate.objects.get_or_create(
     name=TEMPLATE_NAME,
@@ -34,7 +32,7 @@ obj, created = EmailTemplate.objects.get_or_create(
         'html_content': html_content,
         'body':         '',
         'variables':    {
-            'first_name': 'Test User',
+            'first_name': 'Speaker',
             'last_name':  '',
         },
     },
@@ -43,7 +41,6 @@ obj, created = EmailTemplate.objects.get_or_create(
 if created:
     print(f"Template created successfully (id={obj.id}): '{obj.name}'")
 else:
-    # Update html_content in case the file changed
     obj.html_content = html_content
     obj.subject      = SUBJECT
     obj.save()
