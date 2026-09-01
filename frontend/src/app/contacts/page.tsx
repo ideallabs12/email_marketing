@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
-import { Plus, Search, X, Trash2, Users, Upload, Check, AlertCircle } from 'lucide-react';
+import { Plus, Search, X, Trash2, Users, Upload, Check, AlertCircle, Edit, ChevronDown, ChevronRight } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 import { ContactList, Contact } from '../../types';
 
@@ -15,6 +15,13 @@ export default function ContactsPage() {
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+
+  const [expandedDates, setExpandedDates] = useState<string[]>([]);
+  const [showEditListModal, setShowEditListModal] = useState(false);
+  const [editingListId, setEditingListId] = useState<number | null>(null);
+  const [editListName, setEditListName] = useState('');
+  const [editListDesc, setEditListDesc] = useState('');
+  const [editListError, setEditListError] = useState('');
 
   const [newEmail, setNewEmail] = useState('');
   const [newFirstName, setNewFirstName] = useState('');
@@ -164,10 +171,65 @@ export default function ContactsPage() {
     }
   };
 
+  const openEditListModal = (list: ContactList) => {
+    setEditingListId(list.id);
+    setEditListName(list.name);
+    setEditListDesc(list.description || '');
+    setEditListError('');
+    setShowEditListModal(true);
+  };
+
+  const handleEditList = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditListError('');
+    if (!editListName.trim()) {
+      setEditListError('Please enter a list name.');
+      return;
+    }
+
+    try {
+      await apiClient.patch(`/api/v1/contact-lists/${editingListId}/`, {
+        name: editListName,
+        description: editListDesc,
+      });
+      setShowEditListModal(false);
+      setEditingListId(null);
+      loadData();
+    } catch (err: any) {
+      setEditListError(err.message || 'Failed to update list.');
+    }
+  };
+
   const filteredLists = lists.filter(l => {
     const term = searchQuery.toLowerCase();
     return l.name.toLowerCase().includes(term) || (l.description || '').toLowerCase().includes(term);
   });
+
+  const groupedLists = React.useMemo(() => {
+    const groups: Record<string, ContactList[]> = {};
+    filteredLists.filter(l => !l.is_default).forEach(list => {
+      let dateStr = 'Unknown Date';
+      if (list.created_at) {
+        const d = new Date(list.created_at);
+        dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
+      }
+      if (!groups[dateStr]) groups[dateStr] = [];
+      groups[dateStr].push(list);
+    });
+    return groups;
+  }, [filteredLists]);
+
+  const sortedDates = Object.keys(groupedLists).sort((a, b) => {
+    if (a === 'Unknown Date') return 1;
+    if (b === 'Unknown Date') return -1;
+    return new Date(b).getTime() - new Date(a).getTime();
+  });
+
+  const toggleDate = (date: string) => {
+    setExpandedDates(prev => 
+      prev.includes(date) ? prev.filter(d => d !== date) : [...prev, date]
+    );
+  };
 
   return (
     <div className="space-y-8">
@@ -216,45 +278,120 @@ export default function ContactsPage() {
       {loading ? (
         <div className="text-sm text-foreground/40 py-12 text-center">Loading contact lists...</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card className="p-4 relative group flex flex-col justify-between">
-            <div>
-              <h3 className="font-semibold text-lg pr-6 text-foreground">All Contacts</h3>
-              <p className="text-xs text-foreground/50 mt-1 line-clamp-2">Master list containing all contacts across the platform</p>
-            </div>
-            <div className="mt-6 flex items-end justify-between border-t border-border pt-3">
-              <div className="text-2xl font-bold text-foreground">
-                {contacts.length} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Contacts</span>
-              </div>
-            </div>
-          </Card>
-          
-          {filteredLists.filter(list => !list.is_default).map(list => (
-            <Card key={list.id} className="p-4 relative group flex flex-col justify-between">
-              <button
-                onClick={() => handleDeleteList(list.id)}
-                className="absolute top-2 right-2 text-foreground/30 hover:text-red-500 transition-all p-2 opacity-50 hover:opacity-100 rounded-md hover:bg-red-500/10"
-                title="Delete List"
-              >
-                <Trash2 size={16} />
-              </button>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Card className="p-4 relative group flex flex-col justify-between">
               <div>
-                <h3 className="font-semibold text-lg pr-8 text-foreground">{list.name}</h3>
-                <p className="text-xs text-foreground/50 mt-1 line-clamp-2">{list.description || 'No description provided'}</p>
+                <h3 className="font-semibold text-lg pr-6 text-foreground">All Contacts</h3>
+                <p className="text-xs text-foreground/50 mt-1 line-clamp-2">Master list containing all contacts across the platform</p>
               </div>
               <div className="mt-6 flex items-end justify-between border-t border-border pt-3">
                 <div className="text-2xl font-bold text-foreground">
-                  {contacts.filter(c => c.lists.includes(list.id)).length} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Contacts</span>
+                  {contacts.length} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Contacts</span>
                 </div>
               </div>
             </Card>
-          ))}
+          </div>
+
+          <div className="space-y-4">
+            {sortedDates.map(dateStr => {
+              const isExpanded = expandedDates.includes(dateStr) || searchQuery !== '';
+              return (
+                <div key={dateStr} className="border border-border rounded-lg bg-background overflow-hidden shadow-sm">
+                  <button 
+                    onClick={() => toggleDate(dateStr)}
+                    className="w-full flex items-center justify-between p-4 bg-foreground/5 hover:bg-foreground/10 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                      <span className="font-semibold text-foreground text-sm tracking-wide">{dateStr}</span>
+                    </div>
+                    <span className="text-xs font-medium bg-background px-3 py-1 rounded-full border border-border">
+                      {groupedLists[dateStr].length} {groupedLists[dateStr].length === 1 ? 'List' : 'Lists'}
+                    </span>
+                  </button>
+                  
+                  {isExpanded && (
+                    <div className="p-4 bg-background border-t border-border">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {groupedLists[dateStr].map(list => (
+                          <Card key={list.id} className="p-4 relative group flex flex-col justify-between">
+                            <div className="absolute top-2 right-2 flex items-center gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => openEditListModal(list)}
+                                className="text-foreground/50 hover:text-blue-500 p-2 rounded-md hover:bg-blue-500/10 transition-colors"
+                                title="Edit List"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteList(list.id)}
+                                className="text-foreground/50 hover:text-red-500 p-2 rounded-md hover:bg-red-500/10 transition-colors"
+                                title="Delete List"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-lg pr-16 text-foreground">{list.name}</h3>
+                              <p className="text-xs text-foreground/50 mt-1 line-clamp-2">{list.description || 'No description provided'}</p>
+                            </div>
+                            <div className="mt-6 flex items-end justify-between border-t border-border pt-3">
+                              <div className="text-2xl font-bold text-foreground">
+                                {contacts.filter(c => c.lists.includes(list.id)).length} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Contacts</span>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
           
           {filteredLists.filter(list => !list.is_default).length === 0 && searchQuery && (
-            <div className="col-span-full py-8 text-center text-foreground/50 text-sm">
+            <div className="py-8 text-center text-foreground/50 text-sm">
               No lists match your search query.
             </div>
           )}
+        </div>
+      )}
+
+      {showEditListModal && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md p-6 border border-border bg-background shadow-lg relative">
+            <button className="absolute top-4 right-4 text-foreground/50 hover:text-foreground" onClick={() => setShowEditListModal(false)}>
+              <X size={20} />
+            </button>
+            <h2 className="text-xl font-bold mb-4">Edit Contact List</h2>
+            <form onSubmit={handleEditList} className="space-y-4">
+              {editListError && <div className="text-xs text-red-500">{editListError}</div>}
+              <div className="space-y-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">List Name</label>
+                <input
+                  type="text"
+                  value={editListName}
+                  onChange={e => setEditListName(e.target.value)}
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                  placeholder="e.g. Speaker Invites"
+                  required
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Description</label>
+                <textarea
+                  value={editListDesc}
+                  onChange={e => setEditListDesc(e.target.value)}
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                  placeholder="Short explanation of this list..."
+                  rows={3}
+                />
+              </div>
+              <Button type="submit" className="w-full py-2">Save Changes</Button>
+            </form>
+          </Card>
         </div>
       )}
 
