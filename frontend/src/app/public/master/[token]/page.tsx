@@ -171,92 +171,14 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
     <div className="min-h-screen bg-white">
       {/* Header bar */}
       <div className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 px-4 md:px-6 py-4 shadow-sm">
-        <div className="flex flex-col 2xl:flex-row 2xl:items-start justify-between gap-4 2xl:gap-0">
-          <div className="flex-1">
+        {/* Top Row: Title & Actions */}
+        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 lg:gap-0">
+          <div>
             <h1 className="text-xl font-bold text-gray-900">Master Analytics View</h1>
-            <p className="text-xs text-gray-500 mt-1 mb-4">Select a campaign to view its live performance</p>
-            
-            <div className="flex flex-col lg:flex-row lg:items-center gap-4 mt-2">
-              {/* Custom Dropdown */}
-              <div className="relative w-full md:w-[32rem] z-20">
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex w-full md:w-[32rem] items-center justify-between rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow"
-              >
-                <span className="truncate text-left">
-                  {selectedCampaignToken 
-                    ? (() => {
-                        const c = campaigns.find(c => c.share_token === selectedCampaignToken);
-                        return c ? `${c.name} (${new Date(c.created_at).toLocaleDateString()})` : 'Select a campaign...';
-                      })()
-                    : 'Select a campaign...'}
-                </span>
-                <ChevronDown size={16} className={`ml-2 flex-shrink-0 text-gray-500 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {dropdownOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)} />
-                  <div className="absolute left-0 top-full mt-2 w-full md:w-[32rem] z-20 rounded-lg border border-gray-200 bg-white shadow-xl max-h-[350px] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                    <div className="p-2 border-b border-gray-100 flex items-center gap-2 bg-gray-50/80">
-                      <Search size={15} className="text-gray-400 ml-2" />
-                      <input
-                        type="text"
-                        placeholder="Search campaigns..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-transparent outline-none text-sm p-1.5 placeholder:text-gray-400"
-                        autoFocus
-                      />
-                    </div>
-                    <div className="overflow-y-auto overflow-x-hidden flex-1 p-1.5 custom-scrollbar">
-                      {campaigns.length === 0 && <div className="p-4 text-sm text-gray-500 text-center">No campaigns available</div>}
-                      {campaigns
-                        .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                        .map(c => (
-                          <button
-                            key={c.id}
-                            onClick={() => {
-                              setSelectedCampaignToken(c.share_token);
-                              setDropdownOpen(false);
-                              setSearchQuery('');
-                            }}
-                            className={`w-full text-left flex items-center justify-between px-3 py-2.5 mb-0.5 text-sm rounded-md transition-colors ${
-                              selectedCampaignToken === c.share_token 
-                                ? 'bg-blue-50/80 text-blue-700 font-semibold' 
-                                : 'text-gray-700 hover:bg-gray-100/80'
-                            }`}
-                          >
-                            <span className="truncate pr-4 flex-1">
-                              {c.name} 
-                              <span className={`text-xs ml-2 font-normal ${selectedCampaignToken === c.share_token ? 'text-blue-500' : 'text-gray-400'}`}>
-                                ({new Date(c.created_at).toLocaleDateString()})
-                              </span>
-                            </span>
-                            {selectedCampaignToken === c.share_token && <Check size={16} className="text-blue-600 flex-shrink-0" />}
-                          </button>
-                      ))}
-                      {campaigns.length > 0 && campaigns.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
-                        <div className="p-6 text-sm text-gray-500 text-center">No campaigns found matching "{searchQuery}"</div>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-            
-            {analytics?.totals && !analyticsLoading && (
-              <div className="flex flex-wrap items-center gap-3 text-base">
-                <div className="flex items-baseline bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-md"><span className="text-gray-500 text-sm mr-2">Recipients:</span> <span className="font-bold text-lg text-gray-900">{analytics.totals.total_recipients}</span></div>
-                <div className="flex items-baseline bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-md"><span className="text-gray-500 text-sm mr-2">Delivered:</span> <span className="font-bold text-lg text-gray-900">{analytics.totals.total_delivered}</span></div>
-                <div className="flex items-baseline bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-md"><span className="text-gray-500 text-sm mr-2">Opens:</span> <span className="font-bold text-lg text-gray-900">{analytics.totals.total_opens}</span></div>
-                <div className="flex items-baseline bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-md"><span className="text-gray-500 text-sm mr-2">Clicks:</span> <span className="font-bold text-lg text-gray-900">{analytics.totals.total_clicks}</span></div>
-              </div>
-            )}
-            </div>
+            <p className="text-xs text-gray-500 mt-1">Select a campaign to view its live performance</p>
           </div>
           
-          <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-2 xl:gap-4 w-full 2xl:w-auto mt-4 2xl:mt-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full lg:w-auto mt-2 lg:mt-0">
             <div className="flex flex-wrap gap-1 bg-gray-100 p-1 rounded-md border border-gray-200">
               {['all', 'delivered', 'opened', 'clicked', 'sent', 'pending', 'failed'].map(status => (
                 <button
@@ -275,12 +197,92 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
             <button
               type="button"
               onClick={refreshAnalytics}
-              className="w-full xl:w-auto inline-flex justify-center items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+              className="w-full sm:w-auto inline-flex justify-center items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
             >
               <RefreshCw size={15} className={analyticsLoading ? 'animate-spin' : ''} />
               {analyticsLoading ? 'Syncing...' : 'Sync Data'}
             </button>
           </div>
+        </div>
+
+        {/* Bottom Row: Dropdown & Stats */}
+        <div className="flex flex-col xl:flex-row xl:items-center gap-4 mt-4">
+          {/* Custom Dropdown */}
+          <div className="relative w-full xl:w-[32rem] z-20">
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex w-full xl:w-[32rem] items-center justify-between rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow"
+            >
+              <span className="truncate text-left">
+                {selectedCampaignToken 
+                  ? (() => {
+                      const c = campaigns.find(c => c.share_token === selectedCampaignToken);
+                      return c ? `${c.name} (${new Date(c.created_at).toLocaleDateString()})` : 'Select a campaign...';
+                    })()
+                  : 'Select a campaign...'}
+              </span>
+              <ChevronDown size={16} className={`ml-2 flex-shrink-0 text-gray-500 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {dropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)} />
+                <div className="absolute left-0 top-full mt-2 w-full xl:w-[32rem] z-20 rounded-lg border border-gray-200 bg-white shadow-xl max-h-[350px] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                  <div className="p-2 border-b border-gray-100 flex items-center gap-2 bg-gray-50/80">
+                    <Search size={15} className="text-gray-400 ml-2" />
+                    <input
+                      type="text"
+                      placeholder="Search campaigns..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-transparent outline-none text-sm p-1.5 placeholder:text-gray-400"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="overflow-y-auto overflow-x-hidden flex-1 p-1.5 custom-scrollbar">
+                    {campaigns.length === 0 && <div className="p-4 text-sm text-gray-500 text-center">No campaigns available</div>}
+                    {campaigns
+                      .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                      .map(c => (
+                        <button
+                          key={c.id}
+                          onClick={() => {
+                            setSelectedCampaignToken(c.share_token);
+                            setDropdownOpen(false);
+                            setSearchQuery('');
+                          }}
+                          className={`w-full text-left flex items-center justify-between px-3 py-2.5 mb-0.5 text-sm rounded-md transition-colors ${
+                            selectedCampaignToken === c.share_token 
+                              ? 'bg-blue-50/80 text-blue-700 font-semibold' 
+                              : 'text-gray-700 hover:bg-gray-100/80'
+                          }`}
+                        >
+                          <span className="truncate pr-4 flex-1">
+                            {c.name} 
+                            <span className={`text-xs ml-2 font-normal ${selectedCampaignToken === c.share_token ? 'text-blue-500' : 'text-gray-400'}`}>
+                              ({new Date(c.created_at).toLocaleDateString()})
+                            </span>
+                          </span>
+                          {selectedCampaignToken === c.share_token && <Check size={16} className="text-blue-600 flex-shrink-0" />}
+                        </button>
+                    ))}
+                    {campaigns.length > 0 && campaigns.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                      <div className="p-6 text-sm text-gray-500 text-center">No campaigns found matching "{searchQuery}"</div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+          
+          {analytics?.totals && !analyticsLoading && (
+            <div className="flex flex-wrap items-center gap-3 text-base">
+              <div className="flex items-baseline bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-md"><span className="text-gray-500 text-sm mr-2">Recipients:</span> <span className="font-bold text-lg text-gray-900">{analytics.totals.total_recipients}</span></div>
+              <div className="flex items-baseline bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-md"><span className="text-gray-500 text-sm mr-2">Delivered:</span> <span className="font-bold text-lg text-gray-900">{analytics.totals.total_delivered}</span></div>
+              <div className="flex items-baseline bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-md"><span className="text-gray-500 text-sm mr-2">Opens:</span> <span className="font-bold text-lg text-gray-900">{analytics.totals.total_opens}</span></div>
+              <div className="flex items-baseline bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-md"><span className="text-gray-500 text-sm mr-2">Clicks:</span> <span className="font-bold text-lg text-gray-900">{analytics.totals.total_clicks}</span></div>
+            </div>
+          )}
         </div>
       </div>
 
