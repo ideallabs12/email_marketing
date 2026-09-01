@@ -70,6 +70,24 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
     return () => { isCurrent = false; };
   }, [token]);
 
+  // Real-time polling to check if link is disabled
+  useEffect(() => {
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+    const intervalId = setInterval(() => {
+      fetch(`${API_BASE_URL}/api/v1/public/master-link/${token}/campaigns/`, { cache: 'no-store' })
+        .then((res) => {
+          if (!res.ok) {
+            setError('This link has been disabled by the administrator.');
+          }
+        })
+        .catch(() => {
+          // Ignore network errors to avoid false positives if connection drops momentarily
+        });
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(intervalId);
+  }, [token]);
+
   useEffect(() => {
     if (!selectedCampaignToken) return;
     
