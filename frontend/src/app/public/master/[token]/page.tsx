@@ -171,13 +171,14 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
     <div className="min-h-screen bg-white">
       {/* Header bar */}
       <div className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 px-4 md:px-6 py-4 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 md:gap-0">
-          <div className="flex-1 max-w-xl">
+        <div className="flex flex-col 2xl:flex-row 2xl:items-start justify-between gap-4 2xl:gap-0">
+          <div className="flex-1">
             <h1 className="text-xl font-bold text-gray-900">Master Analytics View</h1>
             <p className="text-xs text-gray-500 mt-1 mb-4">Select a campaign to view its live performance</p>
             
-            {/* Custom Dropdown */}
-            <div className="relative w-full z-20 mt-2">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-4 mt-2">
+              {/* Custom Dropdown */}
+              <div className="relative w-full md:w-[32rem] z-20">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className="flex w-full md:w-[32rem] items-center justify-between rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow"
@@ -245,16 +246,17 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
             </div>
             
             {analytics?.totals && !analyticsLoading && (
-              <div className="flex flex-wrap gap-4 mt-4 text-sm border-t border-gray-200 pt-3">
-                <div><span className="text-gray-500">Recipients:</span> <span className="font-semibold text-gray-900">{analytics.totals.total_recipients}</span></div>
-                <div><span className="text-gray-500">Delivered:</span> <span className="font-semibold text-gray-900">{analytics.totals.total_delivered}</span></div>
-                <div><span className="text-gray-500">Opens:</span> <span className="font-semibold text-gray-900">{analytics.totals.total_opens}</span></div>
-                <div><span className="text-gray-500">Clicks:</span> <span className="font-semibold text-gray-900">{analytics.totals.total_clicks}</span></div>
+              <div className="flex flex-wrap items-center gap-3 text-base">
+                <div className="flex items-baseline bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-md"><span className="text-gray-500 text-sm mr-2">Recipients:</span> <span className="font-bold text-lg text-gray-900">{analytics.totals.total_recipients}</span></div>
+                <div className="flex items-baseline bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-md"><span className="text-gray-500 text-sm mr-2">Delivered:</span> <span className="font-bold text-lg text-gray-900">{analytics.totals.total_delivered}</span></div>
+                <div className="flex items-baseline bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-md"><span className="text-gray-500 text-sm mr-2">Opens:</span> <span className="font-bold text-lg text-gray-900">{analytics.totals.total_opens}</span></div>
+                <div className="flex items-baseline bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-md"><span className="text-gray-500 text-sm mr-2">Clicks:</span> <span className="font-bold text-lg text-gray-900">{analytics.totals.total_clicks}</span></div>
               </div>
             )}
+            </div>
           </div>
           
-          <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-2 xl:gap-4 w-full md:w-auto mt-4 md:mt-0">
+          <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-2 xl:gap-4 w-full 2xl:w-auto mt-4 2xl:mt-0">
             <div className="flex flex-wrap gap-1 bg-gray-100 p-1 rounded-md border border-gray-200">
               {['all', 'delivered', 'opened', 'clicked', 'sent', 'pending', 'failed'].map(status => (
                 <button
