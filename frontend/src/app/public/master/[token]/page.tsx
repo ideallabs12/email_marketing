@@ -1,7 +1,7 @@
 'use client';
 
 import { use, useEffect, useState } from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, RefreshCw, ChevronDown, Check, Search } from 'lucide-react';
 
 interface CampaignSummary {
   id: number;
@@ -39,6 +39,8 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     let isCurrent = true;
@@ -156,19 +158,72 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
             <h1 className="text-xl font-bold text-gray-900">Master Analytics View</h1>
             <p className="text-xs text-gray-500 mt-1 mb-4">Select a campaign to view its live performance</p>
             
-            <div className="flex flex-col sm:flex-row gap-2">
-              <select
-                value={selectedCampaignToken}
-                onChange={(e) => setSelectedCampaignToken(e.target.value)}
-                className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            {/* Custom Dropdown */}
+            <div className="relative w-full z-20 mt-2">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex w-full md:w-[32rem] items-center justify-between rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow"
               >
-                {campaigns.length === 0 && <option value="">No campaigns available</option>}
-                {campaigns.map(c => (
-                  <option key={c.id} value={c.share_token}>
-                    {c.name} ({new Date(c.created_at).toLocaleDateString()})
-                  </option>
-                ))}
-              </select>
+                <span className="truncate text-left">
+                  {selectedCampaignToken 
+                    ? (() => {
+                        const c = campaigns.find(c => c.share_token === selectedCampaignToken);
+                        return c ? `${c.name} (${new Date(c.created_at).toLocaleDateString()})` : 'Select a campaign...';
+                      })()
+                    : 'Select a campaign...'}
+                </span>
+                <ChevronDown size={16} className={`ml-2 flex-shrink-0 text-gray-500 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {dropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)} />
+                  <div className="absolute left-0 top-full mt-2 w-full md:w-[32rem] z-20 rounded-lg border border-gray-200 bg-white shadow-xl max-h-[350px] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                    <div className="p-2 border-b border-gray-100 flex items-center gap-2 bg-gray-50/80">
+                      <Search size={15} className="text-gray-400 ml-2" />
+                      <input
+                        type="text"
+                        placeholder="Search campaigns..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-transparent outline-none text-sm p-1.5 placeholder:text-gray-400"
+                        autoFocus
+                      />
+                    </div>
+                    <div className="overflow-y-auto overflow-x-hidden flex-1 p-1.5 custom-scrollbar">
+                      {campaigns.length === 0 && <div className="p-4 text-sm text-gray-500 text-center">No campaigns available</div>}
+                      {campaigns
+                        .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                        .map(c => (
+                          <button
+                            key={c.id}
+                            onClick={() => {
+                              setSelectedCampaignToken(c.share_token);
+                              setDropdownOpen(false);
+                              setSearchQuery('');
+                            }}
+                            className={`w-full text-left flex items-center justify-between px-3 py-2.5 mb-0.5 text-sm rounded-md transition-colors ${
+                              selectedCampaignToken === c.share_token 
+                                ? 'bg-blue-50/80 text-blue-700 font-semibold' 
+                                : 'text-gray-700 hover:bg-gray-100/80'
+                            }`}
+                          >
+                            <span className="truncate pr-4 flex-1">
+                              {c.name} 
+                              <span className={`text-xs ml-2 font-normal ${selectedCampaignToken === c.share_token ? 'text-blue-500' : 'text-gray-400'}`}>
+                                ({new Date(c.created_at).toLocaleDateString()})
+                              </span>
+                            </span>
+                            {selectedCampaignToken === c.share_token && <Check size={16} className="text-blue-600 flex-shrink-0" />}
+                          </button>
+                      ))}
+                      {campaigns.length > 0 && campaigns.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                        <div className="p-6 text-sm text-gray-500 text-center">No campaigns found matching "{searchQuery}"</div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
             
             {analytics?.totals && !analyticsLoading && (
