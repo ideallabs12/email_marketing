@@ -71,3 +71,23 @@ class CampaignRecipientStatus(models.Model):
     def __str__(self):
         return f"{self.campaign.name}: {self.contact.email} ({self.status})"
 
+
+import uuid
+
+class MasterLinkSettings(models.Model):
+    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    is_active = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.pk and MasterLinkSettings.objects.exists():
+            return
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_settings(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return f"Master Link {'Active' if self.is_active else 'Inactive'}"

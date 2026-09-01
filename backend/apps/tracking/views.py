@@ -339,7 +339,52 @@ class BrevoWebhookView(views.APIView):
                 recipient.last_event_at = now
                 recipient.save()
         except (Campaign.DoesNotExist, ValueError, TypeError):
-            # Acknowledge stale/malformed provider events so Brevo does not retry forever.
             pass
 
         return Response({'status': 'ok'})
+
+from rest_framework.permissions import IsAuthenticated
+from .models import MasterLinkSettings
+
+class MasterLinkSettingsView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        settings = MasterLinkSettings.get_settings()
+        return Response({
+            'token': str(settings.token),
+            'is_active': settings.is_active
+        })
+
+    def post(self, request):
+        settings = MasterLinkSettings.get_settings()
+        is_active = request.data.get('is_active')
+        if is_active is not None:
+            settings.is_active = bool(is_active)
+            settings.save()
+        return Response({
+            'token': str(settings.token),
+            'is_active': settings.is_active
+        })
+
+class PublicMasterLinkCampaignsView(views.APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        try:
+            settings = MasterLinkSettings.objects.get(token=token, is_active=True)
+        except MasterLinkSettings.DoesNotExist:
+            return Response({'detail': 'This link is disabled or invalid.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Return sent/scheduled/sending campaigns that would have analytics
+        campaigns = Campaign.objects.exclude(status='draft').order_by('-created_at')
+        data = []
+        for c in campaigns:
+            data.append({
+                'id': c.id,
+                'name': c.name,
+                'status': c.status,
+                'share_token': str(c.share_token),
+                'created_at': c.created_at.isoformat()
+            })
+        return Response(data)

@@ -14,7 +14,7 @@ export default function CampaignsPage() {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [polling, setPolling] = useState(false);
-
+  const [showMasterLinkModal, setShowMasterLinkModal] = useState(false);
 
   const [actionError, setActionError] = useState('');
 
@@ -111,12 +111,18 @@ export default function CampaignsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Campaigns</h1>
           <p className="text-foreground/50 mt-1 text-sm">Manage and send your email campaigns.</p>
         </div>
-        <Link href="/campaigns/new">
-          <Button>
-            <Plus size={16} />
-            <span>New Campaign</span>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={() => setShowMasterLinkModal(true)}>
+            <ChartNoAxesCombined size={16} />
+            <span className="ml-1">Master Link</span>
           </Button>
-        </Link>
+          <Link href="/campaigns/new">
+            <Button>
+              <Plus size={16} />
+              <span>New Campaign</span>
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {actionError && (
@@ -226,6 +232,85 @@ export default function CampaignsPage() {
           )}
         </div>
       </Card>
+      {showMasterLinkModal && (
+        <MasterLinkModal onClose={() => setShowMasterLinkModal(false)} />
+      )}
+    </div>
+  );
+}
+
+function MasterLinkModal({ onClose }: { onClose: () => void }) {
+  const [token, setToken] = useState('');
+  const [isActive, setIsActive] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    apiClient.get('/api/v1/master-link/settings/').then(res => {
+      setToken(res.token);
+      setIsActive(res.is_active);
+      setLoading(false);
+    }).catch(err => {
+      console.error('Failed to load master link settings', err);
+      setLoading(false);
+    });
+  }, []);
+
+  const handleToggle = async () => {
+    try {
+      const res = await apiClient.post('/api/v1/master-link/settings/', { is_active: !isActive });
+      setIsActive(res.is_active);
+    } catch (err) {
+      console.error('Failed to update master link settings', err);
+    }
+  };
+
+  const copyLink = () => {
+    const url = `${window.location.origin}/public/master/${token}`;
+    navigator.clipboard.writeText(url);
+    alert('Link copied to clipboard!');
+  };
+
+  return (
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-background border border-border p-6 rounded-lg shadow-lg max-w-md w-full relative">
+        <button onClick={onClose} className="absolute top-4 right-4 text-foreground/50 hover:text-foreground">
+          <X size={20} />
+        </button>
+        <h2 className="text-xl font-bold mb-6">Master Link Settings</h2>
+        {loading ? (
+          <p className="text-foreground/50">Loading...</p>
+        ) : (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">Enable Master Link</div>
+                <div className="text-xs text-foreground/50 mt-1">Allow anyone with the link to view analytics for all campaigns.</div>
+              </div>
+              <button 
+                onClick={handleToggle}
+                className={`w-11 h-6 rounded-full transition-colors ${isActive ? 'bg-foreground' : 'bg-foreground/20'} relative flex-shrink-0`}
+              >
+                <div className={`w-4 h-4 bg-background rounded-full absolute top-1 transition-transform ${isActive ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+            
+            {isActive && (
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Public URL</div>
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="text" 
+                    readOnly 
+                    value={`${window.location.origin}/public/master/${token}`} 
+                    className="flex-1 bg-foreground/5 border border-border p-2 rounded-md text-sm outline-none" 
+                  />
+                  <Button onClick={copyLink} variant="outline" className="px-4">Copy</Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
