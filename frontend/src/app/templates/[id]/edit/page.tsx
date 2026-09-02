@@ -323,7 +323,7 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col h-[calc(100vh-250px)] min-h-[600px]">
+          <div className="flex flex-col min-h-[600px] pb-12">
             <div className="flex justify-end mb-4">
               <div className="flex items-center gap-2 bg-foreground/5 border border-border rounded-lg p-1">
                 {(['desktop', 'mobile'] as const).map((d) => (
@@ -342,7 +342,7 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto bg-[#e8eaed] flex justify-center items-start rounded-xl border border-border p-8">
+            <div className="bg-[#e8eaed] flex justify-center items-start rounded-xl border border-border p-8">
               <div
                 style={{
                   width: previewDevice === 'desktop' ? 640 : 390,
@@ -387,9 +387,15 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
                 <iframe
                   title="Template Preview"
                   srcDoc={getPreviewHtml()}
+                  onLoad={(e) => {
+                    const iframe = e.target as HTMLIFrameElement;
+                    if (iframe.contentWindow) {
+                      iframe.style.height = iframe.contentWindow.document.documentElement.scrollHeight + 'px';
+                    }
+                  }}
                   style={{
                     width: '100%',
-                    height: previewDevice === 'desktop' ? 680 : 600,
+                    minHeight: previewDevice === 'desktop' ? 680 : 600,
                     border: 'none',
                     display: 'block',
                     background: '#fff',
