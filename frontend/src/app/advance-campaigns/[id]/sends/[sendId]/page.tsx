@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { use, useEffect, useState } from 'react';
 import { ArrowLeft, CheckCircle2, CircleX, Eye, MailCheck, MousePointerClick, RefreshCw, UserMinus, ShieldAlert, Clock, MailWarning, AlertTriangle, Link as LinkIcon, MonitorSmartphone, Download, Share2, Check } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import Card from '../../../../../../components/Card';
-import { apiClient } from '../../../../../../services/apiClient';
-import type { CampaignAnalytics, CampaignRecipientFilter, CampaignRecipientStatus } from '../../../../../../types';
+import Card from '../../../../../components/Card';
+import { apiClient } from '../../../../../services/apiClient';
+import type { CampaignAnalytics, CampaignRecipientFilter, CampaignRecipientStatus } from '../../../../../types';
 
 const filters: { value: CampaignRecipientFilter; label: string }[] = [
   { value: 'all', label: 'All' },
