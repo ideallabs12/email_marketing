@@ -390,7 +390,17 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
                   onLoad={(e) => {
                     const iframe = e.target as HTMLIFrameElement;
                     if (iframe.contentWindow) {
-                      iframe.style.height = iframe.contentWindow.document.documentElement.scrollHeight + 'px';
+                      const doc = iframe.contentWindow.document;
+                      const updateHeight = () => {
+                        iframe.style.height = doc.documentElement.scrollHeight + 'px';
+                      };
+                      updateHeight();
+                      if (typeof ResizeObserver !== 'undefined') {
+                        const observer = new ResizeObserver(updateHeight);
+                        if (doc.body) {
+                          observer.observe(doc.body);
+                        }
+                      }
                     }
                   }}
                   style={{
