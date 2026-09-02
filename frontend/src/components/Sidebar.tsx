@@ -58,6 +58,10 @@ export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: { mobileM
           <Mail size={18} />
           {!isCollapsed && <span>Campaigns</span>}
         </Link>
+        <Link href="/advance-campaigns" title="Advanced Campaigns" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
+          <LayoutTemplate size={18} />
+          {!isCollapsed && <span>Adv. Campaigns</span>}
+        </Link>
         <Link href="/templates" title="Templates" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
           <FileText size={18} />
           {!isCollapsed && <span>Templates</span>}

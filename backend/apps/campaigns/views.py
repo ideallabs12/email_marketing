@@ -5,8 +5,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from .models import Campaign
-from .serializers import CampaignSerializer
+from .models import Campaign, AdvanceCampaign
+from .serializers import CampaignSerializer, AdvanceCampaignSerializer
 
 class SenderListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -45,8 +45,13 @@ class SenderListView(APIView):
 
 
 class CampaignViewSet(viewsets.ModelViewSet):
-    queryset = Campaign.objects.all().order_by('-created_at')
     serializer_class = CampaignSerializer
+
+    def get_queryset(self):
+        qs = Campaign.objects.all().order_by('-created_at')
+        if self.action == 'list':
+            qs = qs.filter(advance_campaign__isnull=True)
+        return qs
 
     def destroy(self, request, *args, **kwargs):
         campaign = self.get_object()
@@ -75,5 +80,10 @@ class CampaignViewSet(viewsets.ModelViewSet):
         send_campaign_emails.delay(campaign.id)
 
         return Response({'status': 'Campaign queued for sending.'})
+
+
+class AdvanceCampaignViewSet(viewsets.ModelViewSet):
+    queryset = AdvanceCampaign.objects.all().order_by('-created_at')
+    serializer_class = AdvanceCampaignSerializer
 
 

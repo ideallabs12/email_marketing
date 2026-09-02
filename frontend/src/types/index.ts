@@ -51,6 +51,15 @@ export interface Campaign {
   updated_at: string;
 }
 
+export interface AdvanceCampaign {
+  id: number;
+  name: string;
+  target_list: number;
+  campaigns?: Campaign[];
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CampaignPerformance {
   id: number;
   campaign: number;
