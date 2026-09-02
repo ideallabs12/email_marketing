@@ -23,7 +23,7 @@ if not TEMPLATE_FILE.exists():
 html_content = TEMPLATE_FILE.read_text(encoding='utf-8')
 
 TEMPLATE_NAME = "IDIAS_FOLLOWUP_01"
-SUBJECT       = "Following up: Speaker Opportunity — IDIAS Global Conferences"
+SUBJECT       = "Following up: Speaker Opportunity — i-DIAS Global Conferences"
 
 obj, created = EmailTemplate.objects.get_or_create(
     name=TEMPLATE_NAME,
