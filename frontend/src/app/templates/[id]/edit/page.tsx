@@ -323,77 +323,18 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
             </div>
           </div>
         ) : (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 50,
-              background: 'var(--background)',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            {/* ── Top bar ── */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '10px 20px',
-                borderBottom: '1px solid var(--border)',
-                background: 'var(--background)',
-                flexShrink: 0,
-                gap: 12,
-                flexWrap: 'wrap',
-              }}
-            >
-              {/* Left: back + title */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <button
-                  onClick={() => setViewMode('edit')}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                    color: 'var(--foreground)', opacity: 0.6,
-                    background: 'none', border: 'none', padding: 0,
-                  }}
-                >
-                  ← Back to Editor
-                </button>
-                <span style={{ opacity: 0.2, fontSize: 14 }}>|</span>
-                <span style={{ fontSize: 13, fontWeight: 600 }}>{template.name}</span>
-              </div>
-
-              {/* Center: email meta */}
-              <div style={{ fontSize: 12, opacity: 0.5, textAlign: 'center', flex: 1, minWidth: 160 }}>
-                <span style={{ fontWeight: 600 }}>To:</span> {testFirstName} {testLastName} &lt;{testEmail}&gt;
-                &nbsp;&nbsp;
-                <span style={{ fontWeight: 600 }}>Subject:</span> {subject || '(No subject)'}
-              </div>
-
-              {/* Right: device toggle */}
-              <div
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 4,
-                  background: 'var(--foreground-5, rgba(255,255,255,0.06))',
-                  border: '1px solid var(--border)', borderRadius: 8, padding: 3,
-                }}
-              >
+          <div className="flex flex-col h-[calc(100vh-250px)] min-h-[600px]">
+            <div className="flex justify-end mb-4">
+              <div className="flex items-center gap-2 bg-foreground/5 border border-border rounded-lg p-1">
                 {(['desktop', 'mobile'] as const).map((d) => (
                   <button
                     key={d}
                     onClick={() => setPreviewDevice(d)}
-                    style={{
-                      padding: '5px 14px', fontSize: 12, fontWeight: 600,
-                      borderRadius: 6, border: 'none', cursor: 'pointer',
-                      transition: 'all 0.15s',
-                      background: previewDevice === d ? 'var(--foreground)' : 'transparent',
-                      color: previewDevice === d ? 'var(--background)' : 'var(--foreground)',
-                      opacity: previewDevice === d ? 1 : 0.5,
-                    }}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                      previewDevice === d
+                        ? 'bg-foreground text-background shadow-sm'
+                        : 'text-foreground hover:bg-foreground/10 opacity-70'
+                    }`}
                   >
                     {d === 'desktop' ? '🖥  Desktop' : '📱 Mobile'}
                   </button>
@@ -401,19 +342,7 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
               </div>
             </div>
 
-            {/* ── Preview canvas ── */}
-            <div
-              style={{
-                flex: 1,
-                overflow: 'auto',
-                background: '#e8eaed',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'flex-start',
-                padding: previewDevice === 'desktop' ? '32px 24px' : '40px 24px',
-              }}
-            >
-              {/* Device chrome wrapper */}
+            <div className="flex-1 overflow-auto bg-[#e8eaed] flex justify-center items-start rounded-xl border border-border p-8">
               <div
                 style={{
                   width: previewDevice === 'desktop' ? 640 : 390,
@@ -428,7 +357,6 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
                   transition: 'all 0.3s ease',
                 }}
               >
-                {/* Fake mobile notch */}
                 {previewDevice === 'mobile' && (
                   <div
                     style={{
@@ -440,7 +368,6 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
                   </div>
                 )}
 
-                {/* Fake email client top bar */}
                 <div
                   style={{
                     background: '#f8f9fa',
@@ -457,7 +384,6 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
                   </div>
                 </div>
 
-                {/* The actual email iframe */}
                 <iframe
                   title="Template Preview"
                   srcDoc={getPreviewHtml()}
@@ -470,7 +396,6 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
                   }}
                 />
 
-                {/* Fake mobile home bar */}
                 {previewDevice === 'mobile' && (
                   <div
                     style={{
