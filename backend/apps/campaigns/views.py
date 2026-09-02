@@ -1,8 +1,48 @@
+import requests
+from django.conf import settings
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from .models import Campaign
 from .serializers import CampaignSerializer
+
+class SenderListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        fallback_senders = [
+            {"name": "Signature Talks", "email": "global@signaturetalks.org"},
+            {"name": "WYNx Talks", "email": "info@wynxtalks.com"},
+            {"name": "Voice Talks", "email": "info@voicetalks.org"},
+            {"name": "ICON Conferences", "email": "contact@iconconferences.org"},
+            {"name": "IDIAS", "email": "contact@idias.org"},
+        ]
+
+        brevo_api_key = getattr(settings, 'BREVO_API_KEY', None)
+        if not brevo_api_key:
+            return Response(fallback_senders)
+
+        try:
+            response = requests.get(
+                'https://api.brevo.com/v3/senders',
+                headers={'api-key': brevo_api_key, 'accept': 'application/json'}
+            )
+            response.raise_for_status()
+            data = response.json()
+            senders = []
+            for sender in data.get('senders', []):
+                senders.append({
+                    "name": sender.get('name', ''),
+                    "email": sender.get('email', ''),
+                })
+            if not senders:
+                return Response(fallback_senders)
+            return Response(senders)
+        except Exception as e:
+            return Response(fallback_senders)
+
 
 class CampaignViewSet(viewsets.ModelViewSet):
     queryset = Campaign.objects.all().order_by('-created_at')

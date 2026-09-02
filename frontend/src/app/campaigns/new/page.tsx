@@ -14,6 +14,7 @@ export default function NewCampaignPage() {
   
   const [lists, setLists] = useState<ContactList[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [senders, setSenders] = useState<{name: string, email: string}[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [name, setName] = useState('');
@@ -21,7 +22,7 @@ export default function NewCampaignPage() {
   const [targetList, setTargetList] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [templateCategory, setTemplateCategory] = useState('');
-  const [fromEmail, setFromEmail] = useState('Signature Talks <global@signaturetalks.org>');
+  const [fromEmail, setFromEmail] = useState('');
   const [createError, setCreateError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -29,12 +30,19 @@ export default function NewCampaignPage() {
     async function loadData() {
       setLoading(true);
       try {
-        const [listsRes, templatesRes] = await Promise.all([
+        const [listsRes, templatesRes, sendersRes] = await Promise.all([
           apiClient.get('/api/v1/contact-lists/?limit=10000'),
           apiClient.get('/api/v1/templates/?limit=10000'),
+          apiClient.get('/api/v1/senders/'),
         ]);
         setLists(listsRes.results || []);
         setTemplates(templatesRes.results || []);
+        
+        const sendersData = sendersRes || [];
+        setSenders(sendersData);
+        if (sendersData.length > 0) {
+          setFromEmail(`${sendersData[0].name} <${sendersData[0].email}>`);
+        }
       } catch (err) {
         console.error('Failed to load form data:', err);
       } finally {
@@ -138,10 +146,11 @@ export default function NewCampaignPage() {
               className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
               required
             >
-              <option value="Signature Talks <global@signaturetalks.org>">Signature Talks (global@signaturetalks.org)</option>
-              <option value="WYNxTALKS <info@wynxtalks.com>">WYNx Talks (info@wynxtalks.com)</option>
-              <option value="VOICETALKS <info@voicetalks.org>">Voice Talks (info@voicetalks.org)</option>
-              <option value="ICON Conferences <contact@iconconferences.org>">ICON Conferences (contact@iconconferences.org)</option>
+              {senders.map(s => (
+                <option key={s.email} value={`${s.name} <${s.email}>`}>
+                  {s.name} ({s.email})
+                </option>
+              ))}
             </select>
           </div>
 
