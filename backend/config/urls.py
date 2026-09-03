@@ -19,7 +19,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken.views import obtain_auth_token
 
-from apps.contacts.views import ContactViewSet, ContactListViewSet, IgnoredContactViewSet
+from apps.contacts.views import ContactViewSet, ContactListViewSet, IgnoredContactViewSet, ContactBatchViewSet
 from apps.templates.views import EmailTemplateViewSet
 from apps.campaigns.views import CampaignViewSet, SenderListView, AdvanceCampaignViewSet
 from apps.tracking.views import CampaignPerformanceViewSet, CampaignAnalyticsViewSet, BrevoWebhookView, BouncedEmailViewSet, PublicCampaignAnalyticsView, MasterLinkSettingsView, PublicMasterLinkCampaignsView
@@ -28,6 +28,7 @@ router = DefaultRouter()
 router.register(r'contacts', ContactViewSet, basename='contact')
 router.register(r'contact-lists', ContactListViewSet, basename='contactlist')
 router.register(r'ignored-contacts', IgnoredContactViewSet, basename='ignoredcontact')
+router.register(r'contact-batches', ContactBatchViewSet, basename='contactbatch')
 router.register(r'templates', EmailTemplateViewSet, basename='emailtemplate')
 router.register(r'campaigns', CampaignViewSet, basename='campaign')
 router.register(r'advance-campaigns', AdvanceCampaignViewSet, basename='advancecampaign')

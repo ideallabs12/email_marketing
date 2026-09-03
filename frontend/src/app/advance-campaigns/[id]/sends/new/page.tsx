@@ -7,7 +7,7 @@ import Button from '../../../../../components/Button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { apiClient } from '../../../../../services/apiClient';
-import { AdvanceCampaign, EmailTemplate } from '../../../../../types';
+import { AdvanceCampaign, EmailTemplate, ContactBatch } from '../../../../../types';
 
 export default function NewSendPage() {
   const router = useRouter();
@@ -17,6 +17,7 @@ export default function NewSendPage() {
   const [advCampaign, setAdvCampaign] = useState<AdvanceCampaign | null>(null);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [senders, setSenders] = useState<{name: string, email: string}[]>([]);
+  const [batches, setBatches] = useState<ContactBatch[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [name, setName] = useState('');
@@ -24,6 +25,7 @@ export default function NewSendPage() {
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [templateCategory, setTemplateCategory] = useState('');
   const [fromEmail, setFromEmail] = useState('');
+  const [selectedBatches, setSelectedBatches] = useState<number[]>([]);
   const [createError, setCreateError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -43,6 +45,15 @@ export default function NewSendPage() {
         setSenders(sendersData);
         if (sendersData.length > 0) {
           setFromEmail(`${sendersData[0].name} <${sendersData[0].email}>`);
+        }
+
+        if (campaignRes.target_list) {
+          try {
+            const batchesRes = await apiClient.get(`/api/v1/contact-batches/?contact_list=${campaignRes.target_list}`);
+            setBatches(batchesRes.results || []);
+          } catch (e) {
+            console.error('Failed to load batches', e);
+          }
         }
       } catch (err) {
         console.error('Failed to load form data:', err);
@@ -80,6 +91,7 @@ export default function NewSendPage() {
         subject: subject.trim() || undefined,
         from_email: fromEmail,
         target_list: advCampaign.target_list,
+        target_batches: selectedBatches,
         template: Number(selectedTemplate),
         advance_campaign: advCampaign.id,
         status: 'draft',
@@ -182,6 +194,24 @@ export default function NewSendPage() {
                 <option key={t.id} value={t.id}>{t.name}</option>
               ))}
             </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Target Batches (Optional)</label>
+            <select
+              multiple
+              value={selectedBatches.map(String)}
+              onChange={e => {
+                const vals = Array.from(e.target.selectedOptions, option => Number(option.value));
+                setSelectedBatches(vals);
+              }}
+              className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background min-h-[80px]"
+            >
+              {batches.map(b => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+            <p className="text-[10px] text-foreground/40 mt-1">Leave empty to send to the entire list. Hold Ctrl (Cmd) to select multiple batches.</p>
           </div>
 
           <Button type="submit" className="w-full py-2.5 mt-2" disabled={isSubmitting}>

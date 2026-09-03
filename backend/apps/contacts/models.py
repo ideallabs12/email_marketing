@@ -10,12 +10,21 @@ class ContactList(models.Model):
     def __str__(self):
         return self.name
 
+class ContactBatch(models.Model):
+    name = models.CharField(max_length=255)
+    contact_list = models.ForeignKey(ContactList, related_name='batches', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.contact_list.name})"
+
 class Contact(models.Model):
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=255, blank=True)
     last_name = models.CharField(max_length=255, blank=True)
     is_subscribed = models.BooleanField(default=True)
     lists = models.ManyToManyField(ContactList, related_name='contacts', blank=True)
+    batches = models.ManyToManyField(ContactBatch, related_name='contacts', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

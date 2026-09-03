@@ -33,8 +33,11 @@ def send_campaign_emails(self, campaign_id: int):
         return
 
     contacts = campaign.target_list.contacts.filter(is_subscribed=True)
+    if campaign.target_batches.exists():
+        contacts = contacts.filter(batches__in=campaign.target_batches.all()).distinct()
+        
     if not contacts.exists():
-        logger.info("Campaign %s: no subscribed contacts found.", campaign_id)
+        logger.info("Campaign %s: no subscribed contacts found for the given targets.", campaign_id)
         campaign.status = 'failed'
         campaign.save()
         return

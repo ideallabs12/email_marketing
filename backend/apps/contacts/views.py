@@ -3,8 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 import csv
 import io
-from .models import Contact, ContactList, IgnoredContact
-from .serializers import ContactSerializer, ContactListSerializer, IgnoredContactSerializer
+from .models import Contact, ContactList, IgnoredContact, ContactBatch
+from .serializers import ContactSerializer, ContactListSerializer, IgnoredContactSerializer, ContactBatchSerializer
 from django.db.models import ProtectedError
 
 class ContactListViewSet(viewsets.ModelViewSet):
@@ -36,6 +36,7 @@ class ContactViewSet(viewsets.ModelViewSet):
     def import_csv(self, request):
         file_obj = request.FILES.get('file')
         list_id = request.data.get('list_id')
+        batch_name = request.data.get('batch_name', '').strip()
 
         if not file_obj:
             return Response({'error': 'No file uploaded.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -58,9 +59,15 @@ class ContactViewSet(viewsets.ModelViewSet):
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             target_list = None
+            batch = None
             if list_id:
                 try:
                     target_list = ContactList.objects.get(id=list_id)
+                    if batch_name:
+                        batch, _ = ContactBatch.objects.get_or_create(
+                            name=batch_name,
+                            contact_list=target_list
+                        )
                 except ContactList.DoesNotExist:
                     return Response({'error': f"Target list with ID {list_id} not found."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -108,6 +115,8 @@ class ContactViewSet(viewsets.ModelViewSet):
 
                 if target_list:
                     contact.lists.add(target_list)
+                if batch:
+                    contact.batches.add(batch)
                 contact.lists.add(default_list)
 
                 success_count += 1
@@ -130,3 +139,14 @@ class IgnoredContactViewSet(viewsets.ReadOnlyModelViewSet):
     def clear_all(self, request):
         count, _ = IgnoredContact.objects.all().delete()
         return Response({'message': f'Successfully cleared {count} ignored contacts.'}, status=status.HTTP_200_OK)
+
+class ContactBatchViewSet(viewsets.ModelViewSet):
+    queryset = ContactBatch.objects.all().order_by('-created_at')
+    serializer_class = ContactBatchSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        list_id = self.request.query_params.get('contact_list')
+        if list_id:
+            qs = qs.filter(contact_list_id=list_id)
+        return qs

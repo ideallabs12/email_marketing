@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Contact, ContactList, IgnoredContact
+from .models import Contact, ContactList, IgnoredContact, ContactBatch
 
 class ContactListSerializer(serializers.ModelSerializer):
     class Meta:
@@ -14,4 +14,9 @@ class ContactSerializer(serializers.ModelSerializer):
 class IgnoredContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = IgnoredContact
+        fields = '__all__'
+
+class ContactBatchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContactBatch
         fields = '__all__'

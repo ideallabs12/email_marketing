@@ -32,6 +32,7 @@ export default function ContactsPage() {
 
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [targetListId, setTargetListId] = useState<string>('');
+  const [batchName, setBatchName] = useState('');
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState('');
   const [importing, setImporting] = useState(false);
@@ -104,6 +105,9 @@ export default function ContactsPage() {
     if (targetListId) {
       formData.append('list_id', targetListId);
     }
+    if (batchName) {
+      formData.append('batch_name', batchName);
+    }
 
     try {
       const token = document.cookie.match(new RegExp('(^| )auth_token=([^;]+)'))?.[2];
@@ -126,6 +130,7 @@ export default function ContactsPage() {
 
       setImportSuccess(resData.message);
       setCsvFile(null);
+      setBatchName('');
       setTimeout(() => {
         setShowImportModal(false);
         setImportSuccess('');
@@ -545,6 +550,19 @@ export default function ContactsPage() {
                   ))}
                 </select>
               </div>
+
+              {targetListId && (
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Batch Name (Optional)</label>
+                  <input
+                    type="text"
+                    value={batchName}
+                    onChange={e => setBatchName(e.target.value)}
+                    className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                    placeholder="e.g. Batch 1"
+                  />
+                </div>
+              )}
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50 font-medium">Select File</label>

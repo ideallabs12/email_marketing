@@ -14,6 +14,14 @@ export interface ContactList {
   updated_at: string;
 }
 
+export interface ContactBatch {
+  id: number;
+  name: string;
+  contact_list: number;
+  created_at: string;
+}
+
+
 export interface Contact {
   id: number;
   email: string;
@@ -21,6 +29,7 @@ export interface Contact {
   last_name: string;
   is_subscribed: boolean;
   lists: number[];
+  batches: number[];
   created_at: string;
   updated_at: string;
 }
@@ -42,6 +51,7 @@ export interface Campaign {
   subject: string;
   template: number;
   target_list: number;
+  target_batches?: number[];
   status: 'draft' | 'scheduled' | 'sending' | 'sent' | 'failed';
   from_email: string;
   scheduled_at: string | null;
