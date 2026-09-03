@@ -21,8 +21,8 @@ class Command(BaseCommand):
                 if created:
                     self.stdout.write(self.style.SUCCESS(f'Created batch "{batch_name}" for list "{contact_list.name}"'))
 
-                # Find all contacts in this list that are not yet in this batch
-                contacts_in_list = Contact.objects.filter(lists=contact_list)
+                # Find all contacts in this list that are not yet in ANY batch
+                contacts_in_list = Contact.objects.filter(lists=contact_list, batches__isnull=True)
                 contacts_to_update = []
                 for contact in contacts_in_list:
                     contacts_to_update.append(contact)
