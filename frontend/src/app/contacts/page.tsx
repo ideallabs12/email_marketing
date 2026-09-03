@@ -217,31 +217,7 @@ export default function ContactsPage() {
     return l.name.toLowerCase().includes(term) || (l.description || '').toLowerCase().includes(term);
   });
 
-  const groupedLists = React.useMemo(() => {
-    const groups: Record<string, ContactList[]> = {};
-    filteredLists.filter(l => !l.is_default).forEach(list => {
-      let dateStr = 'Unknown Date';
-      if (list.created_at) {
-        const d = new Date(list.created_at);
-        dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
-      }
-      if (!groups[dateStr]) groups[dateStr] = [];
-      groups[dateStr].push(list);
-    });
-    return groups;
-  }, [filteredLists]);
-
-  const sortedDates = Object.keys(groupedLists).sort((a, b) => {
-    if (a === 'Unknown Date') return 1;
-    if (b === 'Unknown Date') return -1;
-    return new Date(b).getTime() - new Date(a).getTime();
-  });
-
-  const toggleDate = (date: string) => {
-    setExpandedDates(prev => 
-      prev.includes(date) ? prev.filter(d => d !== date) : [...prev, date]
-    );
-  };
+  // Date grouping removed per user request
 
   return (
     <div className="space-y-8">
@@ -307,64 +283,38 @@ export default function ContactsPage() {
             </Card>
           </div>
 
-          <div className="space-y-4">
-            {sortedDates.map(dateStr => {
-              const isExpanded = expandedDates.includes(dateStr) || searchQuery !== '';
-              return (
-                <div key={dateStr} className="border border-border rounded-lg bg-background overflow-hidden shadow-sm">
-                  <button 
-                    onClick={() => toggleDate(dateStr)}
-                    className="w-full flex items-center justify-between p-4 bg-foreground/5 hover:bg-foreground/10 transition-colors"
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredLists.filter(list => !list.is_default).map(list => (
+              <Card key={list.id} className="p-0 relative group flex flex-col justify-between overflow-hidden">
+                <div className="absolute top-2 right-2 flex items-center gap-1 opacity-50 group-hover:opacity-100 transition-opacity z-10">
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); openEditListModal(list); }}
+                    className="text-foreground/50 hover:text-blue-500 p-2 rounded-md hover:bg-blue-500/10 transition-colors"
+                    title="Edit List"
                   >
-                    <div className="flex items-center gap-3">
-                      {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-                      <span className="font-semibold text-foreground text-sm tracking-wide">{dateStr}</span>
-                    </div>
-                    <span className="text-xs font-medium bg-background px-3 py-1 rounded-full border border-border">
-                      {groupedLists[dateStr].length} {groupedLists[dateStr].length === 1 ? 'List' : 'Lists'}
-                    </span>
+                    <Edit size={16} />
                   </button>
-                  
-                  {isExpanded && (
-                    <div className="p-4 bg-background border-t border-border">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {groupedLists[dateStr].map(list => (
-                          <Card key={list.id} className="p-0 relative group flex flex-col justify-between overflow-hidden">
-                            <div className="absolute top-2 right-2 flex items-center gap-1 opacity-50 group-hover:opacity-100 transition-opacity z-10">
-                              <button
-                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); openEditListModal(list); }}
-                                className="text-foreground/50 hover:text-blue-500 p-2 rounded-md hover:bg-blue-500/10 transition-colors"
-                                title="Edit List"
-                              >
-                                <Edit size={16} />
-                              </button>
-                              <button
-                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteList(list.id); }}
-                                className="text-foreground/50 hover:text-red-500 p-2 rounded-md hover:bg-red-500/10 transition-colors"
-                                title="Delete List"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                            <Link href={`/contacts/${list.id}`} className="p-4 flex flex-col h-full hover:bg-foreground/[0.02] transition-colors">
-                              <div>
-                                <h3 className="font-semibold text-lg pr-16 text-foreground">{list.name}</h3>
-                                <p className="text-xs text-foreground/50 mt-1 line-clamp-2">{list.description || 'No description provided'}</p>
-                              </div>
-                              <div className="mt-6 flex items-end justify-between border-t border-border pt-3">
-                                <div className="text-2xl font-bold text-foreground">
-                                  {contacts.filter(c => c.lists.includes(list.id)).length} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Contacts</span>
-                                </div>
-                              </div>
-                            </Link>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteList(list.id); }}
+                    className="text-foreground/50 hover:text-red-500 p-2 rounded-md hover:bg-red-500/10 transition-colors"
+                    title="Delete List"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
-              );
-            })}
+                <Link href={`/contacts/${list.id}`} className="p-4 flex flex-col h-full hover:bg-foreground/[0.02] transition-colors">
+                  <div>
+                    <h3 className="font-semibold text-lg pr-16 text-foreground">{list.name}</h3>
+                    <p className="text-xs text-foreground/50 mt-1 line-clamp-2">{list.description || 'No description provided'}</p>
+                  </div>
+                  <div className="mt-6 flex items-end justify-between border-t border-border pt-3">
+                    <div className="text-2xl font-bold text-foreground">
+                      {contacts.filter(c => c.lists.includes(list.id)).length} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Contacts</span>
+                    </div>
+                  </div>
+                </Link>
+              </Card>
+            ))}
           </div>
           
           {filteredLists.filter(list => !list.is_default).length === 0 && searchQuery && (
