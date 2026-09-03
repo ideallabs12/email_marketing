@@ -7,7 +7,7 @@ import Card from '../../../components/Card';
 import Button from '../../../components/Button';
 import { ArrowLeft, Plus, Send, AlertCircle, RefreshCw, ChartNoAxesCombined, Trash2, Edit2, Check, X as XIcon } from 'lucide-react';
 import { apiClient } from '../../../services/apiClient';
-import { AdvanceCampaign, Campaign, ContactList, EmailTemplate } from '../../../types';
+import { AdvanceCampaign, Campaign, ContactList, EmailTemplate, ContactBatch } from '../../../types';
 
 export default function AdvanceCampaignDetailPage() {
   const params = useParams();
@@ -17,6 +17,7 @@ export default function AdvanceCampaignDetailPage() {
   const [advCampaign, setAdvCampaign] = useState<AdvanceCampaign | null>(null);
   const [lists, setLists] = useState<ContactList[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [batches, setBatches] = useState<ContactBatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [polling, setPolling] = useState(false);
   const [actionError, setActionError] = useState('');
@@ -70,6 +71,15 @@ export default function AdvanceCampaignDetailPage() {
       setAdvCampaign(campaignRes);
       setLists(listsRes.results || []);
       setTemplates(templatesRes.results || []);
+      
+      if (campaignRes.target_list) {
+        try {
+          const batchesRes = await apiClient.get(`/api/v1/contact-batches/?contact_list=${campaignRes.target_list}`);
+          setBatches(batchesRes.results || []);
+        } catch (e) {
+          console.error('Failed to load batches', e);
+        }
+      }
     } catch (err) {
       console.error('Failed to load detail data:', err);
     } finally {
@@ -152,6 +162,11 @@ export default function AdvanceCampaignDetailPage() {
 
   const getListName = (listId: number) => lists.find(l => l.id === listId)?.name || `List #${listId}`;
   const getTemplateName = (templateId: number) => templates.find(t => t.id === templateId)?.name || `Template #${templateId}`;
+
+  const getBatchNames = (batchIds?: number[]) => {
+    if (!batchIds || batchIds.length === 0) return 'All Contacts';
+    return batchIds.map(id => batches.find(b => b.id === id)?.name || `Batch #${id}`).join(', ');
+  };
 
   if (loading || !advCampaign) {
     return <div className="text-center py-12 text-foreground/50">Loading advanced campaign...</div>;
@@ -250,6 +265,7 @@ export default function AdvanceCampaignDetailPage() {
                     )}
                     <span className="text-xs text-foreground/50 mt-1 truncate font-medium">Template: {getTemplateName(c.template)}</span>
                     <span className="text-xs text-foreground/50 mt-0.5 truncate">From: {c.from_email}</span>
+                    <span className="text-[11px] bg-foreground/5 text-foreground/70 px-1.5 py-0.5 rounded inline-block mt-1 truncate max-w-fit border border-border">Target: {getBatchNames(c.target_batches)}</span>
                   </div>
 
                   {/* Status Group */}
