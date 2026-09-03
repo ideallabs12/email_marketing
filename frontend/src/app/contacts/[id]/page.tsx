@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Card from '../../../components/Card';
 import Button from '../../../components/Button';
-import { Users, Search, X, Trash2, ArrowLeft, Calendar, Layers } from 'lucide-react';
+import { Users, Search, X, Trash2, ArrowLeft, Calendar, Layers, Edit } from 'lucide-react';
 import { apiClient } from '../../../services/apiClient';
 import { Contact, ContactList, ContactBatch } from '../../../types';
 import Link from 'next/link';
@@ -21,6 +21,16 @@ export default function ContactListDetailsPage() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBatchFilter, setSelectedBatchFilter] = useState<string>('all');
+
+  const [showEditListModal, setShowEditListModal] = useState(false);
+  const [editListName, setEditListName] = useState('');
+  const [editListDesc, setEditListDesc] = useState('');
+  const [editListError, setEditListError] = useState('');
+
+  const [showEditBatchModal, setShowEditBatchModal] = useState(false);
+  const [editingBatchId, setEditingBatchId] = useState<number | null>(null);
+  const [editBatchName, setEditBatchName] = useState('');
+  const [editBatchError, setEditBatchError] = useState('');
 
   useEffect(() => {
     if (!listId || isNaN(listId)) {
@@ -52,6 +62,62 @@ export default function ContactListDetailsPage() {
       setLoading(false);
     }
   }
+
+  const handleEditList = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditListError('');
+    if (!editListName.trim()) {
+      setEditListError('Please enter a list name.');
+      return;
+    }
+
+    try {
+      await apiClient.patch(`/api/v1/contact-lists/${listId}/`, {
+        name: editListName,
+        description: editListDesc,
+      });
+      setShowEditListModal(false);
+      loadData();
+    } catch (err: any) {
+      setEditListError(err.message || 'Failed to update list.');
+    }
+  };
+
+  const openEditListModal = () => {
+    if (!list) return;
+    setEditListName(list.name);
+    setEditListDesc(list.description || '');
+    setEditListError('');
+    setShowEditListModal(true);
+  };
+
+  const handleEditBatch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditBatchError('');
+    if (!editBatchName.trim()) {
+      setEditBatchError('Please enter a batch name.');
+      return;
+    }
+
+    try {
+      await apiClient.patch(`/api/v1/contact-batches/${editingBatchId}/`, {
+        name: editBatchName,
+      });
+      setShowEditBatchModal(false);
+      setEditingBatchId(null);
+      loadData();
+    } catch (err: any) {
+      setEditBatchError(err.message || 'Failed to update batch.');
+    }
+  };
+
+  const openEditBatchModal = (batch: ContactBatch, e: React.MouseEvent) => {
+    e.stopPropagation(); // prevent card click
+    setEditingBatchId(batch.id);
+    setEditBatchName(batch.name);
+    setEditBatchError('');
+    setShowEditBatchModal(true);
+  };
 
   const handleDeleteContact = async (id: number) => {
     if (!confirm('Are you sure you want to remove this contact?')) return;
@@ -98,10 +164,19 @@ export default function ContactListDetailsPage() {
         <Link href="/contacts" className="text-foreground/50 hover:text-foreground transition-colors p-2 rounded-full hover:bg-foreground/5">
           <ArrowLeft size={20} />
         </Link>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            {list.name}
-          </h1>
+        <div className="flex-1">
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+              {list.name}
+            </h1>
+            <button
+              onClick={openEditListModal}
+              className="text-foreground/40 hover:text-blue-500 transition-colors p-1 rounded-md hover:bg-blue-500/10"
+              title="Edit List"
+            >
+              <Edit size={18} />
+            </button>
+          </div>
           <p className="text-foreground/50 mt-1 text-sm">{list.description || 'No description provided'}</p>
         </div>
       </div>
@@ -138,10 +213,19 @@ export default function ContactListDetailsPage() {
               return (
                 <Card 
                   key={batch.id} 
-                  className={`p-4 cursor-pointer transition-all border-2 ${isSelected ? 'border-primary' : 'border-transparent hover:border-foreground/10'}`}
+                  className={`p-4 cursor-pointer transition-all border-2 relative group overflow-hidden ${isSelected ? 'border-primary' : 'border-transparent hover:border-foreground/10'}`}
                   onClick={() => setSelectedBatchFilter(String(batch.id))}
                 >
-                  <h3 className="font-semibold text-lg text-foreground truncate" title={batch.name}>{batch.name}</h3>
+                  <div className="absolute top-2 right-2 flex items-center gap-1 opacity-50 group-hover:opacity-100 transition-opacity z-10">
+                    <button
+                      onClick={(e) => openEditBatchModal(batch, e)}
+                      className="text-foreground/50 hover:text-blue-500 p-2 rounded-md hover:bg-blue-500/10 transition-colors"
+                      title="Edit Batch"
+                    >
+                      <Edit size={16} />
+                    </button>
+                  </div>
+                  <h3 className="font-semibold text-lg text-foreground pr-8 truncate" title={batch.name}>{batch.name}</h3>
                   {batch.created_at && (
                     <div className="text-xs text-foreground/50 flex items-center gap-1 mt-1">
                       <Calendar size={12} />
@@ -251,6 +335,68 @@ export default function ContactListDetailsPage() {
           )}
         </div>
       </Card>
+
+      {showEditListModal && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md p-6 border border-border bg-background shadow-lg relative">
+            <button className="absolute top-4 right-4 text-foreground/50 hover:text-foreground" onClick={() => setShowEditListModal(false)}>
+              <X size={20} />
+            </button>
+            <h2 className="text-xl font-bold mb-4">Edit Contact List</h2>
+            <form onSubmit={handleEditList} className="space-y-4">
+              {editListError && <div className="text-xs text-red-500">{editListError}</div>}
+              <div className="space-y-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">List Name</label>
+                <input
+                  type="text"
+                  value={editListName}
+                  onChange={e => setEditListName(e.target.value)}
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                  placeholder="e.g. Speaker Invites"
+                  required
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Description</label>
+                <textarea
+                  value={editListDesc}
+                  onChange={e => setEditListDesc(e.target.value)}
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                  placeholder="Short explanation of this list..."
+                  rows={3}
+                />
+              </div>
+              <Button type="submit" className="w-full py-2">Save Changes</Button>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {showEditBatchModal && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md p-6 border border-border bg-background shadow-lg relative">
+            <button className="absolute top-4 right-4 text-foreground/50 hover:text-foreground" onClick={() => setShowEditBatchModal(false)}>
+              <X size={20} />
+            </button>
+            <h2 className="text-xl font-bold mb-4">Edit Batch Name</h2>
+            <form onSubmit={handleEditBatch} className="space-y-4">
+              {editBatchError && <div className="text-xs text-red-500">{editBatchError}</div>}
+              <div className="space-y-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Batch Name</label>
+                <input
+                  type="text"
+                  value={editBatchName}
+                  onChange={e => setEditBatchName(e.target.value)}
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                  placeholder="e.g. Batch 1"
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full py-2">Save Changes</Button>
+            </form>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
