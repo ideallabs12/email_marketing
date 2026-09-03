@@ -6,6 +6,7 @@ import Button from '../../components/Button';
 import { Plus, Search, X, Trash2, Users, Upload, Check, AlertCircle, Edit, ChevronDown, ChevronRight } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 import { ContactList, Contact, ContactBatch } from '../../types';
+import Link from 'next/link';
 
 export default function ContactsPage() {
   const [lists, setLists] = useState<ContactList[]>([]);
@@ -291,16 +292,18 @@ export default function ContactsPage() {
       ) : (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Card className="p-4 relative group flex flex-col justify-between">
-              <div>
-                <h3 className="font-semibold text-lg pr-6 text-foreground">All Contacts</h3>
-                <p className="text-xs text-foreground/50 mt-1 line-clamp-2">Master list containing all contacts across the platform</p>
-              </div>
-              <div className="mt-6 flex items-end justify-between border-t border-border pt-3">
-                <div className="text-2xl font-bold text-foreground">
-                  {contacts.length} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Contacts</span>
+            <Card className="p-0 relative group flex flex-col justify-between">
+              <Link href={`/directory`} className="flex flex-col h-full hover:bg-foreground/[0.02] transition-colors p-4">
+                <div>
+                  <h3 className="font-semibold text-lg pr-6 text-foreground">All Contacts</h3>
+                  <p className="text-xs text-foreground/50 mt-1 line-clamp-2">Master list containing all contacts across the platform</p>
                 </div>
-              </div>
+                <div className="mt-6 flex items-end justify-between border-t border-border pt-3">
+                  <div className="text-2xl font-bold text-foreground">
+                    {contacts.length} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Contacts</span>
+                  </div>
+                </div>
+              </Link>
             </Card>
           </div>
 
@@ -326,32 +329,34 @@ export default function ContactsPage() {
                     <div className="p-4 bg-background border-t border-border">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {groupedLists[dateStr].map(list => (
-                          <Card key={list.id} className="p-4 relative group flex flex-col justify-between">
-                            <div className="absolute top-2 right-2 flex items-center gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
+                          <Card key={list.id} className="p-0 relative group flex flex-col justify-between overflow-hidden">
+                            <div className="absolute top-2 right-2 flex items-center gap-1 opacity-50 group-hover:opacity-100 transition-opacity z-10">
                               <button
-                                onClick={() => openEditListModal(list)}
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); openEditListModal(list); }}
                                 className="text-foreground/50 hover:text-blue-500 p-2 rounded-md hover:bg-blue-500/10 transition-colors"
                                 title="Edit List"
                               >
                                 <Edit size={16} />
                               </button>
                               <button
-                                onClick={() => handleDeleteList(list.id)}
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteList(list.id); }}
                                 className="text-foreground/50 hover:text-red-500 p-2 rounded-md hover:bg-red-500/10 transition-colors"
                                 title="Delete List"
                               >
                                 <Trash2 size={16} />
                               </button>
                             </div>
-                            <div>
-                              <h3 className="font-semibold text-lg pr-16 text-foreground">{list.name}</h3>
-                              <p className="text-xs text-foreground/50 mt-1 line-clamp-2">{list.description || 'No description provided'}</p>
-                            </div>
-                            <div className="mt-6 flex items-end justify-between border-t border-border pt-3">
-                              <div className="text-2xl font-bold text-foreground">
-                                {contacts.filter(c => c.lists.includes(list.id)).length} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Contacts</span>
+                            <Link href={`/contacts/${list.id}`} className="p-4 flex flex-col h-full hover:bg-foreground/[0.02] transition-colors">
+                              <div>
+                                <h3 className="font-semibold text-lg pr-16 text-foreground">{list.name}</h3>
+                                <p className="text-xs text-foreground/50 mt-1 line-clamp-2">{list.description || 'No description provided'}</p>
                               </div>
-                            </div>
+                              <div className="mt-6 flex items-end justify-between border-t border-border pt-3">
+                                <div className="text-2xl font-bold text-foreground">
+                                  {contacts.filter(c => c.lists.includes(list.id)).length} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Contacts</span>
+                                </div>
+                              </div>
+                            </Link>
                           </Card>
                         ))}
                       </div>
