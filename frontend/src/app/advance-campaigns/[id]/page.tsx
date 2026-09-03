@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import Card from '../../../components/Card';
 import Button from '../../../components/Button';
-import { ArrowLeft, Plus, Send, AlertCircle, RefreshCw, ChartNoAxesCombined, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Send, AlertCircle, RefreshCw, ChartNoAxesCombined, Trash2, Edit2, Check, X as XIcon } from 'lucide-react';
 import { apiClient } from '../../../services/apiClient';
 import { AdvanceCampaign, Campaign, ContactList, EmailTemplate } from '../../../types';
 
@@ -20,6 +20,12 @@ export default function AdvanceCampaignDetailPage() {
   const [loading, setLoading] = useState(true);
   const [polling, setPolling] = useState(false);
   const [actionError, setActionError] = useState('');
+
+  const [editingAdvName, setEditingAdvName] = useState(false);
+  const [newAdvName, setNewAdvName] = useState('');
+  
+  const [editingBlastId, setEditingBlastId] = useState<number | null>(null);
+  const [newBlastName, setNewBlastName] = useState('');
 
   useEffect(() => {
     loadInitialData();
@@ -110,6 +116,40 @@ export default function AdvanceCampaignDetailPage() {
     }
   };
 
+  const handleSaveAdvName = async () => {
+    if (!advCampaign || !newAdvName.trim() || newAdvName === advCampaign.name) {
+        setEditingAdvName(false);
+        return;
+    }
+    try {
+        const res = await apiClient.patch(`/api/v1/advance-campaigns/${id}/`, { name: newAdvName });
+        setAdvCampaign({ ...advCampaign, name: res.name });
+        setEditingAdvName(false);
+    } catch (err: any) {
+        setActionError(err.message || 'Failed to rename campaign.');
+    }
+  };
+
+  const handleSaveBlastName = async (campaignId: number) => {
+    const blast = advCampaign?.campaigns?.find(c => c.id === campaignId);
+    if (!newBlastName.trim() || newBlastName === blast?.name) {
+        setEditingBlastId(null);
+        return;
+    }
+    try {
+        const res = await apiClient.patch(`/api/v1/campaigns/${campaignId}/`, { name: newBlastName });
+        if (advCampaign) {
+            const updatedSends = (advCampaign.campaigns || []).map(c => 
+                c.id === campaignId ? { ...c, name: res.name } : c
+            );
+            setAdvCampaign({ ...advCampaign, campaigns: updatedSends });
+        }
+        setEditingBlastId(null);
+    } catch (err: any) {
+        setActionError(err.message || 'Failed to rename blast.');
+    }
+  };
+
   const getListName = (listId: number) => lists.find(l => l.id === listId)?.name || `List #${listId}`;
   const getTemplateName = (templateId: number) => templates.find(t => t.id === templateId)?.name || `Template #${templateId}`;
 
@@ -125,8 +165,28 @@ export default function AdvanceCampaignDetailPage() {
         <Link href="/advance-campaigns" className="text-foreground/50 hover:text-foreground">
           <ArrowLeft size={20} />
         </Link>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{advCampaign.name}</h1>
+        <div className="flex-1">
+          {editingAdvName ? (
+            <div className="flex items-center gap-2">
+              <input 
+                type="text" 
+                value={newAdvName}
+                onChange={(e) => setNewAdvName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSaveAdvName(); if (e.key === 'Escape') setEditingAdvName(false); }}
+                className="text-2xl font-bold bg-background border border-foreground/30 rounded px-2 py-1 outline-none w-full max-w-md"
+                autoFocus
+              />
+              <button onClick={handleSaveAdvName} className="p-1 hover:bg-foreground/10 rounded text-green-600"><Check size={18} /></button>
+              <button onClick={() => setEditingAdvName(false)} className="p-1 hover:bg-foreground/10 rounded text-foreground/50"><XIcon size={18} /></button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 group">
+              <h1 className="text-3xl font-bold tracking-tight">{advCampaign.name}</h1>
+              <button onClick={() => { setNewAdvName(advCampaign.name); setEditingAdvName(true); }} className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-foreground/10 rounded text-foreground/50 transition-opacity">
+                <Edit2 size={16} />
+              </button>
+            </div>
+          )}
           <p className="text-foreground/50 mt-1 text-sm">Targeting: {getListName(advCampaign.target_list)}</p>
         </div>
       </div>
@@ -167,7 +227,27 @@ export default function AdvanceCampaignDetailPage() {
                 <div key={c.id} className="flex flex-col md:grid md:grid-cols-12 gap-1 md:gap-0 py-4 md:py-3 text-sm items-start md:items-center hover:bg-foreground/5 rounded-lg md:rounded-md border border-border md:border-transparent bg-foreground/[0.02] md:bg-transparent px-3 md:px-2 mb-4 md:mb-0 transition-colors shadow-sm md:shadow-none">
                   {/* Name and Basic Info */}
                   <div className="flex flex-col md:col-span-4 pr-2 min-w-0 w-full mb-3 md:mb-0">
-                    <span className="font-bold md:font-medium text-base md:text-sm truncate text-foreground">{c.name}</span>
+                    {editingBlastId === c.id ? (
+                      <div className="flex items-center gap-1 mb-1">
+                        <input 
+                          type="text" 
+                          value={newBlastName}
+                          onChange={(e) => setNewBlastName(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleSaveBlastName(c.id); if (e.key === 'Escape') setEditingBlastId(null); }}
+                          className="font-bold md:font-medium text-sm bg-background border border-foreground/30 rounded px-1.5 py-0.5 outline-none w-full"
+                          autoFocus
+                        />
+                        <button onClick={() => handleSaveBlastName(c.id)} className="p-1 hover:bg-foreground/10 rounded text-green-600"><Check size={14} /></button>
+                        <button onClick={() => setEditingBlastId(null)} className="p-1 hover:bg-foreground/10 rounded text-foreground/50"><XIcon size={14} /></button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 group/blast">
+                        <span className="font-bold md:font-medium text-base md:text-sm truncate text-foreground">{c.name}</span>
+                        <button onClick={() => { setNewBlastName(c.name); setEditingBlastId(c.id); }} className="opacity-0 group-hover/blast:opacity-100 p-1 hover:bg-foreground/10 rounded text-foreground/50 transition-opacity">
+                          <Edit2 size={12} />
+                        </button>
+                      </div>
+                    )}
                     <span className="text-xs text-foreground/50 mt-1 truncate font-medium">Template: {getTemplateName(c.template)}</span>
                     <span className="text-xs text-foreground/50 mt-0.5 truncate">From: {c.from_email}</span>
                   </div>
