@@ -7,7 +7,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('campaigns', '0009_advancecampaign_campaign_advance_campaign'),
-        ('contacts', '0003_ignoredcontact_contactbatch_contact_batches'),
+        ('contacts', '0004_contactbatch_contact_batches'),
     ]
 
     operations = [
