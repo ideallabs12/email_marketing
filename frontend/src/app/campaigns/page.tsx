@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
-import { Plus, X, Send, AlertCircle, RefreshCw, ChartNoAxesCombined, Trash2 } from 'lucide-react';
+import { Plus, X, Send, AlertCircle, RefreshCw, ChartNoAxesCombined, Trash2, Zap } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { apiClient } from '../../services/apiClient';
 import { Campaign, ContactList, EmailTemplate } from '../../types';
 
@@ -15,6 +16,7 @@ export default function CampaignsPage() {
   const [loading, setLoading] = useState(true);
   const [polling, setPolling] = useState(false);
   const [showMasterLinkModal, setShowMasterLinkModal] = useState(false);
+  const router = useRouter();
 
   const [actionError, setActionError] = useState('');
 
@@ -98,6 +100,21 @@ export default function CampaignsPage() {
       setCampaigns((current) => current.filter((item) => item.id !== campaign.id));
     } catch (err: unknown) {
       setActionError(err instanceof Error ? err.message : 'Failed to delete campaign.');
+    }
+  };
+
+  const handleConvertToAdvanced = async (campaignId: number, campaignName: string) => {
+    setActionError('');
+    const confirmed = window.confirm(`Convert "${campaignName}" into an Advance Campaign? It will become the first step of the new Advance Campaign.`);
+    if (!confirmed) return;
+
+    try {
+      const res = await apiClient.post(`/api/v1/campaigns/${campaignId}/convert-to-advanced/`, {});
+      if (res.advance_campaign_id) {
+        router.push(`/advance-campaigns/${res.advance_campaign_id}`);
+      }
+    } catch (err: any) {
+      setActionError(err.message || 'Failed to convert campaign.');
     }
   };
 
@@ -190,24 +207,33 @@ export default function CampaignsPage() {
                   {/* Actions Group */}
                   <div className="w-full pt-3 border-t border-border/50 md:border-0 md:pt-0 md:col-span-2 text-left md:text-right">
                     {(c.status === 'draft' || c.status === 'failed') ? (
-                      <div className="flex items-center md:justify-end gap-2">
+                      <div className="flex items-center md:justify-end gap-2 flex-wrap md:flex-nowrap">
+                        <Button variant="outline" className="py-1.5 md:py-1 px-3 text-xs w-full md:w-auto justify-center" onClick={() => handleConvertToAdvanced(c.id, c.name)}>
+                          <Zap size={12} className="text-yellow-500" />
+                          <span>To Advance</span>
+                        </Button>
                         <Button variant="outline" className="py-1.5 md:py-1 px-3 text-xs w-full md:w-auto justify-center" onClick={() => handleSendCampaign(c.id)}>
                           <Send size={12} />
                           <span>Send Now</span>
                         </Button>
                         <Button
                           variant="outline"
-                          className="py-1.5 md:py-1 px-3 md:px-2 text-red-600 border-red-600/40 hover:bg-red-600 hover:text-white hover:border-red-600"
+                          className="py-1.5 md:py-1 px-3 md:px-2 text-red-600 border-red-600/40 hover:bg-red-600 hover:text-white hover:border-red-600 w-full md:w-auto"
                           onClick={() => handleDeleteCampaign(c)}
                           title={`Delete ${c.name}`}
                         >
-                          <Trash2 size={14} className="md:w-3.5 md:h-3.5" />
+                          <Trash2 size={14} className="md:w-3.5 md:h-3.5 hidden md:block" />
+                          <span className="md:hidden ml-1">Delete</span>
                         </Button>
                       </div>
                     ) : c.status === 'sending' ? (
                       <span className="text-xs text-foreground/40 italic">Sending...</span>
                     ) : (
-                      <div className="flex items-center md:justify-end gap-2">
+                      <div className="flex items-center md:justify-end gap-2 flex-wrap md:flex-nowrap">
+                        <Button variant="outline" className="py-1.5 md:py-1 px-3 text-xs w-full md:w-auto justify-center" onClick={() => handleConvertToAdvanced(c.id, c.name)}>
+                          <Zap size={12} className="text-yellow-500" />
+                          <span>To Advance</span>
+                        </Button>
                         <Link
                           href={`/campaigns/${c.id}/analytics`}
                           className="inline-flex items-center justify-center gap-1 w-full md:w-auto rounded-md border border-foreground bg-background px-3 py-1.5 md:py-1 text-xs font-medium hover:bg-foreground hover:text-background transition-colors"
@@ -217,11 +243,12 @@ export default function CampaignsPage() {
                         </Link>
                         <Button
                           variant="outline"
-                          className="py-1.5 md:py-1 px-3 md:px-2 text-red-600 border-red-600/40 hover:bg-red-600 hover:text-white hover:border-red-600"
+                          className="py-1.5 md:py-1 px-3 md:px-2 text-red-600 border-red-600/40 hover:bg-red-600 hover:text-white hover:border-red-600 w-full md:w-auto"
                           onClick={() => handleDeleteCampaign(c)}
                           title={`Delete ${c.name}`}
                         >
-                          <Trash2 size={14} className="md:w-3.5 md:h-3.5" />
+                          <Trash2 size={14} className="md:w-3.5 md:h-3.5 hidden md:block" />
+                          <span className="md:hidden ml-1">Delete</span>
                         </Button>
                       </div>
                     )}

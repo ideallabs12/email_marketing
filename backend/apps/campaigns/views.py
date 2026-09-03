@@ -81,6 +81,29 @@ class CampaignViewSet(viewsets.ModelViewSet):
 
         return Response({'status': 'Campaign queued for sending.'})
 
+    @action(detail=True, methods=['post'], url_path='convert-to-advanced')
+    def convert_to_advanced(self, request, pk=None):
+        campaign = self.get_object()
+
+        if campaign.advance_campaign:
+            return Response(
+                {'error': 'This campaign is already part of an advance campaign.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        advance_campaign = AdvanceCampaign.objects.create(
+            name=campaign.name,
+            target_list=campaign.target_list
+        )
+
+        campaign.advance_campaign = advance_campaign
+        campaign.save()
+
+        return Response({
+            'status': 'Converted to advance campaign.',
+            'advance_campaign_id': advance_campaign.id
+        })
+
 
 class AdvanceCampaignViewSet(viewsets.ModelViewSet):
     queryset = AdvanceCampaign.objects.all().order_by('-created_at')
