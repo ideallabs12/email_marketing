@@ -5,10 +5,11 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { Plus, Search, X, Trash2, Users, Upload, Check, AlertCircle, Edit, ChevronDown, ChevronRight } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
-import { ContactList, Contact } from '../../types';
+import { ContactList, Contact, ContactBatch } from '../../types';
 
 export default function ContactsPage() {
   const [lists, setLists] = useState<ContactList[]>([]);
+  const [allBatches, setAllBatches] = useState<ContactBatch[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -28,6 +29,7 @@ export default function ContactsPage() {
   const [newLastName, setNewLastName] = useState('');
   const [newSubscribed, setNewSubscribed] = useState(true);
   const [newSelectedLists, setNewSelectedLists] = useState<number[]>([]);
+  const [newSelectedBatches, setNewSelectedBatches] = useState<number[]>([]);
   const [addError, setAddError] = useState('');
 
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -49,11 +51,13 @@ export default function ContactsPage() {
   async function loadData() {
     setLoading(true);
     try {
-      const [listsRes, contactsRes] = await Promise.all([
+      const [listsRes, batchesRes, contactsRes] = await Promise.all([
         apiClient.get('/api/v1/contact-lists/?limit=10000'),
+        apiClient.get('/api/v1/contact-batches/?limit=10000'),
         apiClient.get('/api/v1/contacts/?limit=10000'),
       ]);
       setLists(listsRes.results || []);
+      setAllBatches(batchesRes.results || []);
       setContacts(contactsRes.results || []);
     } catch (err) {
       console.error('Failed to load contact lists data:', err);
@@ -77,6 +81,7 @@ export default function ContactsPage() {
         last_name: newLastName,
         is_subscribed: newSubscribed,
         lists: newSelectedLists,
+        batches: newSelectedBatches,
       });
       setShowAddModal(false);
       setNewEmail('');
@@ -84,6 +89,7 @@ export default function ContactsPage() {
       setNewLastName('');
       setNewSubscribed(true);
       setNewSelectedLists([]);
+      setNewSelectedBatches([]);
       loadData();
     } catch (err: any) {
       setAddError(err.message || 'Failed to add contact.');
@@ -496,6 +502,26 @@ export default function ContactsPage() {
                 </select>
                 <p className="text-[10px] text-foreground/40 mt-1">Hold Ctrl (Cmd) to select multiple lists.</p>
               </div>
+
+              {newSelectedLists.length > 0 && allBatches.filter(b => newSelectedLists.includes(b.contact_list)).length > 0 && (
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Add to Batch (Optional)</label>
+                  <select
+                    multiple
+                    value={newSelectedBatches.map(String)}
+                    onChange={e => {
+                      const vals = Array.from(e.target.selectedOptions, option => Number(option.value));
+                      setNewSelectedBatches(vals);
+                    }}
+                    className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background min-h-[80px]"
+                  >
+                    {allBatches.filter(b => newSelectedLists.includes(b.contact_list)).map(batch => (
+                      <option key={batch.id} value={batch.id}>{batch.name} (from {lists.find(l => l.id === batch.contact_list)?.name})</option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-foreground/40 mt-1">Hold Ctrl (Cmd) to select multiple batches.</p>
+                </div>
+              )}
 
               <div className="flex items-center space-x-2 pt-2">
                 <input

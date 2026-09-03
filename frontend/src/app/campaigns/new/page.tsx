@@ -7,12 +7,13 @@ import Button from '../../../components/Button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { apiClient } from '../../../services/apiClient';
-import { ContactList, EmailTemplate } from '../../../types';
+import { ContactList, EmailTemplate, ContactBatch } from '../../../types';
 
 export default function NewCampaignPage() {
   const router = useRouter();
   
   const [lists, setLists] = useState<ContactList[]>([]);
+  const [batches, setBatches] = useState<ContactBatch[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [senders, setSenders] = useState<{name: string, email: string}[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,6 +21,7 @@ export default function NewCampaignPage() {
   const [name, setName] = useState('');
   const [subject, setSubject] = useState('');
   const [targetList, setTargetList] = useState('');
+  const [selectedBatches, setSelectedBatches] = useState<number[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [templateCategory, setTemplateCategory] = useState('');
   const [fromEmail, setFromEmail] = useState('');
@@ -30,12 +32,14 @@ export default function NewCampaignPage() {
     async function loadData() {
       setLoading(true);
       try {
-        const [listsRes, templatesRes, sendersRes] = await Promise.all([
+        const [listsRes, batchesRes, templatesRes, sendersRes] = await Promise.all([
           apiClient.get('/api/v1/contact-lists/?limit=10000'),
+          apiClient.get('/api/v1/contact-batches/?limit=10000'),
           apiClient.get('/api/v1/templates/?limit=10000'),
           apiClient.get('/api/v1/senders/'),
         ]);
         setLists(listsRes.results || []);
+        setBatches(batchesRes.results || []);
         setTemplates(templatesRes.results || []);
         
         const sendersData = sendersRes || [];
@@ -79,6 +83,7 @@ export default function NewCampaignPage() {
         subject: subject.trim() || undefined,
         from_email: fromEmail,
         target_list: Number(targetList),
+        target_batches: selectedBatches,
         template: Number(selectedTemplate),
         status: 'draft',
       });
@@ -196,6 +201,26 @@ export default function NewCampaignPage() {
               ))}
             </select>
           </div>
+
+          {targetList && batches.filter(b => b.contact_list === Number(targetList)).length > 0 && (
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Target Batches (Optional)</label>
+              <select
+                multiple
+                value={selectedBatches.map(String)}
+                onChange={e => {
+                  const vals = Array.from(e.target.selectedOptions, option => Number(option.value));
+                  setSelectedBatches(vals);
+                }}
+                className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background min-h-[80px]"
+              >
+                {batches.filter(b => b.contact_list === Number(targetList)).map(b => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+              <p className="text-[10px] text-foreground/40 mt-1">Leave empty to send to the entire list. Hold Ctrl (Cmd) to select multiple batches.</p>
+            </div>
+          )}
 
           <Button type="submit" className="w-full py-2.5 mt-2" disabled={isSubmitting}>
             {isSubmitting ? 'Creating...' : 'Create Campaign'}
