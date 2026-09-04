@@ -6,6 +6,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 import Card from './Card';
 import { apiClient } from '../services/apiClient';
 import type { CampaignAnalytics, CampaignRecipientFilter, CampaignRecipientStatus } from '../types';
+import { slugify } from '../utils/slug';
 
 const filters: { value: CampaignRecipientFilter; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -114,13 +115,12 @@ export default function CampaignAnalyticsView({ campaignId }: { campaignId: stri
   };
 
   const copyShareLink = () => {
-    const campaignShareToken = (analytics?.campaign as any)?.advance_campaign_share_token;
-    const blastShareToken = (analytics?.campaign as any)?.share_token;
-    const token = campaignShareToken || blastShareToken;
-    if (!token) return;
-    const shareUrl = campaignShareToken
-      ? `${window.location.origin}/public/campaign/${campaignShareToken}`
-      : `${window.location.origin}/public/campaign/${blastShareToken}`;
+    const camp = analytics?.campaign as any;
+    const advSlug = camp?.advance_campaign_slug || (camp?.advance_campaign_name ? slugify(camp.advance_campaign_name) : null);
+    const blastSlug = camp?.slug || (camp?.name ? slugify(camp.name) : null);
+    const identifier = advSlug || camp?.advance_campaign_share_token || blastSlug || camp?.share_token;
+    if (!identifier) return;
+    const shareUrl = `${window.location.origin}/public/campaign/${identifier}`;
     navigator.clipboard.writeText(shareUrl).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);

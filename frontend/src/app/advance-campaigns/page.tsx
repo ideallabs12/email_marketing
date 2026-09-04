@@ -7,6 +7,7 @@ import Button from '../../components/Button';
 import { Plus, AlertCircle, Trash2, Layers, RefreshCw, ChartNoAxesCombined, Share2, Check } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 import { AdvanceCampaign, ContactList, Campaign } from '../../types';
+import { slugify } from '../../utils/slug';
 
 export default function AdvanceCampaignsPage() {
   const [activeTab, setActiveTab] = useState<'all' | 'recent'>('all');
@@ -90,8 +91,8 @@ export default function AdvanceCampaignsPage() {
   const getContainerName = (id: number) => campaigns.find(c => c.id === id)?.name || `Container #${id}`;
 
   const handleCopyLink = (campaign: AdvanceCampaign) => {
-    if (!campaign.share_token) return;
-    const url = `${window.location.origin}/public/campaign/${campaign.share_token}`;
+    const slug = (campaign as any).slug || (campaign.name ? slugify(campaign.name) : '') || campaign.share_token || campaign.id;
+    const url = `${window.location.origin}/public/campaign/${slug}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopiedId(campaign.id);
       setTimeout(() => setCopiedId(null), 2000);

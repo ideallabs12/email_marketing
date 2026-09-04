@@ -9,6 +9,7 @@ class CampaignSerializer(serializers.ModelSerializer):
 class AdvanceCampaignSerializer(serializers.ModelSerializer):
     campaigns = CampaignSerializer(many=True, read_only=True)
     share_token = serializers.SerializerMethodField()
+    slug = serializers.SerializerMethodField()
 
     class Meta:
         model = AdvanceCampaign
@@ -23,4 +24,8 @@ class AdvanceCampaignSerializer(serializers.ModelSerializer):
             pass
         import uuid
         return str(uuid.uuid5(uuid.NAMESPACE_DNS, f"advance-campaign-{obj.id}"))
+
+    def get_slug(self, obj):
+        from django.utils.text import slugify
+        return slugify(obj.name) or f"campaign-{obj.id}"
 

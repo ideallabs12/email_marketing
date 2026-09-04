@@ -8,6 +8,7 @@ import Button from '../../../components/Button';
 import { ArrowLeft, Plus, Send, AlertCircle, RefreshCw, ChartNoAxesCombined, Trash2, Edit2, Check, X as XIcon, Share2 } from 'lucide-react';
 import { apiClient } from '../../../services/apiClient';
 import { AdvanceCampaign, Campaign, ContactList, EmailTemplate, ContactBatch } from '../../../types';
+import { slugify } from '../../../utils/slug';
 
 export default function AdvanceCampaignDetailPage() {
   const params = useParams();
@@ -178,9 +179,9 @@ export default function AdvanceCampaignDetailPage() {
   };
 
   const handleCopyCampaignLink = () => {
-    const token = advCampaign?.share_token || advCampaign?.id;
-    if (!token) return;
-    const url = `${window.location.origin}/public/campaign/${token}`;
+    const slug = (advCampaign as any)?.slug || (advCampaign?.name ? slugify(advCampaign.name) : '') || advCampaign?.share_token || advCampaign?.id;
+    if (!slug) return;
+    const url = `${window.location.origin}/public/campaign/${slug}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);

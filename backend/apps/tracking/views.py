@@ -24,17 +24,68 @@ class PublicAdvanceCampaignView(views.APIView):
     def get(self, request, token):
         import uuid
         from django.http import Http404
+        from django.utils.text import slugify
 
         adv_campaign = None
+        direct_blast = None
+        token_str = str(token).strip()
+        token_clean = token_str.lower().replace('_', '-')
+
+        # 1. Try finding by exact share_token if valid UUID
         try:
-            adv_campaign = AdvanceCampaign.objects.filter(share_token=token).first()
+            val = uuid.UUID(token_str)
+            adv_campaign = AdvanceCampaign.objects.filter(share_token=val).first()
+            if not adv_campaign:
+                single_campaign = Campaign.objects.filter(share_token=val).first()
+                if single_campaign and single_campaign.advance_campaign:
+                    adv_campaign = single_campaign.advance_campaign
+                    direct_blast = single_campaign
         except Exception:
             adv_campaign = None
 
+        # 2. Try finding by matching slugified name of AdvanceCampaign
         if not adv_campaign:
             try:
                 for ac in AdvanceCampaign.objects.all():
-                    if str(uuid.uuid5(uuid.NAMESPACE_DNS, f"advance-campaign-{ac.id}")) == str(token):
+                    ac_slug = slugify(ac.name)
+                    ac_hyphen = ac.name.lower().strip().replace('_', '-')
+                    if (
+                        token_clean == ac_slug
+                        or token_clean == ac_hyphen
+                        or token_clean.replace('-', '') == ac_slug.replace('-', '')
+                        or token_clean == f"{ac_slug}-{ac.id}"
+                        or token_clean == str(ac.id)
+                    ):
+                        adv_campaign = ac
+                        break
+            except Exception:
+                pass
+
+        # 3. Try finding by matching single Campaign blast slug
+        if not adv_campaign:
+            try:
+                for camp in Campaign.objects.all():
+                    camp_slug = slugify(camp.name)
+                    camp_hyphen = camp.name.lower().strip().replace('_', '-')
+                    if (
+                        token_clean == camp_slug
+                        or token_clean == camp_hyphen
+                        or token_clean.replace('-', '') == camp_slug.replace('-', '')
+                        or token_clean == f"{camp_slug}-{camp.id}"
+                        or token_clean == str(camp.id)
+                    ):
+                        if camp.advance_campaign:
+                            adv_campaign = camp.advance_campaign
+                            direct_blast = camp
+                            break
+            except Exception:
+                pass
+
+        # 4. Fallback: match deterministic uuid5
+        if not adv_campaign:
+            try:
+                for ac in AdvanceCampaign.objects.all():
+                    if str(uuid.uuid5(uuid.NAMESPACE_DNS, f"advance-campaign-{ac.id}")) == token_str:
                         adv_campaign = ac
                         break
             except Exception:
@@ -60,6 +111,8 @@ class PublicAdvanceCampaignView(views.APIView):
                 selected_blast = blasts_qs.get(id=int(blast_id))
             except (ValueError, Campaign.DoesNotExist):
                 selected_blast = None
+        elif direct_blast:
+            selected_blast = direct_blast
         
         if not selected_blast and blasts_qs.exists():
             selected_blast = blasts_qs.first()
@@ -293,6 +346,14 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
                 import uuid
                 advance_token = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"advance-campaign-{campaign.advance_campaign_id}"))
 
+        advance_slug = None
+        if campaign.advance_campaign_id:
+            try:
+                from django.utils.text import slugify
+                advance_slug = slugify(campaign.advance_campaign.name)
+            except Exception:
+                advance_slug = None
+
         return Response({
             'campaign': {
                 'id': campaign.id,
@@ -300,6 +361,7 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
                 'status': campaign.status,
                 'share_token': campaign.share_token,
                 'advance_campaign_share_token': advance_token,
+                'advance_campaign_slug': advance_slug,
             },
             'summary': counts,
             'filter': status_filter,
@@ -550,13 +612,17 @@ class PublicMasterLinkCampaignsView(views.APIView):
             blasts = ac.campaigns.all().order_by('-created_at')
             ac_share_token = ''
             try:
-                ac_share_token = str(getattr(ac, 'share_token', ''))
+                raw_token = getattr(ac, 'share_token', None)
+                ac_share_token = str(raw_token) if raw_token else ''
             except Exception:
                 pass
+            if not ac_share_token:
+                ac_share_token = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"advance-campaign-{ac.id}"))
 
             containers.append({
                 'id': ac.id,
                 'name': ac.name,
+                'slug': slugify(ac.name),
                 'share_token': ac_share_token,
                 'created_at': ac.created_at.isoformat(),
                 'blasts': [{

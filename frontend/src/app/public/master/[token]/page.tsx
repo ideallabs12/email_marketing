@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState, useMemo } from 'react';
 import { AlertTriangle, RefreshCw, ChevronDown, ChevronRight, Search, Lock, Eye, EyeOff, Loader2, ExternalLink } from 'lucide-react';
+import { getCampaignUrl } from '@/utils/slug';
 
 interface BlastSummary {
   id: number;
@@ -15,6 +16,7 @@ interface BlastSummary {
 interface ContainerSummary {
   id: number | null;
   name: string;
+  slug?: string;
   share_token?: string;
   created_at: string | null;
   blasts: BlastSummary[];
@@ -324,9 +326,9 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-1">
                       <span className="font-semibold text-sm text-gray-800 truncate">{container.name}</span>
-                      {container.share_token && (
+                      {(container.share_token || container.name) && (
                         <a
-                          href={`/public/campaign/${container.share_token}`}
+                          href={getCampaignUrl(container)}
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
