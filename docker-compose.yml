@@ -1,0 +1,70 @@
+services:
+  nginx:
+    build: ./nginx
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - frontend
+      - backend
+
+  db:
+    image: postgres:16
+    restart: always
+    env_file:
+      - ./backend/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    restart: always
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: ./backend
+    restart: always
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - db
+      - redis
+
+  celery_worker:
+    build: ./backend
+    restart: always
+    command: celery -A config worker --loglevel=info
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - db
+      - redis
+      - backend
+
+  celery_beat:
+    build: ./backend
+    restart: always
+    command: celery -A config beat --loglevel=info
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - db
+      - redis
+      - backend
+
+  frontend:
+    build: ./frontend
+    restart: always
+    # Removed volumes mapping to not use local source code for production
+
+volumes:
+  postgres_data:

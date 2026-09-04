@@ -1,0 +1,43 @@
+from django.db import models
+
+class ContactList(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+class ContactBatch(models.Model):
+    name = models.CharField(max_length=255)
+    contact_list = models.ForeignKey(ContactList, related_name='batches', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.contact_list.name})"
+
+class Contact(models.Model):
+    email = models.EmailField(unique=True)
+    first_name = models.CharField(max_length=255, blank=True)
+    last_name = models.CharField(max_length=255, blank=True)
+    is_subscribed = models.BooleanField(default=True)
+    lists = models.ManyToManyField(ContactList, related_name='contacts', blank=True)
+    batches = models.ManyToManyField(ContactBatch, related_name='contacts', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.email
+
+class IgnoredContact(models.Model):
+    email = models.CharField(max_length=255, blank=True)
+    first_name = models.CharField(max_length=255, blank=True)
+    last_name = models.CharField(max_length=255, blank=True)
+    reason = models.TextField()
+    imported_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.email or 'No Email'} - {self.reason}"
+
