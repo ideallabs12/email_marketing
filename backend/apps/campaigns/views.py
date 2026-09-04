@@ -109,4 +109,10 @@ class AdvanceCampaignViewSet(viewsets.ModelViewSet):
     queryset = AdvanceCampaign.objects.all().order_by('-created_at')
     serializer_class = AdvanceCampaignSerializer
 
+    @action(detail=False, methods=['get'], url_path='recent-blasts')
+    def recent_blasts(self, request):
+        recent = Campaign.objects.filter(advance_campaign__isnull=False).order_by('-created_at')[:50]
+        serializer = CampaignSerializer(recent, many=True)
+        return Response({'results': serializer.data})
+
 
