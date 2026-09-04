@@ -41,8 +41,11 @@ export default function CentralizedAnalyticsPage() {
   // Filter containers based on search query
   const filteredContainers = useMemo(() => {
     if (!searchQuery.trim()) return containers;
-    const lowerQuery = searchQuery.toLowerCase();
-    return containers.filter(c => c.name.toLowerCase().includes(lowerQuery));
+    const tokens = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    return containers.filter(c => {
+      const name = c.name.toLowerCase();
+      return tokens.every(token => name.includes(token));
+    });
   }, [containers, searchQuery]);
 
   const toggleContainer = (id: number) => {

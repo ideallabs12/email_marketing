@@ -41,11 +41,25 @@ export default function BouncesPage() {
   }
 
   const filteredBounces = bounces.filter(b => {
-    const term = searchQuery.toLowerCase();
-    const matchesSearch = b.email.toLowerCase().includes(term) ||
-      (b.first_name || '').toLowerCase().includes(term) ||
-      (b.last_name || '').toLowerCase().includes(term) ||
-      (b.campaign_name || '').toLowerCase().includes(term);
+    let matchesSearch = true;
+    if (searchQuery.trim()) {
+      const tokens = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
+      const firstName = (b.first_name || '').toLowerCase();
+      const lastName = (b.last_name || '').toLowerCase();
+      const fullName = `${firstName} ${lastName}`.trim();
+      const reverseFullName = `${lastName} ${firstName}`.trim();
+      const email = (b.email || '').toLowerCase();
+      const campaignName = (b.campaign_name || '').toLowerCase();
+
+      matchesSearch = tokens.every(token =>
+        firstName.includes(token) ||
+        lastName.includes(token) ||
+        fullName.includes(token) ||
+        reverseFullName.includes(token) ||
+        email.includes(token) ||
+        campaignName.includes(token)
+      );
+    }
       
     const matchesCategory = categoryFilter === 'All' || b.error_message === categoryFilter;
     

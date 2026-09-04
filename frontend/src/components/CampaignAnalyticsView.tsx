@@ -114,8 +114,9 @@ export default function CampaignAnalyticsView({ campaignId }: { campaignId: stri
   };
 
   const copyShareLink = () => {
-    if (!analytics?.campaign?.share_token) return;
-    const shareUrl = `${window.location.origin}/public/campaign/${analytics.campaign.share_token}`;
+    const campaignShareToken = (analytics?.campaign as any)?.advance_campaign_share_token;
+    if (!campaignShareToken) return;
+    const shareUrl = `${window.location.origin}/public/campaign/${campaignShareToken}`;
     navigator.clipboard.writeText(shareUrl).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -181,14 +182,14 @@ export default function CampaignAnalyticsView({ campaignId }: { campaignId: stri
             <p className="text-foreground/50 mt-1 text-sm">{analytics?.campaign.name || 'Loading campaign…'}</p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            {analytics?.campaign?.share_token && (
+            {Boolean((analytics?.campaign as any)?.advance_campaign_share_token) && (
               <button
                 type="button"
                 onClick={copyShareLink}
                 className="inline-flex items-center gap-2 border border-border rounded-md px-3 py-2 text-sm hover:bg-foreground hover:text-background transition-colors"
               >
                 {copied ? <Check size={15} className="text-green-500" /> : <Share2 size={15} />} 
-                {copied ? 'Copied Link' : 'Copy Live Link'}
+                {copied ? 'Copied Campaign Link' : 'Copy Campaign Link'}
               </button>
             )}
             <button

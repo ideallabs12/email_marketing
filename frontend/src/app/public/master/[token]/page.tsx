@@ -217,13 +217,25 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
   // Filter containers + blasts by search query
   const filteredContainers = useMemo(() => {
     if (!searchQuery.trim()) return containers;
-    const q = searchQuery.toLowerCase();
+    const tokens = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
     return containers
-      .map(c => ({
-        ...c,
-        blasts: c.blasts.filter(b => b.name.toLowerCase().includes(q)),
-      }))
-      .filter(c => c.name.toLowerCase().includes(q) || c.blasts.length > 0);
+      .map(c => {
+        const containerName = c.name.toLowerCase();
+        const matchesContainer = tokens.every(t => containerName.includes(t));
+        const matchingBlasts = c.blasts.filter(b => {
+          const blastName = b.name.toLowerCase();
+          const combined = `${containerName} ${blastName}`;
+          return tokens.every(t => blastName.includes(t) || combined.includes(t));
+        });
+        return {
+          ...c,
+          blasts: matchesContainer ? c.blasts : matchingBlasts,
+        };
+      })
+      .filter(c => {
+        const containerName = c.name.toLowerCase();
+        return tokens.every(t => containerName.includes(t)) || c.blasts.length > 0;
+      });
   }, [containers, searchQuery]);
 
   const filteredRows = analytics?.data.filter(row =>

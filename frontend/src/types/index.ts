@@ -66,6 +66,7 @@ export interface AdvanceCampaign {
   id: number;
   name: string;
   target_list: number;
+  share_token?: string;
   campaigns?: Campaign[];
   created_at: string;
   updated_at: string;

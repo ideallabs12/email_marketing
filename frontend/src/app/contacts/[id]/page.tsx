@@ -131,10 +131,23 @@ export default function ContactListDetailsPage() {
   };
 
   const filteredContacts = contacts.filter(c => {
-    const term = searchQuery.toLowerCase();
-    const matchesSearch = c.email.toLowerCase().includes(term) ||
-      (c.first_name || '').toLowerCase().includes(term) ||
-      (c.last_name || '').toLowerCase().includes(term);
+    let matchesSearch = true;
+    if (searchQuery.trim()) {
+      const tokens = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
+      const firstName = (c.first_name || '').toLowerCase();
+      const lastName = (c.last_name || '').toLowerCase();
+      const fullName = `${firstName} ${lastName}`.trim();
+      const reverseFullName = `${lastName} ${firstName}`.trim();
+      const email = (c.email || '').toLowerCase();
+
+      matchesSearch = tokens.every(token =>
+        firstName.includes(token) ||
+        lastName.includes(token) ||
+        fullName.includes(token) ||
+        reverseFullName.includes(token) ||
+        email.includes(token)
+      );
+    }
       
     let matchesBatch = true;
     if (selectedBatchFilter !== 'all') {

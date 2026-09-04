@@ -7,79 +7,125 @@ from rest_framework.permissions import AllowAny
 
 from .models import CampaignPerformance, CampaignRecipientStatus
 from .serializers import CampaignPerformanceSerializer, CampaignRecipientStatusSerializer, BouncedEmailSerializer
-from apps.campaigns.models import Campaign
+from apps.campaigns.models import Campaign, AdvanceCampaign
 
 from django.shortcuts import get_object_or_404
 from urllib.parse import urlparse
+
+def get_campaign_target_contacts(campaign):
+    contacts = campaign.target_list.contacts.filter(is_subscribed=True)
+    if campaign.target_batches.exists():
+        contacts = contacts.filter(batches__in=campaign.target_batches.all()).distinct()
+    return contacts.order_by('email')
+
+class PublicAdvanceCampaignView(views.APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        adv_campaign = get_object_or_404(AdvanceCampaign, share_token=token)
+        blasts_qs = adv_campaign.campaigns.exclude(status='draft').order_by('-created_at')
+
+        blasts_data = [{
+            'id': b.id,
+            'name': b.name,
+            'status': b.status,
+            'sent_at': b.sent_at.isoformat() if b.sent_at else None,
+            'created_at': b.created_at.isoformat(),
+        } for b in blasts_qs]
+
+        blast_id = request.query_params.get('blast_id')
+        selected_blast = None
+        if blast_id:
+            try:
+                selected_blast = blasts_qs.get(id=int(blast_id))
+            except (ValueError, Campaign.DoesNotExist):
+                selected_blast = None
+        
+        if not selected_blast and blasts_qs.exists():
+            selected_blast = blasts_qs.first()
+
+        analytics_data = None
+        if selected_blast:
+            contacts = get_campaign_target_contacts(selected_blast)
+            recipient_statuses = CampaignRecipientStatus.objects.filter(
+                campaign=selected_blast, contact__in=contacts,
+            ).select_related('contact')
+            by_contact = {item.contact_id: item for item in recipient_statuses}
+
+            rows = []
+            for contact in contacts:
+                item = by_contact.get(contact.id)
+                speaker_name = f"{contact.first_name} {contact.last_name}".strip()
+                email = contact.email
+                if item:
+                    status_val = item.status
+                    links = []
+                    for link in item.clicked_links:
+                        try:
+                            domain = urlparse(link).netloc.replace('www.', '')
+                            domain = domain.split('.')[0] if domain else str(link)
+                            if domain and domain not in links:
+                                links.append(domain)
+                        except Exception:
+                            if link and str(link) not in links:
+                                links.append(str(link))
+                    links_str = ", ".join(links)
+                    opened_at = item.opened_at.isoformat() if item.opened_at else None
+                    clicked_at = item.clicked_at.isoformat() if item.clicked_at else None
+                else:
+                    status_val = 'pending'
+                    links_str = ''
+                    opened_at = None
+                    clicked_at = None
+                
+                rows.append({
+                    "speaker_name": speaker_name,
+                    "email": email,
+                    "delivery_status": status_val,
+                    "links_clicked": links_str,
+                    "opened_at": opened_at,
+                    "clicked_at": clicked_at
+                })
+
+            counts = recipient_statuses.aggregate(
+                delivered=Count('id', filter=Q(status__in=['delivered', 'opened', 'clicked'])),
+                opened=Count('id', filter=Q(opened_at__isnull=False) | Q(status__in=['opened', 'clicked'])),
+                clicked=Count('id', filter=Q(clicked_at__isnull=False) | Q(status='clicked')),
+            )
+
+            analytics_data = {
+                "blast_id": selected_blast.id,
+                "blast_name": selected_blast.name,
+                "totals": {
+                    "total_recipients": contacts.count(),
+                    "total_delivered": counts['delivered'],
+                    "total_opens": counts['opened'],
+                    "total_clicks": counts['clicked'],
+                },
+                "data": rows
+            }
+
+        return Response({
+            "campaign_id": adv_campaign.id,
+            "campaign_name": adv_campaign.name,
+            "created_at": adv_campaign.created_at.isoformat(),
+            "blasts": blasts_data,
+            "selected_blast_id": selected_blast.id if selected_blast else None,
+            "analytics": analytics_data
+        })
 
 class PublicCampaignAnalyticsView(views.APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, token):
-        campaign = get_object_or_404(Campaign.objects.select_related('advance_campaign'), share_token=token)
-        contacts = campaign.target_list.contacts.filter(is_subscribed=True).order_by('email')
-        recipient_statuses = CampaignRecipientStatus.objects.filter(
-            campaign=campaign, contact__in=contacts,
-        ).select_related('contact')
-
-        by_contact = {item.contact_id: item for item in recipient_statuses}
-
-        rows = []
-        for contact in contacts:
-            item = by_contact.get(contact.id)
-            speaker_name = f"{contact.first_name} {contact.last_name}".strip()
-            email = contact.email
-            
-            if item:
-                status_val = item.status
-                links = []
-                for link in item.clicked_links:
-                    try:
-                        domain = urlparse(link).netloc
-                        domain = domain.replace('www.', '')
-                        domain = domain.split('.')[0] if domain else str(link)
-                        if domain and domain not in links:
-                            links.append(domain)
-                    except Exception:
-                        if link and str(link) not in links:
-                            links.append(str(link))
-                links_str = ", ".join(links)
-                opened_at = item.opened_at.isoformat() if item.opened_at else None
-                clicked_at = item.clicked_at.isoformat() if item.clicked_at else None
-            else:
-                status_val = 'pending'
-                links_str = ''
-                opened_at = None
-                clicked_at = None
-            
-            rows.append({
-                "speaker_name": speaker_name,
-                "email": email,
-                "delivery_status": status_val,
-                "links_clicked": links_str,
-                "opened_at": opened_at,
-                "clicked_at": clicked_at
-            })
-
-        counts = recipient_statuses.aggregate(
-            delivered=Count('id', filter=Q(status__in=['delivered', 'opened', 'clicked'])),
-            opened=Count('id', filter=Q(opened_at__isnull=False) | Q(status__in=['opened', 'clicked'])),
-            clicked=Count('id', filter=Q(clicked_at__isnull=False) | Q(status='clicked')),
+        # Old direct blast links are retired per user instruction: "stop all old links"
+        return Response(
+            {
+                "error": "retired_link",
+                "detail": "Direct blast links have been retired. Please use your main Campaign link to view blast analytics."
+            },
+            status=status.HTTP_410_GONE
         )
-
-        totals = {
-            "total_recipients": contacts.count(),
-            "total_delivered": counts['delivered'],
-            "total_opens": counts['opened'],
-            "total_clicks": counts['clicked'],
-        }
-
-        return Response({
-            "campaign_name": campaign.name,
-            "advance_campaign_name": campaign.advance_campaign.name if campaign.advance_campaign else None,
-            "totals": totals,
-            "data": rows
-        })
 
 class CampaignPerformanceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CampaignPerformance.objects.all().order_by('-campaign_id')
@@ -109,7 +155,7 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
         if status_filter not in allowed_filters:
             return Response({'detail': 'Invalid status filter.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        contacts = campaign.target_list.contacts.filter(is_subscribed=True).order_by('email')
+        contacts = get_campaign_target_contacts(campaign)
         recipient_statuses = CampaignRecipientStatus.objects.filter(
             campaign=campaign, contact__in=contacts,
         ).select_related('contact')
@@ -164,7 +210,13 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
         counts['pending'] = max(counts['total_recipients'] - counts['sent'] - counts['failed'], 0)
 
         return Response({
-            'campaign': {'id': campaign.id, 'name': campaign.name, 'status': campaign.status, 'share_token': campaign.share_token},
+            'campaign': {
+                'id': campaign.id,
+                'name': campaign.name,
+                'status': campaign.status,
+                'share_token': campaign.share_token,
+                'advance_campaign_share_token': campaign.advance_campaign.share_token if campaign.advance_campaign else None,
+            },
             'summary': counts,
             'filter': status_filter,
             'recipients': recipients,
@@ -185,7 +237,7 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
         headers = ['SPEAKER_NAME', 'EMAIL', 'DELIVERY_STATUS', 'LINKS_CLICKED']
         ws.append(headers)
 
-        contacts = campaign.target_list.contacts.filter(is_subscribed=True).order_by('email')
+        contacts = get_campaign_target_contacts(campaign)
         recipient_statuses = CampaignRecipientStatus.objects.filter(
             campaign=campaign, contact__in=contacts,
         ).select_related('contact')

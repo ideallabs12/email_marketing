@@ -22,7 +22,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 from apps.contacts.views import ContactViewSet, ContactListViewSet, IgnoredContactViewSet, ContactBatchViewSet
 from apps.templates.views import EmailTemplateViewSet
 from apps.campaigns.views import CampaignViewSet, SenderListView, AdvanceCampaignViewSet
-from apps.tracking.views import CampaignPerformanceViewSet, CampaignAnalyticsViewSet, BrevoWebhookView, BouncedEmailViewSet, PublicCampaignAnalyticsView, MasterLinkSettingsView, PublicMasterLinkCampaignsView
+from apps.tracking.views import CampaignPerformanceViewSet, CampaignAnalyticsViewSet, BrevoWebhookView, BouncedEmailViewSet, PublicCampaignAnalyticsView, MasterLinkSettingsView, PublicMasterLinkCampaignsView, PublicAdvanceCampaignView
 
 router = DefaultRouter()
 router.register(r'contacts', ContactViewSet, basename='contact')
@@ -43,6 +43,7 @@ urlpatterns = [
     path('api/v1/senders/', SenderListView.as_view(), name='sender-list'),
     path('api/v1/webhooks/brevo/', BrevoWebhookView.as_view(), name='brevo-webhook'),
     path('api/v1/webhooks/brevo', BrevoWebhookView.as_view(), name='brevo-webhook-no-slash'),
+    path('api/v1/public/campaign/<uuid:token>/', PublicAdvanceCampaignView.as_view(), name='public-advance-campaign'),
     path('api/v1/public-analytics/<uuid:token>/', PublicCampaignAnalyticsView.as_view(), name='public-analytics'),
     path('api/v1/master-link/settings/', MasterLinkSettingsView.as_view(), name='master-link-settings'),
     path('api/v1/public/master-link/<uuid:token>/campaigns/', PublicMasterLinkCampaignsView.as_view(), name='public-master-link-campaigns'),

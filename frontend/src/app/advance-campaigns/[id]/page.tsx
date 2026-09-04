@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import Card from '../../../components/Card';
 import Button from '../../../components/Button';
-import { ArrowLeft, Plus, Send, AlertCircle, RefreshCw, ChartNoAxesCombined, Trash2, Edit2, Check, X as XIcon } from 'lucide-react';
+import { ArrowLeft, Plus, Send, AlertCircle, RefreshCw, ChartNoAxesCombined, Trash2, Edit2, Check, X as XIcon, Share2 } from 'lucide-react';
 import { apiClient } from '../../../services/apiClient';
 import { AdvanceCampaign, Campaign, ContactList, EmailTemplate, ContactBatch } from '../../../types';
 
@@ -21,6 +21,7 @@ export default function AdvanceCampaignDetailPage() {
   const [loading, setLoading] = useState(true);
   const [polling, setPolling] = useState(false);
   const [actionError, setActionError] = useState('');
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const [editingAdvName, setEditingAdvName] = useState(false);
   const [newAdvName, setNewAdvName] = useState('');
@@ -168,6 +169,15 @@ export default function AdvanceCampaignDetailPage() {
     return batchIds.map(id => batches.find(b => b.id === id)?.name || `Batch #${id}`).join(', ');
   };
 
+  const handleCopyCampaignLink = () => {
+    if (!advCampaign?.share_token) return;
+    const url = `${window.location.origin}/public/campaign/${advCampaign.share_token}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    });
+  };
+
   if (loading || !advCampaign) {
     return <div className="text-center py-12 text-foreground/50">Loading advanced campaign...</div>;
   }
@@ -206,14 +216,22 @@ export default function AdvanceCampaignDetailPage() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <h2 className="text-xl font-semibold">Email Sends (Blasts)</h2>
-        <Link href={`/advance-campaigns/${advCampaign.id}/sends/new`}>
-          <Button>
-            <Plus size={16} />
-            <span className="ml-1">New Send</span>
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          {advCampaign.share_token && (
+            <Button variant="outline" onClick={handleCopyCampaignLink} className="flex items-center gap-1.5">
+              {copiedLink ? <Check size={15} className="text-green-500" /> : <Share2 size={15} />}
+              <span>{copiedLink ? 'Copied Campaign Link' : 'Share Campaign Link'}</span>
+            </Button>
+          )}
+          <Link href={`/advance-campaigns/${advCampaign.id}/sends/new`}>
+            <Button>
+              <Plus size={16} />
+              <span className="ml-1">New Send</span>
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {actionError && (

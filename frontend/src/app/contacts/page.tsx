@@ -213,8 +213,11 @@ export default function ContactsPage() {
   };
 
   const filteredLists = lists.filter(l => {
-    const term = searchQuery.toLowerCase();
-    return l.name.toLowerCase().includes(term) || (l.description || '').toLowerCase().includes(term);
+    if (!searchQuery.trim()) return true;
+    const tokens = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    const name = l.name.toLowerCase();
+    const desc = (l.description || '').toLowerCase();
+    return tokens.every(token => name.includes(token) || desc.includes(token));
   });
 
   // Date grouping removed per user request
