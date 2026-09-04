@@ -262,13 +262,21 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
         counts['total_recipients'] = contacts.count()
         counts['pending'] = max(counts['total_recipients'] - counts['sent'] - counts['failed'], 0)
 
+        advance_token = None
+        if campaign.advance_campaign_id:
+            try:
+                ac = campaign.advance_campaign
+                advance_token = str(getattr(ac, 'share_token', '') or '') or None
+            except Exception:
+                advance_token = None
+
         return Response({
             'campaign': {
                 'id': campaign.id,
                 'name': campaign.name,
                 'status': campaign.status,
                 'share_token': campaign.share_token,
-                'advance_campaign_share_token': campaign.advance_campaign.share_token if campaign.advance_campaign else None,
+                'advance_campaign_share_token': advance_token,
             },
             'summary': counts,
             'filter': status_filter,

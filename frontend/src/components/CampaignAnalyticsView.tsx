@@ -68,7 +68,7 @@ export default function CampaignAnalyticsView({ campaignId }: { campaignId: stri
       })
       .catch((loadError: unknown) => {
         console.error('Failed to load campaign analytics:', loadError);
-        if (isCurrent) setError('Unable to load campaign analytics. Please try again.');
+        if (isCurrent) setError(loadError instanceof Error ? loadError.message : 'Unable to load campaign analytics. Please try again.');
       })
       .finally(() => {
         if (isCurrent) setLoading(false);
