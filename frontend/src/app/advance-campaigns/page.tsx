@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
-import { Plus, AlertCircle, Trash2, Layers, RefreshCw, ChartNoAxesCombined } from 'lucide-react';
+import { Plus, AlertCircle, Trash2, Layers, RefreshCw, ChartNoAxesCombined, Share2, Check } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 import { AdvanceCampaign, ContactList, Campaign } from '../../types';
 
@@ -15,6 +15,7 @@ export default function AdvanceCampaignsPage() {
   const [lists, setLists] = useState<ContactList[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionError, setActionError] = useState('');
+  const [copiedId, setCopiedId] = useState<number | null>(null);
 
   useEffect(() => {
     loadInitialData();
@@ -87,6 +88,15 @@ export default function AdvanceCampaignsPage() {
 
   const getListName = (id: number) => lists.find(l => l.id === id)?.name || `List #${id}`;
   const getContainerName = (id: number) => campaigns.find(c => c.id === id)?.name || `Container #${id}`;
+
+  const handleCopyLink = (campaign: AdvanceCampaign) => {
+    if (!campaign.share_token) return;
+    const url = `${window.location.origin}/public/campaign/${campaign.share_token}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedId(campaign.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
 
   return (
     <div className="space-y-8">
@@ -172,6 +182,17 @@ export default function AdvanceCampaignsPage() {
 
                     <div className="w-full pt-3 border-t border-border/50 md:border-0 md:pt-0 md:col-span-2 text-left md:text-right">
                       <div className="flex items-center md:justify-end gap-2">
+                        {c.share_token && (
+                          <Button
+                            variant="outline"
+                            className="py-1.5 md:py-1 px-2.5 text-xs font-medium flex items-center gap-1 hover:bg-foreground hover:text-background transition-colors"
+                            onClick={() => handleCopyLink(c)}
+                            title="Copy Campaign Public Link"
+                          >
+                            {copiedId === c.id ? <Check size={13} className="text-green-500" /> : <Share2 size={13} />}
+                            <span className="hidden sm:inline">{copiedId === c.id ? 'Copied' : 'Share'}</span>
+                          </Button>
+                        )}
                         <Link
                           href={`/advance-campaigns/${c.id}`}
                           className="inline-flex items-center justify-center gap-1 w-full md:w-auto rounded-md border border-foreground bg-background px-3 py-1.5 md:py-1 text-xs font-medium hover:bg-foreground hover:text-background transition-colors"
