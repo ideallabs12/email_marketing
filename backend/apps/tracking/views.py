@@ -82,19 +82,37 @@ class PublicAdvanceCampaignView(views.APIView):
                 pass
 
         # 4. Fallback: match deterministic uuid5
-        if not adv_campaign:
+        if not adv_campaign and not single_campaign:
             try:
                 for ac in AdvanceCampaign.objects.all():
                     if str(uuid.uuid5(uuid.NAMESPACE_DNS, f"advance-campaign-{ac.id}")) == token_str:
                         adv_campaign = ac
                         break
+                if not adv_campaign:
+                    for camp in Campaign.objects.all():
+                        if str(uuid.uuid5(uuid.NAMESPACE_DNS, f"campaign-{camp.id}")) == token_str:
+                            if camp.advance_campaign:
+                                adv_campaign = camp.advance_campaign
+                                direct_blast = camp
+                            else:
+                                single_campaign = camp
+                            break
             except Exception:
                 pass
 
-        if not adv_campaign:
+        if not adv_campaign and not single_campaign:
             raise Http404("Campaign not found")
 
-        blasts_qs = adv_campaign.campaigns.all().order_by('-created_at')
+        if adv_campaign:
+            blasts_qs = adv_campaign.campaigns.all().order_by('-created_at')
+            camp_id = adv_campaign.id
+            camp_name = adv_campaign.name
+            camp_created_at = adv_campaign.created_at.isoformat()
+        else:
+            blasts_qs = Campaign.objects.filter(id=single_campaign.id)
+            camp_id = single_campaign.id
+            camp_name = single_campaign.name
+            camp_created_at = single_campaign.created_at.isoformat()
 
         blasts_data = [{
             'id': b.id,
@@ -113,6 +131,8 @@ class PublicAdvanceCampaignView(views.APIView):
                 selected_blast = None
         elif direct_blast:
             selected_blast = direct_blast
+        elif single_campaign:
+            selected_blast = single_campaign
         
         if not selected_blast and blasts_qs.exists():
             selected_blast = blasts_qs.first()
@@ -179,9 +199,9 @@ class PublicAdvanceCampaignView(views.APIView):
             }
 
         return Response({
-            "campaign_id": adv_campaign.id,
-            "campaign_name": adv_campaign.name,
-            "created_at": adv_campaign.created_at.isoformat(),
+            "campaign_id": camp_id,
+            "campaign_name": camp_name,
+            "created_at": camp_created_at,
             "blasts": blasts_data,
             "selected_blast_id": selected_blast.id if selected_blast else None,
             "analytics": analytics_data
