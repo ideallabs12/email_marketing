@@ -108,12 +108,47 @@ class CampaignViewSet(viewsets.ModelViewSet):
 class AdvanceCampaignViewSet(viewsets.ModelViewSet):
     serializer_class = AdvanceCampaignSerializer
 
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        try:
+            from config.urls import ensure_db_schema
+            ensure_db_schema()
+        except Exception:
+            pass
+
     def get_queryset(self):
         try:
             list(AdvanceCampaign.objects.only('id', 'share_token')[:1])
             return AdvanceCampaign.objects.all().order_by('-created_at')
         except Exception:
             return AdvanceCampaign.objects.defer('share_token').order_by('-created_at')
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception:
+            # Self-heal schema in PostgreSQL if share_token column is missing
+            from django.db import connection
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        DO $$
+                        BEGIN
+                            IF NOT EXISTS (
+                                SELECT 1 FROM information_schema.columns 
+                                WHERE table_name='campaigns_advancecampaign' AND column_name='share_token'
+                            ) THEN
+                                ALTER TABLE campaigns_advancecampaign ADD COLUMN share_token UUID DEFAULT gen_random_uuid();
+                                UPDATE campaigns_advancecampaign SET share_token = gen_random_uuid() WHERE share_token IS NULL;
+                                ALTER TABLE campaigns_advancecampaign ALTER COLUMN share_token SET NOT NULL;
+                                CREATE UNIQUE INDEX IF NOT EXISTS campaigns_advancecampaign_share_token_uniq ON campaigns_advancecampaign (share_token);
+                            END IF;
+                        END $$;
+                    """)
+                return super().create(request, *args, **kwargs)
+            except Exception as retry_err:
+                raise retry_err
+
 
 
     @action(detail=False, methods=['get'], url_path='recent-blasts')

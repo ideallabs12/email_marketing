@@ -13,6 +13,7 @@ docker compose up -d --build
 # 3. Run database migrations
 echo "🗄️ Running database migrations..."
 docker compose exec backend python manage.py migrate
+docker compose restart backend
 
 # 4. Clean up old unused Docker images to save disk space
 echo "🧹 Cleaning up old unused images..."
