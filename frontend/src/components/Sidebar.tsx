@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, Mail, Users, FileText, ChevronLeft, ChevronRight, MailWarning, LogOut, X, Library, LayoutTemplate } from 'lucide-react';
+import { Home, Mail, Users, FileText, ChevronLeft, ChevronRight, MailWarning, LogOut, X, Library, LayoutTemplate, BarChart3 } from 'lucide-react';
 import { apiClient } from '@/services/apiClient';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
@@ -61,6 +61,10 @@ export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: { mobileM
         <Link href="/advance-campaigns" title="Advanced Campaigns" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
           <LayoutTemplate size={18} />
           {!isCollapsed && <span>Adv. Campaigns</span>}
+        </Link>
+        <Link href="/analytics" title="Centralized Analytics" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
+          <BarChart3 size={18} />
+          {!isCollapsed && <span>Analytics</span>}
         </Link>
         <Link href="/templates" title="Templates" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
           <FileText size={18} />
