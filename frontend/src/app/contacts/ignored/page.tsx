@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../../../components/Card';
 import Button from '../../../components/Button';
-import { ArrowLeft, Trash2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Trash2, AlertCircle, Download } from 'lucide-react';
 import { apiClient } from '../../../services/apiClient';
 import Link from 'next/link';
 
@@ -55,6 +55,15 @@ export default function IgnoredContactsPage() {
     }
   };
 
+  const handleDownloadCSV = async () => {
+    setError('');
+    try {
+      await apiClient.download('/api/v1/ignored-contacts/export-csv/', 'ignored_contacts.csv');
+    } catch (err: any) {
+      setError(err.message || 'Failed to download CSV.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -69,7 +78,16 @@ export default function IgnoredContactsPage() {
             Contacts that were skipped during CSV imports due to formatting errors or missing data.
           </p>
         </div>
-        <div>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            onClick={handleDownloadCSV} 
+            disabled={ignoredContacts.length === 0}
+            className="flex items-center gap-2 border-border hover:bg-foreground/5"
+          >
+            <Download size={16} />
+            Download CSV
+          </Button>
           <Button 
             variant="outline" 
             onClick={handleClearAll} 

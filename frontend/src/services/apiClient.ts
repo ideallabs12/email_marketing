@@ -71,6 +71,25 @@ export const apiClient = {
     }
   },
 
+  download: async (endpoint: string, filename: string) => {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error(`Download failed: ${response.statusText}`);
+    }
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+  },
+
   login: async (username: string, password: string): Promise<string> => {
     const response = await fetch(`${API_BASE_URL}/api/v1/auth/token/`, {
       method: 'POST',

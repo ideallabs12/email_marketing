@@ -196,22 +196,48 @@ export default function NewSendPage() {
             </select>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Target Batches (Optional)</label>
-            <select
-              multiple
-              value={selectedBatches.map(String)}
-              onChange={e => {
-                const vals = Array.from(e.target.selectedOptions, option => Number(option.value));
-                setSelectedBatches(vals);
-              }}
-              className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background min-h-[80px]"
-            >
-              {batches.map(b => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))}
-            </select>
-            <p className="text-[10px] text-foreground/40 mt-1">Leave empty to send to the entire list. Hold Ctrl (Cmd) to select multiple batches.</p>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Target Batches (Optional)</label>
+              <p className="text-[10px] text-foreground/40 mt-1 mb-2">Select specific batches to send to, or leave empty to target the entire list.</p>
+            </div>
+            
+            {batches.length === 0 ? (
+              <div className="text-sm italic text-foreground/40 p-4 border border-dashed border-border rounded-md text-center">
+                No batches found for this list.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[240px] overflow-y-auto p-1">
+                {batches.map(b => (
+                  <label 
+                    key={b.id} 
+                    className={`flex items-start space-x-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                      selectedBatches.includes(b.id) 
+                        ? 'border-foreground bg-foreground/5 shadow-sm' 
+                        : 'border-border hover:border-foreground/30 hover:bg-foreground/[0.02]'
+                    }`}
+                  >
+                    <div className="flex h-5 items-center mt-0.5">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-border text-foreground focus:ring-foreground/20 bg-background accent-foreground cursor-pointer"
+                        checked={selectedBatches.includes(b.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedBatches(prev => [...prev, b.id]);
+                          } else {
+                            setSelectedBatches(prev => prev.filter(id => id !== b.id));
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-semibold text-foreground truncate">{b.name}</span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
 
           <Button type="submit" className="w-full py-2.5 mt-2" disabled={isSubmitting}>

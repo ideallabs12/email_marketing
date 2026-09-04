@@ -135,6 +135,29 @@ class IgnoredContactViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = IgnoredContact.objects.all().order_by('-imported_at')
     serializer_class = IgnoredContactSerializer
 
+    @action(detail=False, methods=['get'], url_path='export-csv')
+    def export_csv(self, request):
+        from django.http import HttpResponse
+        
+        queryset = self.get_queryset()
+        
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="ignored_contacts.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow(['first_name', 'last_name', 'email', 'reason', 'imported_at'])
+        
+        for contact in queryset:
+            writer.writerow([
+                contact.first_name,
+                contact.last_name,
+                contact.email,
+                contact.reason,
+                contact.imported_at.strftime('%Y-%m-%d %H:%M:%S') if contact.imported_at else ''
+            ])
+            
+        return response
+
     @action(detail=False, methods=['delete'], url_path='clear-all')
     def clear_all(self, request):
         count, _ = IgnoredContact.objects.all().delete()
