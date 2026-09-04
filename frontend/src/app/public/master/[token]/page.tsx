@@ -3,12 +3,20 @@
 import { use, useEffect, useState, useMemo } from 'react';
 import { AlertTriangle, RefreshCw, ChevronDown, ChevronRight, Search, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 
-interface CampaignSummary {
+interface BlastSummary {
   id: number;
   name: string;
   status: string;
   share_token: string;
+  sent_at: string | null;
   created_at: string;
+}
+
+interface ContainerSummary {
+  id: number | null;
+  name: string;
+  created_at: string | null;
+  blasts: BlastSummary[];
 }
 
 interface PublicAnalyticsData {
@@ -63,7 +71,7 @@ const statusBg: Record<string, string> = {
   error: 'bg-red-100',
 };
 
-function PasswordGate({ onUnlock }: { onUnlock: (pwd: string) => void }) {
+function PasswordGate({ onUnlock }: { onUnlock: (pwd: string) => Promise<void> }) {
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState('');
@@ -73,7 +81,6 @@ function PasswordGate({ onUnlock }: { onUnlock: (pwd: string) => void }) {
     if (!password) return;
     setLoading(true);
     setError('');
-    // Pass password up for the parent to try fetching
     try {
       await onUnlock(password);
     } catch {
@@ -91,7 +98,6 @@ function PasswordGate({ onUnlock }: { onUnlock: (pwd: string) => void }) {
         </div>
         <h1 className="text-2xl font-bold text-center text-gray-900 mb-1">Protected Link</h1>
         <p className="text-sm text-gray-500 text-center mb-8">Enter the password to access this analytics view.</p>
-        
         <div className="space-y-4">
           <div className="relative">
             <input
@@ -103,11 +109,7 @@ function PasswordGate({ onUnlock }: { onUnlock: (pwd: string) => void }) {
               autoFocus
               className="w-full border border-gray-200 rounded-lg px-4 py-3 pr-10 text-sm outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-400 transition-all"
             />
-            <button
-              type="button"
-              onClick={() => setShowPwd(!showPwd)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
+            <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
               {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
@@ -117,7 +119,7 @@ function PasswordGate({ onUnlock }: { onUnlock: (pwd: string) => void }) {
             disabled={!password || loading}
             className="w-full bg-gray-900 text-white rounded-lg py-3 text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
           >
-            {loading ? <Loader2 size={16} className="animate-spin" /> : null}
+            {loading && <Loader2 size={16} className="animate-spin" />}
             {loading ? 'Checking...' : 'Access Analytics'}
           </button>
         </div>
@@ -126,31 +128,36 @@ function PasswordGate({ onUnlock }: { onUnlock: (pwd: string) => void }) {
   );
 }
 
+const getStatusDot = (status: string) => {
+  const colors: Record<string, string> = {
+    sent: 'bg-emerald-500', sending: 'bg-blue-400',
+    failed: 'bg-red-500', scheduled: 'bg-yellow-500', draft: 'bg-gray-300',
+  };
+  return colors[status] || 'bg-gray-400';
+};
+
 export default function MasterLinkPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params);
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
-  const [campaigns, setCampaigns] = useState<CampaignSummary[]>([]);
+  const [containers, setContainers] = useState<ContainerSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [needsPassword, setNeedsPassword] = useState(false);
-  const [unlockedPassword, setUnlockedPassword] = useState('');
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
-  const [selectedCampaignToken, setSelectedCampaignToken] = useState<string>('');
+  const [expandedContainerId, setExpandedContainerId] = useState<number | null | 'other'>(null);
+  const [selectedBlastToken, setSelectedBlastToken] = useState<string>('');
 
   const [analytics, setAnalytics] = useState<PublicAnalyticsData | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const fetchCampaigns = async (password = '') => {
+  const fetchContainers = async (password = '') => {
     const url = password
       ? `${API_BASE_URL}/api/v1/public/master-link/${token}/campaigns/?password=${encodeURIComponent(password)}`
       : `${API_BASE_URL}/api/v1/public/master-link/${token}/campaigns/`;
-
     const res = await fetch(url, { cache: 'no-store' });
-
     if (res.status === 401) {
       const body = await res.json();
       if (body.detail === 'password_required') {
@@ -160,26 +167,19 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
       }
     }
     if (!res.ok) throw new Error('This link is disabled or invalid.');
-    return res.json() as Promise<CampaignSummary[]>;
+    return res.json() as Promise<ContainerSummary[]>;
   };
 
   useEffect(() => {
     let isCurrent = true;
-    fetchCampaigns()
+    fetchContainers()
       .then((data) => {
-        if (isCurrent) {
-          setCampaigns(data);
-          setError('');
-          setNeedsPassword(false);
-          setLoading(false);
-        }
+        if (isCurrent) { setContainers(data); setLoading(false); }
       })
       .catch((err) => {
-        if (isCurrent) {
-          if (err.message !== 'password_required') {
-            setError(err.message || 'Unable to load master link data.');
-            setLoading(false);
-          }
+        if (isCurrent && err.message !== 'password_required') {
+          setError(err.message || 'Unable to load master link data.');
+          setLoading(false);
         }
       });
     return () => { isCurrent = false; };
@@ -187,96 +187,84 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
   }, [token]);
 
   const handleUnlock = async (password: string) => {
-    const data = await fetchCampaigns(password);
-    setUnlockedPassword(password);
-    setCampaigns(data);
+    const data = await fetchContainers(password);
+    setContainers(data);
     setNeedsPassword(false);
     setLoading(false);
   };
 
   useEffect(() => {
-    if (!selectedCampaignToken) return;
+    if (!selectedBlastToken) return;
     let isCurrent = true;
     setAnalyticsLoading(true);
-    fetch(`${API_BASE_URL}/api/v1/public-analytics/${selectedCampaignToken}/`, { cache: 'no-store' })
+    fetch(`${API_BASE_URL}/api/v1/public-analytics/${selectedBlastToken}/`, { cache: 'no-store' })
       .then(r => r.json())
-      .then((data: PublicAnalyticsData) => { if (isCurrent) setAnalytics(data); })
+      .then((data: PublicAnalyticsData) => { if (isCurrent) { setAnalytics(data); setStatusFilter('all'); } })
       .catch(console.error)
       .finally(() => { if (isCurrent) setAnalyticsLoading(false); });
     return () => { isCurrent = false; };
-  }, [selectedCampaignToken, API_BASE_URL]);
+  }, [selectedBlastToken, API_BASE_URL]);
 
   const refreshAnalytics = () => {
-    if (!selectedCampaignToken) return;
+    if (!selectedBlastToken) return;
     setAnalyticsLoading(true);
-    fetch(`${API_BASE_URL}/api/v1/public-analytics/${selectedCampaignToken}/`, { cache: 'no-store' })
-      .then(r => r.json())
-      .then(data => setAnalytics(data))
-      .catch(console.error)
+    fetch(`${API_BASE_URL}/api/v1/public-analytics/${selectedBlastToken}/`, { cache: 'no-store' })
+      .then(r => r.json()).then(data => setAnalytics(data)).catch(console.error)
       .finally(() => setAnalyticsLoading(false));
   };
 
-  // Group campaigns by month
-  const groupedCampaigns = useMemo(() => {
-    const groups: Record<string, CampaignSummary[]> = {};
-    campaigns
-      .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
-      .forEach(c => {
-        const d = new Date(c.created_at);
-        const key = d.toLocaleString('default', { month: 'long', year: 'numeric' });
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(c);
-      });
-    return groups;
-  }, [campaigns, searchQuery]);
-
-  const getStatusDot = (status: string) => {
-    const colors: Record<string, string> = {
-      sent: 'bg-emerald-500', sending: 'bg-blue-500', failed: 'bg-red-500',
-      scheduled: 'bg-yellow-500', draft: 'bg-gray-400',
-    };
-    return colors[status] || 'bg-gray-400';
-  };
+  // Filter containers + blasts by search query
+  const filteredContainers = useMemo(() => {
+    if (!searchQuery.trim()) return containers;
+    const q = searchQuery.toLowerCase();
+    return containers
+      .map(c => ({
+        ...c,
+        blasts: c.blasts.filter(b => b.name.toLowerCase().includes(q)),
+      }))
+      .filter(c => c.name.toLowerCase().includes(q) || c.blasts.length > 0);
+  }, [containers, searchQuery]);
 
   const filteredRows = analytics?.data.filter(row =>
     statusFilter === 'all' || row.delivery_status === statusFilter
   ) ?? [];
 
-  // ---- Render ----
+  const showOpenedAt = ['all', 'opened'].includes(statusFilter);
+  const showClickedAt = ['clicked'].includes(statusFilter);
+  const showLinksClicked = ['clicked'].includes(statusFilter);
 
+  const totalBlasts = containers.reduce((sum, c) => sum + c.blasts.length, 0);
+
+  // ── Render ──
   if (needsPassword) return <PasswordGate onUnlock={handleUnlock} />;
 
   if (loading) return (
     <div className="flex h-screen items-center justify-center bg-gray-50">
-      <div className="flex flex-col items-center gap-4 text-gray-500">
-        <Loader2 className="animate-spin" size={32} />
-        <p>Loading Master Link...</p>
+      <div className="flex flex-col items-center gap-3 text-gray-400">
+        <Loader2 className="animate-spin" size={28} />
+        <p className="text-sm">Loading Master Link...</p>
       </div>
     </div>
   );
 
   if (error) return (
     <div className="flex h-screen items-center justify-center bg-gray-50">
-      <div className="flex flex-col items-center gap-4 text-red-600 max-w-md text-center p-6 bg-white border border-red-200 rounded-lg shadow-sm">
-        <AlertTriangle size={32} />
-        <p className="font-semibold">{error}</p>
+      <div className="flex flex-col items-center gap-3 text-red-600 max-w-md text-center p-6 bg-white border border-red-100 rounded-xl shadow">
+        <AlertTriangle size={28} />
+        <p className="font-semibold text-sm">{error}</p>
       </div>
     </div>
   );
-
-  const showOpenedAt = ['all', 'opened'].includes(statusFilter);
-  const showClickedAt = ['clicked'].includes(statusFilter);
-  const showLinksClicked = ['clicked'].includes(statusFilter);
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
 
       {/* ── Left Pane ── */}
-      <div className="w-[300px] lg:w-[360px] flex-shrink-0 bg-white border-r border-gray-200 flex flex-col">
+      <div className="w-[300px] lg:w-[340px] flex-shrink-0 bg-white border-r border-gray-200 flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-gray-100 flex-shrink-0">
           <h1 className="font-bold text-lg text-gray-900">Master Analytics</h1>
-          <p className="text-xs text-gray-400 mt-0.5">{campaigns.length} campaigns</p>
+          <p className="text-xs text-gray-400 mt-0.5">{totalBlasts} blasts across {containers.length} campaigns</p>
           <div className="relative mt-3">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
             <input
@@ -289,67 +277,72 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
           </div>
         </div>
 
-        {/* Campaign List — grouped by month */}
-        <div className="flex-1 overflow-y-auto p-2">
-          {Object.keys(groupedCampaigns).length === 0 ? (
+        {/* Accordion List */}
+        <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+          {filteredContainers.length === 0 ? (
             <div className="py-10 text-center text-sm text-gray-400">No campaigns found.</div>
-          ) : (
-            Object.entries(groupedCampaigns).map(([month, items]) => {
-              const isOpen = expandedGroup === month || expandedGroup === null;
-              return (
-                <div key={month} className="mb-1">
-                  <button
-                    onClick={() => setExpandedGroup(isOpen && expandedGroup === month ? null : month)}
-                    className="flex items-center w-full gap-1.5 px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    {isOpen && expandedGroup === month
-                      ? <ChevronDown size={13} />
-                      : <ChevronRight size={13} />
-                    }
-                    {month}
-                  </button>
-                  {(expandedGroup === null || expandedGroup === month) && (
-                    <div className="space-y-0.5 pl-1">
-                      {items.map(c => {
-                        const isSelected = selectedCampaignToken === c.share_token;
-                        return (
-                          <button
-                            key={c.id}
-                            onClick={() => setSelectedCampaignToken(c.share_token)}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-all ${
-                              isSelected
-                                ? 'bg-gray-900 text-white shadow-sm'
-                                : 'text-gray-700 hover:bg-gray-100'
-                            }`}
-                          >
-                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusDot(c.status)}`} />
-                            <div className="flex-1 min-w-0">
-                              <div className="truncate font-medium">{c.name}</div>
-                              <div className={`text-[10px] mt-0.5 ${isSelected ? 'text-gray-300' : 'text-gray-400'}`}>
-                                {new Date(c.created_at).toLocaleDateString()}
-                              </div>
+          ) : filteredContainers.map(container => {
+            const key = container.id ?? 'other';
+            const isExpanded = expandedContainerId === key;
+
+            return (
+              <div key={key} className="rounded-lg overflow-hidden">
+                {/* Container header row */}
+                <button
+                  onClick={() => setExpandedContainerId(isExpanded ? null : key)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-gray-50 transition-colors group"
+                >
+                  <span className="text-gray-400 group-hover:text-gray-600 transition-colors flex-shrink-0">
+                    {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-sm text-gray-800 truncate">{container.name}</div>
+                    <div className="text-[11px] text-gray-400 mt-0.5">{container.blasts.length} blast{container.blasts.length !== 1 ? 's' : ''}</div>
+                  </div>
+                </button>
+
+                {/* Blasts nested under container */}
+                {isExpanded && (
+                  <div className="pl-7 pr-2 pb-1 space-y-0.5">
+                    {container.blasts.map(blast => {
+                      const isSelected = selectedBlastToken === blast.share_token;
+                      return (
+                        <button
+                          key={blast.id}
+                          onClick={() => setSelectedBlastToken(blast.share_token)}
+                          className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-sm transition-all ${
+                            isSelected
+                              ? 'bg-gray-900 text-white shadow-sm'
+                              : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getStatusDot(blast.status)}`} />
+                          <div className="flex-1 min-w-0">
+                            <div className="truncate font-medium text-[13px]">{blast.name}</div>
+                            <div className={`text-[10px] mt-0.5 ${isSelected ? 'text-gray-300' : 'text-gray-400'}`}>
+                              {blast.sent_at ? new Date(blast.sent_at).toLocaleDateString() : 'Not sent'}
                             </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
       {/* ── Right Pane ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {!selectedCampaignToken ? (
+        {!selectedBlastToken ? (
           <div className="flex-1 flex flex-col items-center justify-center text-gray-300">
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <Search size={36} className="opacity-50" />
+              <Search size={36} className="opacity-40" />
             </div>
-            <p className="text-lg font-semibold text-gray-400">Select a campaign</p>
-            <p className="text-sm text-gray-400 mt-1">Pick a campaign from the left to see its data.</p>
+            <p className="text-lg font-semibold text-gray-400">Select a blast</p>
+            <p className="text-sm text-gray-400 mt-1">Expand a campaign on the left and pick a blast.</p>
           </div>
         ) : (
           <>
@@ -367,7 +360,6 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                 )}
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                {/* Status filter pills */}
                 <div className="flex gap-1 flex-wrap">
                   {['all', 'delivered', 'opened', 'clicked', 'sent', 'pending', 'failed'].map(s => (
                     <button
@@ -413,7 +405,9 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                   <tbody>
                     {filteredRows.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="py-16 text-center text-gray-400 text-sm">No recipients match the selected filter.</td>
+                        <td colSpan={8} className="py-16 text-center text-gray-400 text-sm">
+                          No recipients match the selected filter.
+                        </td>
                       </tr>
                     ) : filteredRows.map((row, i) => (
                       <tr key={i} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">

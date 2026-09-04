@@ -387,15 +387,46 @@ class PublicMasterLinkCampaignsView(views.APIView):
             if provided != settings.password:
                 return Response({'detail': 'password_required', 'has_password': True}, status=status.HTTP_401_UNAUTHORIZED)
 
-        # Return sent/scheduled/sending campaigns that would have analytics
-        campaigns = Campaign.objects.exclude(status='draft').order_by('-created_at')
-        data = []
-        for c in campaigns:
-            data.append({
-                'id': c.id,
-                'name': c.name,
-                'status': c.status,
-                'share_token': str(c.share_token),
-                'created_at': c.created_at.isoformat()
+        from apps.campaigns.models import AdvanceCampaign
+
+        # Build grouped structure: advance campaigns with their blasts nested
+        advance_campaigns = AdvanceCampaign.objects.prefetch_related('campaigns').order_by('-created_at')
+        containers = []
+        for ac in advance_campaigns:
+            blasts = ac.campaigns.exclude(status='draft').order_by('-created_at')
+            if not blasts.exists():
+                continue
+            containers.append({
+                'id': ac.id,
+                'name': ac.name,
+                'created_at': ac.created_at.isoformat(),
+                'blasts': [{
+                    'id': c.id,
+                    'name': c.name,
+                    'status': c.status,
+                    'share_token': str(c.share_token),
+                    'sent_at': c.sent_at.isoformat() if c.sent_at else None,
+                    'created_at': c.created_at.isoformat(),
+                } for c in blasts]
             })
-        return Response(data)
+
+        # Also include standalone campaigns (no advance_campaign parent)
+        standalone = Campaign.objects.filter(
+            advance_campaign__isnull=True
+        ).exclude(status='draft').order_by('-created_at')
+        if standalone.exists():
+            containers.append({
+                'id': None,
+                'name': 'Other Campaigns',
+                'created_at': None,
+                'blasts': [{
+                    'id': c.id,
+                    'name': c.name,
+                    'status': c.status,
+                    'share_token': str(c.share_token),
+                    'sent_at': c.sent_at.isoformat() if c.sent_at else None,
+                    'created_at': c.created_at.isoformat(),
+                } for c in standalone]
+            })
+
+        return Response(containers)
