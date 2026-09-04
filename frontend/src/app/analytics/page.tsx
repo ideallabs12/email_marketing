@@ -19,11 +19,12 @@ export default function CentralizedAnalyticsPage() {
     let isCurrent = true;
     setLoadingContainers(true);
     
-    apiClient.get('/api/v1/advance-campaigns/')
-      .then((data: AdvanceCampaign[]) => {
+    apiClient.get('/api/v1/advance-campaigns/?limit=10000')
+      .then((data: { results?: AdvanceCampaign[] } | AdvanceCampaign[]) => {
         if (isCurrent) {
-          // Sort by newest first
-          const sorted = data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+          // Handle both paginated {results: [...]} and plain array responses
+          const list = Array.isArray(data) ? data : (data as { results?: AdvanceCampaign[] }).results ?? [];
+          const sorted = list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
           setContainers(sorted);
         }
       })
