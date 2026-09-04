@@ -106,8 +106,15 @@ class CampaignViewSet(viewsets.ModelViewSet):
 
 
 class AdvanceCampaignViewSet(viewsets.ModelViewSet):
-    queryset = AdvanceCampaign.objects.all().order_by('-created_at')
     serializer_class = AdvanceCampaignSerializer
+
+    def get_queryset(self):
+        try:
+            list(AdvanceCampaign.objects.only('id', 'share_token')[:1])
+            return AdvanceCampaign.objects.all().order_by('-created_at')
+        except Exception:
+            return AdvanceCampaign.objects.defer('share_token').order_by('-created_at')
+
 
     @action(detail=False, methods=['get'], url_path='recent-blasts')
     def recent_blasts(self, request):
