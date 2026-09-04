@@ -64,8 +64,8 @@ export default function CentralizedAnalyticsPage() {
       {/* Left Pane: Selection Menu */}
       <div className="w-full md:w-[350px] lg:w-[400px] border-r border-border bg-surface flex flex-col flex-shrink-0">
         
-        {/* Header & Search */}
-        <div className="p-4 border-b border-border bg-background/50 sticky top-0 z-10 backdrop-blur-sm">
+        {/* Header & Search — NOT sticky, is a flex sibling so it never overlaps the list */}
+        <div className="p-4 border-b border-border bg-background/50 flex-shrink-0">
           <h2 className="font-bold text-lg mb-4">Analytics</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40" size={16} />
@@ -79,8 +79,8 @@ export default function CentralizedAnalyticsPage() {
           </div>
         </div>
 
-        {/* Containers List */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-1 custom-scrollbar">
+        {/* Containers List — scrolls independently below the header */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-1">
           {loadingContainers ? (
             <div className="flex justify-center items-center h-32 text-foreground/40">
               <Loader2 className="animate-spin" size={24} />
