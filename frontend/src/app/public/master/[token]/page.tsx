@@ -174,6 +174,9 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
     if (res.status === 401) {
       const body = await res.json().catch(() => ({}));
       if (body.detail === 'password_required') {
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem(`master_pwd_${token}`);
+        }
         setNeedsPassword(true);
         setLoading(false);
         throw new Error('password_required');
@@ -188,9 +191,19 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
 
   useEffect(() => {
     let isCurrent = true;
-    fetchContainers()
+    const savedPwd = typeof window !== 'undefined' ? sessionStorage.getItem(`master_pwd_${token}`) || '' : '';
+    fetchContainers(savedPwd)
       .then((data) => {
-        if (isCurrent) { setContainers(data); setLoading(false); }
+        if (isCurrent) {
+          setContainers(data);
+          setLoading(false);
+          if (data.length > 0) {
+            setExpandedContainerId(data[0].id ?? 'other');
+            if (data[0].blasts && data[0].blasts.length > 0) {
+              setSelectedBlastToken(data[0].blasts[0].share_token);
+            }
+          }
+        }
       })
       .catch((err) => {
         if (isCurrent && err.message !== 'password_required') {
@@ -204,9 +217,18 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
 
   const handleUnlock = async (password: string) => {
     const data = await fetchContainers(password);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(`master_pwd_${token}`, password);
+    }
     setContainers(data);
     setNeedsPassword(false);
     setLoading(false);
+    if (data.length > 0) {
+      setExpandedContainerId(data[0].id ?? 'other');
+      if (data[0].blasts && data[0].blasts.length > 0) {
+        setSelectedBlastToken(data[0].blasts[0].share_token);
+      }
+    }
   };
 
   useEffect(() => {

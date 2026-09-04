@@ -1,16 +1,18 @@
+import uuid
+from urllib.parse import urlparse
 from django.db.models import Count, Q
+from django.http import Http404
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.text import slugify
 from rest_framework import status, viewsets, views
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from .models import CampaignPerformance, CampaignRecipientStatus
 from .serializers import CampaignPerformanceSerializer, CampaignRecipientStatusSerializer, BouncedEmailSerializer
 from apps.campaigns.models import Campaign, AdvanceCampaign
-
-from django.shortcuts import get_object_or_404
-from urllib.parse import urlparse
 
 def get_campaign_target_contacts(campaign):
     contacts = campaign.target_list.contacts.filter(is_subscribed=True)
@@ -211,7 +213,15 @@ class PublicCampaignAnalyticsView(views.APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, token):
-        campaign = get_object_or_404(Campaign.objects.select_related('advance_campaign'), share_token=token)
+        campaign = Campaign.objects.select_related('advance_campaign').filter(share_token=token).first()
+        if not campaign:
+            token_str = str(token).strip()
+            for camp in Campaign.objects.select_related('advance_campaign').all():
+                if str(uuid.uuid5(uuid.NAMESPACE_DNS, f"campaign-{camp.id}")) == token_str:
+                    campaign = camp
+                    break
+        if not campaign:
+            raise Http404("Campaign not found")
         contacts = get_campaign_target_contacts(campaign)
         recipient_statuses = CampaignRecipientStatus.objects.filter(
             campaign=campaign, contact__in=contacts,
@@ -644,14 +654,14 @@ class PublicMasterLinkCampaignsView(views.APIView):
                 'name': ac.name,
                 'slug': slugify(ac.name),
                 'share_token': ac_share_token,
-                'created_at': ac.created_at.isoformat(),
+                'created_at': ac.created_at.isoformat() if ac.created_at else None,
                 'blasts': [{
                     'id': c.id,
                     'name': c.name,
                     'status': c.status,
-                    'share_token': str(c.share_token) if getattr(c, 'share_token', None) else '',
+                    'share_token': str(c.share_token) if getattr(c, 'share_token', None) else str(uuid.uuid5(uuid.NAMESPACE_DNS, f"campaign-{c.id}")),
                     'sent_at': c.sent_at.isoformat() if c.sent_at else None,
-                    'created_at': c.created_at.isoformat(),
+                    'created_at': c.created_at.isoformat() if c.created_at else None,
                 } for c in blasts]
             })
 
@@ -663,15 +673,16 @@ class PublicMasterLinkCampaignsView(views.APIView):
             containers.append({
                 'id': None,
                 'name': 'Other Campaigns',
+                'slug': 'other-campaigns',
                 'share_token': '',
                 'created_at': None,
                 'blasts': [{
                     'id': c.id,
                     'name': c.name,
                     'status': c.status,
-                    'share_token': str(c.share_token) if getattr(c, 'share_token', None) else '',
+                    'share_token': str(c.share_token) if getattr(c, 'share_token', None) else str(uuid.uuid5(uuid.NAMESPACE_DNS, f"campaign-{c.id}")),
                     'sent_at': c.sent_at.isoformat() if c.sent_at else None,
-                    'created_at': c.created_at.isoformat(),
+                    'created_at': c.created_at.isoformat() if c.created_at else None,
                 } for c in standalone]
             })
 
