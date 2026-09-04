@@ -52,6 +52,7 @@ export interface Campaign {
   template: number;
   target_list: number;
   target_batches?: number[];
+  advance_campaign?: number | null;
   status: 'draft' | 'scheduled' | 'sending' | 'sent' | 'failed';
   from_email: string;
   scheduled_at: string | null;
