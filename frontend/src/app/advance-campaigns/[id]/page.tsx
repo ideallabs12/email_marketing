@@ -178,8 +178,9 @@ export default function AdvanceCampaignDetailPage() {
   };
 
   const handleCopyCampaignLink = () => {
-    if (!advCampaign?.share_token) return;
-    const url = `${window.location.origin}/public/campaign/${advCampaign.share_token}`;
+    const token = advCampaign?.share_token || advCampaign?.id;
+    if (!token) return;
+    const url = `${window.location.origin}/public/campaign/${token}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
@@ -227,12 +228,10 @@ export default function AdvanceCampaignDetailPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <h2 className="text-xl font-semibold">Email Sends (Blasts)</h2>
         <div className="flex items-center gap-2">
-          {advCampaign.share_token && (
-            <Button variant="outline" onClick={handleCopyCampaignLink} className="flex items-center gap-1.5">
-              {copiedLink ? <Check size={15} className="text-green-500" /> : <Share2 size={15} />}
-              <span>{copiedLink ? 'Copied Campaign Link' : 'Share Campaign Link'}</span>
-            </Button>
-          )}
+          <Button variant="outline" onClick={handleCopyCampaignLink} className="flex items-center gap-1.5 shadow-sm hover:bg-foreground hover:text-background transition-colors">
+            {copiedLink ? <Check size={15} className="text-green-500" /> : <Share2 size={15} />}
+            <span>{copiedLink ? 'Copied Campaign Link' : 'Share Campaign Link'}</span>
+          </Button>
           <Link href={`/advance-campaigns/${advCampaign.id}/sends/new`}>
             <Button>
               <Plus size={16} />

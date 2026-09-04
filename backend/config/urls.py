@@ -24,6 +24,47 @@ from apps.templates.views import EmailTemplateViewSet
 from apps.campaigns.views import CampaignViewSet, SenderListView, AdvanceCampaignViewSet
 from apps.tracking.views import CampaignPerformanceViewSet, CampaignAnalyticsViewSet, BrevoWebhookView, BouncedEmailViewSet, PublicCampaignAnalyticsView, MasterLinkSettingsView, PublicMasterLinkCampaignsView, PublicAdvanceCampaignView
 
+def ensure_db_schema():
+    from django.db import connection
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name='campaigns_advancecampaign' AND column_name='share_token'
+                    ) THEN
+                        ALTER TABLE campaigns_advancecampaign ADD COLUMN share_token UUID DEFAULT gen_random_uuid();
+                        UPDATE campaigns_advancecampaign SET share_token = gen_random_uuid() WHERE share_token IS NULL;
+                        ALTER TABLE campaigns_advancecampaign ALTER COLUMN share_token SET NOT NULL;
+                        CREATE UNIQUE INDEX IF NOT EXISTS campaigns_advancecampaign_share_token_uniq ON campaigns_advancecampaign (share_token);
+                    END IF;
+                END $$;
+            """)
+            cursor.execute("""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name='tracking_masterlinksettings' AND column_name='password'
+                    ) THEN
+                        ALTER TABLE tracking_masterlinksettings ADD COLUMN password VARCHAR(128) DEFAULT '';
+                    END IF;
+                END $$;
+            """)
+            cursor.execute("""
+                INSERT INTO django_migrations (app, name, applied)
+                SELECT 'campaigns', '0011_advancecampaign_share_token', NOW()
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM django_migrations WHERE app='campaigns' AND name='0011_advancecampaign_share_token'
+                );
+            """)
+    except Exception:
+        pass
+
+ensure_db_schema()
+
 router = DefaultRouter()
 router.register(r'contacts', ContactViewSet, basename='contact')
 router.register(r'contact-lists', ContactListViewSet, basename='contactlist')

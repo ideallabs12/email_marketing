@@ -22,7 +22,27 @@ class PublicAdvanceCampaignView(views.APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, token):
-        adv_campaign = get_object_or_404(AdvanceCampaign, share_token=token)
+        import uuid
+        from django.http import Http404
+
+        adv_campaign = None
+        try:
+            adv_campaign = AdvanceCampaign.objects.filter(share_token=token).first()
+        except Exception:
+            adv_campaign = None
+
+        if not adv_campaign:
+            try:
+                for ac in AdvanceCampaign.objects.all():
+                    if str(uuid.uuid5(uuid.NAMESPACE_DNS, f"advance-campaign-{ac.id}")) == str(token):
+                        adv_campaign = ac
+                        break
+            except Exception:
+                pass
+
+        if not adv_campaign:
+            raise Http404("Campaign not found")
+
         blasts_qs = adv_campaign.campaigns.all().order_by('-created_at')
 
         blasts_data = [{
@@ -269,6 +289,9 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
                 advance_token = str(getattr(ac, 'share_token', '') or '') or None
             except Exception:
                 advance_token = None
+            if not advance_token:
+                import uuid
+                advance_token = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"advance-campaign-{campaign.advance_campaign_id}"))
 
         return Response({
             'campaign': {

@@ -17,7 +17,10 @@ class AdvanceCampaignSerializer(serializers.ModelSerializer):
     def get_share_token(self, obj):
         try:
             val = getattr(obj, 'share_token', None)
-            return str(val) if val else None
+            if val:
+                return str(val)
         except Exception:
-            return None
+            pass
+        import uuid
+        return str(uuid.uuid5(uuid.NAMESPACE_DNS, f"advance-campaign-{obj.id}"))
 
