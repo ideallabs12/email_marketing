@@ -5,6 +5,7 @@ import { AlertTriangle, Download, RefreshCw } from 'lucide-react';
 
 interface PublicAnalyticsData {
   campaign_name: string;
+  advance_campaign_name?: string | null;
   totals?: {
     total_recipients: number;
     total_delivered: number;
@@ -110,7 +111,12 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
       {/* Header bar */}
       <div className="sticky top-0 z-10 flex flex-col md:flex-row md:items-center justify-between border-b border-gray-200 bg-gray-50 px-4 md:px-6 py-4 shadow-sm gap-4 md:gap-0">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">{analytics?.campaign_name} - Analytics</h1>
+          {analytics?.advance_campaign_name && (
+            <div className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">
+              Campaign: {analytics.advance_campaign_name}
+            </div>
+          )}
+          <h1 className="text-xl font-bold text-gray-900">Blast: {analytics?.campaign_name}</h1>
           <p className="text-xs text-gray-500 mt-1">Live Spreadsheet View</p>
           
           {analytics?.totals && (

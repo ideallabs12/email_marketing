@@ -21,6 +21,7 @@ interface ContainerSummary {
 
 interface PublicAnalyticsData {
   campaign_name: string;
+  advance_campaign_name?: string | null;
   totals?: {
     total_recipients: number;
     total_delivered: number;
@@ -349,6 +350,11 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
             {/* Toolbar */}
             <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
+                {analytics?.advance_campaign_name && (
+                  <div className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-0.5">
+                    {analytics.advance_campaign_name}
+                  </div>
+                )}
                 <div className="font-bold text-gray-900 text-base">{analytics?.campaign_name ?? '...'}</div>
                 {analytics?.totals && !analyticsLoading && (
                   <div className="flex gap-4 mt-1 text-xs text-gray-500">

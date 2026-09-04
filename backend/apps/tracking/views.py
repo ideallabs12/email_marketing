@@ -16,7 +16,7 @@ class PublicCampaignAnalyticsView(views.APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, token):
-        campaign = get_object_or_404(Campaign, share_token=token)
+        campaign = get_object_or_404(Campaign.objects.select_related('advance_campaign'), share_token=token)
         contacts = campaign.target_list.contacts.filter(is_subscribed=True).order_by('email')
         recipient_statuses = CampaignRecipientStatus.objects.filter(
             campaign=campaign, contact__in=contacts,
@@ -76,6 +76,7 @@ class PublicCampaignAnalyticsView(views.APIView):
 
         return Response({
             "campaign_name": campaign.name,
+            "advance_campaign_name": campaign.advance_campaign.name if campaign.advance_campaign else None,
             "totals": totals,
             "data": rows
         })
