@@ -1,7 +1,7 @@
 'use client';
 
 import { use, useEffect, useState, useMemo } from 'react';
-import { AlertTriangle, RefreshCw, ChevronDown, ChevronRight, Search, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { AlertTriangle, RefreshCw, ChevronDown, ChevronRight, Search, Lock, Eye, EyeOff, Loader2, ExternalLink } from 'lucide-react';
 
 interface BlastSummary {
   id: number;
@@ -15,6 +15,7 @@ interface BlastSummary {
 interface ContainerSummary {
   id: number | null;
   name: string;
+  share_token?: string;
   created_at: string | null;
   blasts: BlastSummary[];
 }
@@ -84,8 +85,12 @@ function PasswordGate({ onUnlock }: { onUnlock: (pwd: string) => Promise<void> }
     setError('');
     try {
       await onUnlock(password);
-    } catch {
-      setError('Incorrect password. Please try again.');
+    } catch (err: any) {
+      if (err.message === 'password_required') {
+        setError('Incorrect password. Please try again.');
+      } else {
+        setError(err.message || 'Incorrect password. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -165,14 +170,17 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
     }
     const res = await fetch(url, { headers, cache: 'no-store' });
     if (res.status === 401) {
-      const body = await res.json();
+      const body = await res.json().catch(() => ({}));
       if (body.detail === 'password_required') {
         setNeedsPassword(true);
         setLoading(false);
         throw new Error('password_required');
       }
     }
-    if (!res.ok) throw new Error('This link is disabled or invalid.');
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.detail || `Server error (${res.status}). Please try again.`);
+    }
     return res.json() as Promise<ContainerSummary[]>;
   };
 
@@ -314,7 +322,21 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                     {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="font-semibold text-sm text-gray-800 truncate">{container.name}</div>
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="font-semibold text-sm text-gray-800 truncate">{container.name}</span>
+                      {container.share_token && (
+                        <a
+                          href={`/public/campaign/${container.share_token}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-[11px] text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-0.5 shrink-0 font-medium"
+                          title="Open Campaign Analytics Link"
+                        >
+                          <ExternalLink size={11} /> View Link
+                        </a>
+                      )}
+                    </div>
                     <div className="text-[11px] text-gray-400 mt-0.5">{container.blasts.length} blast{container.blasts.length !== 1 ? 's' : ''}</div>
                   </div>
                 </button>

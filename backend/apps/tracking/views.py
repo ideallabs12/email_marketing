@@ -118,14 +118,67 @@ class PublicCampaignAnalyticsView(views.APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, token):
-        # Old direct blast links are retired per user instruction: "stop all old links"
-        return Response(
-            {
-                "error": "retired_link",
-                "detail": "Direct blast links have been retired. Please use your main Campaign link to view blast analytics."
-            },
-            status=status.HTTP_410_GONE
+        campaign = get_object_or_404(Campaign.objects.select_related('advance_campaign'), share_token=token)
+        contacts = get_campaign_target_contacts(campaign)
+        recipient_statuses = CampaignRecipientStatus.objects.filter(
+            campaign=campaign, contact__in=contacts,
+        ).select_related('contact')
+
+        by_contact = {item.contact_id: item for item in recipient_statuses}
+
+        rows = []
+        for contact in contacts:
+            item = by_contact.get(contact.id)
+            speaker_name = f"{contact.first_name} {contact.last_name}".strip()
+            email = contact.email
+            
+            if item:
+                status_val = item.status
+                links = []
+                for link in item.clicked_links:
+                    try:
+                        domain = urlparse(link).netloc.replace('www.', '')
+                        domain = domain.split('.')[0] if domain else str(link)
+                        if domain and domain not in links:
+                            links.append(domain)
+                    except Exception:
+                        if link and str(link) not in links:
+                            links.append(str(link))
+                links_str = ", ".join(links)
+                opened_at = item.opened_at.isoformat() if item.opened_at else None
+                clicked_at = item.clicked_at.isoformat() if item.clicked_at else None
+            else:
+                status_val = 'pending'
+                links_str = ''
+                opened_at = None
+                clicked_at = None
+            
+            rows.append({
+                "speaker_name": speaker_name,
+                "email": email,
+                "delivery_status": status_val,
+                "links_clicked": links_str,
+                "opened_at": opened_at,
+                "clicked_at": clicked_at
+            })
+
+        counts = recipient_statuses.aggregate(
+            delivered=Count('id', filter=Q(status__in=['delivered', 'opened', 'clicked'])),
+            opened=Count('id', filter=Q(opened_at__isnull=False) | Q(status__in=['opened', 'clicked'])),
+            clicked=Count('id', filter=Q(clicked_at__isnull=False) | Q(status='clicked')),
         )
+
+        return Response({
+            "campaign_name": campaign.name,
+            "advance_campaign_name": campaign.advance_campaign.name if campaign.advance_campaign else None,
+            "totals": {
+                "total_recipients": contacts.count(),
+                "total_delivered": counts['delivered'] or 0,
+                "total_opens": counts['opened'] or 0,
+                "total_clicks": counts['clicked'] or 0,
+            },
+            "data": rows
+        })
 
 class CampaignPerformanceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CampaignPerformance.objects.all().order_by('-campaign_id')
@@ -438,28 +491,48 @@ class PublicMasterLinkCampaignsView(views.APIView):
 
         # If password is set, require it via query param or header
         if settings.password:
-            provided = request.headers.get('X-Master-Password') or request.query_params.get('password', '')
-            if str(provided).strip() != str(settings.password).strip():
+            import urllib.parse
+            header_pwd = request.headers.get('X-Master-Password', '')
+            param_pwd = request.query_params.get('password', '')
+            unquoted_param = urllib.parse.unquote(param_pwd)
+            expected = str(settings.password).strip()
+
+            matches = any(
+                str(p).strip() == expected
+                for p in [header_pwd, param_pwd, unquoted_param]
+                if p
+            )
+            if not matches:
                 return Response({'detail': 'password_required', 'has_password': True}, status=status.HTTP_401_UNAUTHORIZED)
 
         from apps.campaigns.models import AdvanceCampaign
 
-        # Build grouped structure: advance campaigns with their blasts nested
-        advance_campaigns = AdvanceCampaign.objects.prefetch_related('campaigns').order_by('-created_at')
+        # Query AdvanceCampaign safely even if share_token migration is pending
+        try:
+            list(AdvanceCampaign.objects.only('id', 'share_token')[:1])
+            advance_campaigns = AdvanceCampaign.objects.prefetch_related('campaigns').order_by('-created_at')
+        except Exception:
+            advance_campaigns = AdvanceCampaign.objects.defer('share_token').prefetch_related('campaigns').order_by('-created_at')
+
         containers = []
         for ac in advance_campaigns:
-            blasts = ac.campaigns.exclude(status='draft').order_by('-created_at')
-            if not blasts.exists():
-                continue
+            blasts = ac.campaigns.all().order_by('-created_at')
+            ac_share_token = ''
+            try:
+                ac_share_token = str(getattr(ac, 'share_token', ''))
+            except Exception:
+                pass
+
             containers.append({
                 'id': ac.id,
                 'name': ac.name,
+                'share_token': ac_share_token,
                 'created_at': ac.created_at.isoformat(),
                 'blasts': [{
                     'id': c.id,
                     'name': c.name,
                     'status': c.status,
-                    'share_token': str(c.share_token),
+                    'share_token': str(c.share_token) if getattr(c, 'share_token', None) else '',
                     'sent_at': c.sent_at.isoformat() if c.sent_at else None,
                     'created_at': c.created_at.isoformat(),
                 } for c in blasts]
@@ -468,17 +541,18 @@ class PublicMasterLinkCampaignsView(views.APIView):
         # Also include standalone campaigns (no advance_campaign parent)
         standalone = Campaign.objects.filter(
             advance_campaign__isnull=True
-        ).exclude(status='draft').order_by('-created_at')
+        ).order_by('-created_at')
         if standalone.exists():
             containers.append({
                 'id': None,
                 'name': 'Other Campaigns',
+                'share_token': '',
                 'created_at': None,
                 'blasts': [{
                     'id': c.id,
                     'name': c.name,
                     'status': c.status,
-                    'share_token': str(c.share_token),
+                    'share_token': str(c.share_token) if getattr(c, 'share_token', None) else '',
                     'sent_at': c.sent_at.isoformat() if c.sent_at else None,
                     'created_at': c.created_at.isoformat(),
                 } for c in standalone]
