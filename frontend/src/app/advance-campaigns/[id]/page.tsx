@@ -61,6 +61,14 @@ export default function AdvanceCampaignDetailPage() {
     };
   }, [polling, id]);
 
+  function extractList<T>(res: any): T[] {
+    if (!res) return [];
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res.results)) return res.results;
+    if (Array.isArray(res.data)) return res.data;
+    return [];
+  }
+
   async function loadInitialData() {
     setLoading(true);
     try {
@@ -70,13 +78,13 @@ export default function AdvanceCampaignDetailPage() {
         apiClient.get('/api/v1/templates/?limit=10000'),
       ]);
       setAdvCampaign(campaignRes);
-      setLists(listsRes.results || []);
-      setTemplates(templatesRes.results || []);
+      setLists(extractList<ContactList>(listsRes));
+      setTemplates(extractList<EmailTemplate>(templatesRes));
       
       if (campaignRes.target_list) {
         try {
           const batchesRes = await apiClient.get(`/api/v1/contact-batches/?contact_list=${campaignRes.target_list}`);
-          setBatches(batchesRes.results || []);
+          setBatches(extractList<ContactBatch>(batchesRes));
         } catch (e) {
           console.error('Failed to load batches', e);
         }

@@ -20,6 +20,14 @@ export default function AdvanceCampaignsPage() {
     loadInitialData();
   }, []);
 
+  function extractList<T>(res: any): T[] {
+    if (!res) return [];
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res.results)) return res.results;
+    if (Array.isArray(res.data)) return res.data;
+    return [];
+  }
+
   async function loadInitialData() {
     setLoading(true);
     setActionError('');
@@ -30,22 +38,29 @@ export default function AdvanceCampaignsPage() {
         apiClient.get('/api/v1/advance-campaigns/recent-blasts/')
       ]);
 
+      const errs: string[] = [];
+
       if (campaignsRes.status === 'fulfilled') {
-        setCampaigns(campaignsRes.value.results || []);
+        setCampaigns(extractList<AdvanceCampaign>(campaignsRes.value));
       } else {
         console.error('Failed to load campaigns:', campaignsRes.reason);
+        errs.push('Unable to load advance campaigns. (If recently updated, ensure DB migrations have been run with: docker compose exec backend python manage.py migrate)');
       }
 
       if (listsRes.status === 'fulfilled') {
-        setLists(listsRes.value.results || []);
+        setLists(extractList<ContactList>(listsRes.value));
       } else {
         console.error('Failed to load lists:', listsRes.reason);
       }
 
       if (recentRes.status === 'fulfilled') {
-        setRecentBlasts(recentRes.value.results || []);
+        setRecentBlasts(extractList<Campaign>(recentRes.value));
       } else {
         console.error('Failed to load recent blasts:', recentRes.reason);
+      }
+
+      if (errs.length > 0) {
+        setActionError(errs.join(' '));
       }
     } catch (err: any) {
       console.error('Failed to load advance campaigns initial data:', err);

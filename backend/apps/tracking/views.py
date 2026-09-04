@@ -23,7 +23,7 @@ class PublicAdvanceCampaignView(views.APIView):
 
     def get(self, request, token):
         adv_campaign = get_object_or_404(AdvanceCampaign, share_token=token)
-        blasts_qs = adv_campaign.campaigns.exclude(status='draft').order_by('-created_at')
+        blasts_qs = adv_campaign.campaigns.all().order_by('-created_at')
 
         blasts_data = [{
             'id': b.id,
@@ -408,6 +408,7 @@ class MasterLinkSettingsView(views.APIView):
             'token': str(settings.token),
             'is_active': settings.is_active,
             'has_password': bool(settings.password),
+            'current_password': settings.password,
         })
 
     def post(self, request):
@@ -423,6 +424,7 @@ class MasterLinkSettingsView(views.APIView):
             'token': str(settings.token),
             'is_active': settings.is_active,
             'has_password': bool(settings.password),
+            'current_password': settings.password,
         })
 
 class PublicMasterLinkCampaignsView(views.APIView):
@@ -436,8 +438,8 @@ class PublicMasterLinkCampaignsView(views.APIView):
 
         # If password is set, require it via query param or header
         if settings.password:
-            provided = request.query_params.get('password', '') or request.headers.get('X-Master-Password', '')
-            if provided != settings.password:
+            provided = request.headers.get('X-Master-Password') or request.query_params.get('password', '')
+            if str(provided).strip() != str(settings.password).strip():
                 return Response({'detail': 'password_required', 'has_password': True}, status=status.HTTP_401_UNAUTHORIZED)
 
         from apps.campaigns.models import AdvanceCampaign

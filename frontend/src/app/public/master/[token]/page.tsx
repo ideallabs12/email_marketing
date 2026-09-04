@@ -155,10 +155,15 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
   const [statusFilter, setStatusFilter] = useState('all');
 
   const fetchContainers = async (password = '') => {
-    const url = password
-      ? `${API_BASE_URL}/api/v1/public/master-link/${token}/campaigns/?password=${encodeURIComponent(password)}`
+    const trimmed = password.trim();
+    const url = trimmed
+      ? `${API_BASE_URL}/api/v1/public/master-link/${token}/campaigns/?password=${encodeURIComponent(trimmed)}`
       : `${API_BASE_URL}/api/v1/public/master-link/${token}/campaigns/`;
-    const res = await fetch(url, { cache: 'no-store' });
+    const headers: Record<string, string> = {};
+    if (trimmed) {
+      headers['X-Master-Password'] = trimmed;
+    }
+    const res = await fetch(url, { headers, cache: 'no-store' });
     if (res.status === 401) {
       const body = await res.json();
       if (body.detail === 'password_required') {
