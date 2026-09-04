@@ -1,7 +1,7 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
-import { AlertTriangle, RefreshCw, ChevronDown, Check, Search } from 'lucide-react';
+import { use, useEffect, useState, useMemo } from 'react';
+import { AlertTriangle, RefreshCw, ChevronDown, ChevronRight, Search, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 interface CampaignSummary {
   id: number;
@@ -29,94 +29,186 @@ interface PublicAnalyticsData {
   }>;
 }
 
+const statusColors: Record<string, string> = {
+  pending: 'text-gray-400',
+  sent: 'text-gray-600',
+  delivered: 'text-emerald-600',
+  opened: 'text-blue-600',
+  clicked: 'text-violet-600',
+  failed: 'text-red-600',
+  unsubscribed: 'text-orange-600',
+  complaint: 'text-red-800',
+  deferred: 'text-yellow-600',
+  hard_bounce: 'text-red-700',
+  soft_bounce: 'text-orange-500',
+  invalid_email: 'text-rose-600',
+  blocked: 'text-slate-600',
+  error: 'text-red-900',
+};
+
+const statusBg: Record<string, string> = {
+  pending: 'bg-gray-100',
+  sent: 'bg-gray-100',
+  delivered: 'bg-emerald-50',
+  opened: 'bg-blue-50',
+  clicked: 'bg-violet-50',
+  failed: 'bg-red-50',
+  unsubscribed: 'bg-orange-50',
+  complaint: 'bg-red-100',
+  deferred: 'bg-yellow-50',
+  hard_bounce: 'bg-red-50',
+  soft_bounce: 'bg-orange-50',
+  invalid_email: 'bg-rose-50',
+  blocked: 'bg-slate-100',
+  error: 'bg-red-100',
+};
+
+function PasswordGate({ onUnlock }: { onUnlock: (pwd: string) => void }) {
+  const [password, setPassword] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const submit = async () => {
+    if (!password) return;
+    setLoading(true);
+    setError('');
+    // Pass password up for the parent to try fetching
+    try {
+      await onUnlock(password);
+    } catch {
+      setError('Incorrect password. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex h-screen items-center justify-center bg-gray-50">
+      <div className="w-full max-w-sm mx-4 bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+        <div className="flex items-center justify-center w-14 h-14 bg-gray-900 rounded-2xl mx-auto mb-6">
+          <Lock size={24} className="text-white" />
+        </div>
+        <h1 className="text-2xl font-bold text-center text-gray-900 mb-1">Protected Link</h1>
+        <p className="text-sm text-gray-500 text-center mb-8">Enter the password to access this analytics view.</p>
+        
+        <div className="space-y-4">
+          <div className="relative">
+            <input
+              type={showPwd ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && submit()}
+              placeholder="Enter password..."
+              autoFocus
+              className="w-full border border-gray-200 rounded-lg px-4 py-3 pr-10 text-sm outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-400 transition-all"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPwd(!showPwd)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+          {error && <p className="text-red-500 text-xs">{error}</p>}
+          <button
+            onClick={submit}
+            disabled={!password || loading}
+            className="w-full bg-gray-900 text-white rounded-lg py-3 text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+          >
+            {loading ? <Loader2 size={16} className="animate-spin" /> : null}
+            {loading ? 'Checking...' : 'Access Analytics'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MasterLinkPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params);
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+
   const [campaigns, setCampaigns] = useState<CampaignSummary[]>([]);
-  const [selectedCampaignToken, setSelectedCampaignToken] = useState<string>('');
-  
-  const [analytics, setAnalytics] = useState<PublicAnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [needsPassword, setNeedsPassword] = useState(false);
+  const [unlockedPassword, setUnlockedPassword] = useState('');
+
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
+  const [selectedCampaignToken, setSelectedCampaignToken] = useState<string>('');
+
+  const [analytics, setAnalytics] = useState<PublicAnalyticsData | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const fetchCampaigns = async (password = '') => {
+    const url = password
+      ? `${API_BASE_URL}/api/v1/public/master-link/${token}/campaigns/?password=${encodeURIComponent(password)}`
+      : `${API_BASE_URL}/api/v1/public/master-link/${token}/campaigns/`;
+
+    const res = await fetch(url, { cache: 'no-store' });
+
+    if (res.status === 401) {
+      const body = await res.json();
+      if (body.detail === 'password_required') {
+        setNeedsPassword(true);
+        setLoading(false);
+        throw new Error('password_required');
+      }
+    }
+    if (!res.ok) throw new Error('This link is disabled or invalid.');
+    return res.json() as Promise<CampaignSummary[]>;
+  };
 
   useEffect(() => {
     let isCurrent = true;
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
-    
-    fetch(`${API_BASE_URL}/api/v1/public/master-link/${token}/campaigns/`, { cache: 'no-store' })
-      .then(async (res) => {
-        if (!res.ok) throw new Error('This link is disabled or invalid.');
-        return res.json();
-      })
-      .then((data: CampaignSummary[]) => {
+    fetchCampaigns()
+      .then((data) => {
         if (isCurrent) {
           setCampaigns(data);
-          if (data.length > 0) {
-            setSelectedCampaignToken(data[0].share_token);
-          }
           setError('');
+          setNeedsPassword(false);
+          setLoading(false);
         }
       })
       .catch((err) => {
-        if (isCurrent) setError(err.message || 'Unable to load master link data.');
-      })
-      .finally(() => {
-        if (isCurrent) setLoading(false);
-      });
-      
-    return () => { isCurrent = false; };
-  }, [token]);
-
-  // Real-time polling to check if link is disabled
-  useEffect(() => {
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
-    const intervalId = setInterval(() => {
-      fetch(`${API_BASE_URL}/api/v1/public/master-link/${token}/campaigns/`, { cache: 'no-store' })
-        .then((res) => {
-          if (!res.ok) {
-            setError('This link has been disabled by the administrator.');
+        if (isCurrent) {
+          if (err.message !== 'password_required') {
+            setError(err.message || 'Unable to load master link data.');
+            setLoading(false);
           }
-        })
-        .catch(() => {
-          // Ignore network errors to avoid false positives if connection drops momentarily
-        });
-    }, 5000); // Check every 5 seconds
-
-    return () => clearInterval(intervalId);
+        }
+      });
+    return () => { isCurrent = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
+
+  const handleUnlock = async (password: string) => {
+    const data = await fetchCampaigns(password);
+    setUnlockedPassword(password);
+    setCampaigns(data);
+    setNeedsPassword(false);
+    setLoading(false);
+  };
 
   useEffect(() => {
     if (!selectedCampaignToken) return;
-    
     let isCurrent = true;
     setAnalyticsLoading(true);
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
-    
     fetch(`${API_BASE_URL}/api/v1/public-analytics/${selectedCampaignToken}/`, { cache: 'no-store' })
-      .then(async (res) => {
-        if (!res.ok) throw new Error('Failed to load campaign data');
-        return res.json();
-      })
-      .then((data: PublicAnalyticsData) => {
-        if (isCurrent) setAnalytics(data);
-      })
-      .catch((err) => {
-        console.error(err);
-      })
-      .finally(() => {
-        if (isCurrent) setAnalyticsLoading(false);
-      });
-      
+      .then(r => r.json())
+      .then((data: PublicAnalyticsData) => { if (isCurrent) setAnalytics(data); })
+      .catch(console.error)
+      .finally(() => { if (isCurrent) setAnalyticsLoading(false); });
     return () => { isCurrent = false; };
-  }, [selectedCampaignToken]);
+  }, [selectedCampaignToken, API_BASE_URL]);
 
   const refreshAnalytics = () => {
     if (!selectedCampaignToken) return;
     setAnalyticsLoading(true);
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
     fetch(`${API_BASE_URL}/api/v1/public-analytics/${selectedCampaignToken}/`, { cache: 'no-store' })
       .then(r => r.json())
       .then(data => setAnalytics(data))
@@ -124,255 +216,242 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
       .finally(() => setAnalyticsLoading(false));
   };
 
-  const statusColors: Record<string, string> = {
-    pending: 'text-gray-500',
-    sent: 'text-gray-600',
-    delivered: 'text-green-600',
-    opened: 'text-blue-600',
-    clicked: 'text-purple-600',
-    failed: 'text-red-600',
-    unsubscribed: 'text-orange-600',
-    complaint: 'text-red-800',
-    deferred: 'text-yellow-600',
-    hard_bounce: 'text-red-700',
-    soft_bounce: 'text-orange-500',
-    invalid_email: 'text-rose-600',
-    blocked: 'text-slate-600',
-    error: 'text-red-900',
+  // Group campaigns by month
+  const groupedCampaigns = useMemo(() => {
+    const groups: Record<string, CampaignSummary[]> = {};
+    campaigns
+      .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      .forEach(c => {
+        const d = new Date(c.created_at);
+        const key = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(c);
+      });
+    return groups;
+  }, [campaigns, searchQuery]);
+
+  const getStatusDot = (status: string) => {
+    const colors: Record<string, string> = {
+      sent: 'bg-emerald-500', sending: 'bg-blue-500', failed: 'bg-red-500',
+      scheduled: 'bg-yellow-500', draft: 'bg-gray-400',
+    };
+    return colors[status] || 'bg-gray-400';
   };
 
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center gap-4 text-gray-500">
-          <RefreshCw className="animate-spin" size={32} />
-          <p>Loading Master Link...</p>
-        </div>
-      </div>
-    );
-  }
+  const filteredRows = analytics?.data.filter(row =>
+    statusFilter === 'all' || row.delivery_status === statusFilter
+  ) ?? [];
 
-  if (error) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center gap-4 text-red-600 max-w-md text-center p-6 bg-white border border-red-200 rounded-lg shadow-sm">
-          <AlertTriangle size={32} />
-          <p className="font-semibold">{error}</p>
-        </div>
+  // ---- Render ----
+
+  if (needsPassword) return <PasswordGate onUnlock={handleUnlock} />;
+
+  if (loading) return (
+    <div className="flex h-screen items-center justify-center bg-gray-50">
+      <div className="flex flex-col items-center gap-4 text-gray-500">
+        <Loader2 className="animate-spin" size={32} />
+        <p>Loading Master Link...</p>
       </div>
-    );
-  }
+    </div>
+  );
+
+  if (error) return (
+    <div className="flex h-screen items-center justify-center bg-gray-50">
+      <div className="flex flex-col items-center gap-4 text-red-600 max-w-md text-center p-6 bg-white border border-red-200 rounded-lg shadow-sm">
+        <AlertTriangle size={32} />
+        <p className="font-semibold">{error}</p>
+      </div>
+    </div>
+  );
 
   const showOpenedAt = ['all', 'opened'].includes(statusFilter);
   const showClickedAt = ['clicked'].includes(statusFilter);
   const showLinksClicked = ['clicked'].includes(statusFilter);
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header bar */}
-      <div className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 px-4 md:px-6 py-4 shadow-sm">
-        {/* Top Row: Title & Actions */}
-        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 lg:gap-0">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Master Analytics View</h1>
-            <p className="text-xs text-gray-500 mt-1">Select a campaign to view its live performance</p>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full lg:w-auto mt-2 lg:mt-0">
-            <div className="flex flex-wrap gap-1 bg-gray-100 p-1 rounded-md border border-gray-200">
-              {['all', 'delivered', 'opened', 'clicked', 'sent', 'pending', 'failed'].map(status => (
-                <button
-                  key={status}
-                  onClick={() => setStatusFilter(status)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${
-                    statusFilter === status 
-                      ? 'bg-white text-gray-900 shadow-sm border border-gray-200/50' 
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
-                  }`}
-                >
-                  {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
-                </button>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={refreshAnalytics}
-              className="w-full sm:w-auto inline-flex justify-center items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
-            >
-              <RefreshCw size={15} className={analyticsLoading ? 'animate-spin' : ''} />
-              {analyticsLoading ? 'Syncing...' : 'Sync Data'}
-            </button>
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+
+      {/* ── Left Pane ── */}
+      <div className="w-[300px] lg:w-[360px] flex-shrink-0 bg-white border-r border-gray-200 flex flex-col">
+        {/* Header */}
+        <div className="p-4 border-b border-gray-100 flex-shrink-0">
+          <h1 className="font-bold text-lg text-gray-900">Master Analytics</h1>
+          <p className="text-xs text-gray-400 mt-0.5">{campaigns.length} campaigns</p>
+          <div className="relative mt-3">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+            <input
+              type="text"
+              placeholder="Search campaigns..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-gray-400 transition-colors"
+            />
           </div>
         </div>
 
-        {/* Bottom Row: Dropdown & Stats */}
-        <div className="flex flex-col xl:flex-row xl:items-center gap-4 mt-4">
-          {/* Custom Dropdown */}
-          <div className="relative w-full xl:w-[32rem] z-20">
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex w-full xl:w-[32rem] items-center justify-between rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow"
-            >
-              <span className="truncate text-left">
-                {selectedCampaignToken 
-                  ? (() => {
-                      const c = campaigns.find(c => c.share_token === selectedCampaignToken);
-                      return c ? `${c.name} (${new Date(c.created_at).toLocaleDateString()})` : 'Select a campaign...';
-                    })()
-                  : 'Select a campaign...'}
-              </span>
-              <ChevronDown size={16} className={`ml-2 flex-shrink-0 text-gray-500 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {dropdownOpen && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)} />
-                <div className="absolute left-0 top-full mt-2 w-full xl:w-[32rem] z-20 rounded-lg border border-gray-200 bg-white shadow-xl max-h-[350px] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                  <div className="p-2 border-b border-gray-100 flex items-center gap-2 bg-gray-50/80">
-                    <Search size={15} className="text-gray-400 ml-2" />
-                    <input
-                      type="text"
-                      placeholder="Search campaigns..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-transparent outline-none text-sm p-1.5 placeholder:text-gray-400"
-                      autoFocus
-                    />
-                  </div>
-                  <div className="overflow-y-auto overflow-x-hidden flex-1 p-1.5 custom-scrollbar">
-                    {campaigns.length === 0 && <div className="p-4 text-sm text-gray-500 text-center">No campaigns available</div>}
-                    {campaigns
-                      .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                      .map(c => (
-                        <button
-                          key={c.id}
-                          onClick={() => {
-                            setSelectedCampaignToken(c.share_token);
-                            setDropdownOpen(false);
-                            setSearchQuery('');
-                          }}
-                          className={`w-full text-left flex items-center justify-between px-3 py-2.5 mb-0.5 text-sm rounded-md transition-colors ${
-                            selectedCampaignToken === c.share_token 
-                              ? 'bg-blue-50/80 text-blue-700 font-semibold' 
-                              : 'text-gray-700 hover:bg-gray-100/80'
-                          }`}
-                        >
-                          <span className="truncate pr-4 flex-1">
-                            {c.name} 
-                            <span className={`text-xs ml-2 font-normal ${selectedCampaignToken === c.share_token ? 'text-blue-500' : 'text-gray-400'}`}>
-                              ({new Date(c.created_at).toLocaleDateString()})
-                            </span>
-                          </span>
-                          {selectedCampaignToken === c.share_token && <Check size={16} className="text-blue-600 flex-shrink-0" />}
-                        </button>
-                    ))}
-                    {campaigns.length > 0 && campaigns.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
-                      <div className="p-6 text-sm text-gray-500 text-center">No campaigns found matching "{searchQuery}"</div>
-                    )}
-                  </div>
+        {/* Campaign List — grouped by month */}
+        <div className="flex-1 overflow-y-auto p-2">
+          {Object.keys(groupedCampaigns).length === 0 ? (
+            <div className="py-10 text-center text-sm text-gray-400">No campaigns found.</div>
+          ) : (
+            Object.entries(groupedCampaigns).map(([month, items]) => {
+              const isOpen = expandedGroup === month || expandedGroup === null;
+              return (
+                <div key={month} className="mb-1">
+                  <button
+                    onClick={() => setExpandedGroup(isOpen && expandedGroup === month ? null : month)}
+                    className="flex items-center w-full gap-1.5 px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {isOpen && expandedGroup === month
+                      ? <ChevronDown size={13} />
+                      : <ChevronRight size={13} />
+                    }
+                    {month}
+                  </button>
+                  {(expandedGroup === null || expandedGroup === month) && (
+                    <div className="space-y-0.5 pl-1">
+                      {items.map(c => {
+                        const isSelected = selectedCampaignToken === c.share_token;
+                        return (
+                          <button
+                            key={c.id}
+                            onClick={() => setSelectedCampaignToken(c.share_token)}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-all ${
+                              isSelected
+                                ? 'bg-gray-900 text-white shadow-sm'
+                                : 'text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusDot(c.status)}`} />
+                            <div className="flex-1 min-w-0">
+                              <div className="truncate font-medium">{c.name}</div>
+                              <div className={`text-[10px] mt-0.5 ${isSelected ? 'text-gray-300' : 'text-gray-400'}`}>
+                                {new Date(c.created_at).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              </>
-            )}
-          </div>
-          
-          {analytics?.totals && !analyticsLoading && (
-            <div className="flex flex-wrap items-center gap-3 text-base">
-              <div className="flex items-baseline bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-md"><span className="text-gray-500 text-sm mr-2">Recipients:</span> <span className="font-bold text-lg text-gray-900">{analytics.totals.total_recipients}</span></div>
-              <div className="flex items-baseline bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-md"><span className="text-gray-500 text-sm mr-2">Delivered:</span> <span className="font-bold text-lg text-gray-900">{analytics.totals.total_delivered}</span></div>
-              <div className="flex items-baseline bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-md"><span className="text-gray-500 text-sm mr-2">Opens:</span> <span className="font-bold text-lg text-gray-900">{analytics.totals.total_opens}</span></div>
-              <div className="flex items-baseline bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-md"><span className="text-gray-500 text-sm mr-2">Clicks:</span> <span className="font-bold text-lg text-gray-900">{analytics.totals.total_clicks}</span></div>
-            </div>
+              );
+            })
           )}
         </div>
       </div>
 
-      {/* Spreadsheet Table */}
-      <div className="w-full px-4 md:px-0 mt-4 md:mt-0">
-        {analyticsLoading ? (
-           <div className="py-20 text-center text-gray-400 text-sm">Loading campaign data...</div>
-        ) : !selectedCampaignToken ? (
-           <div className="py-20 text-center text-gray-400 text-sm">No campaign selected</div>
+      {/* ── Right Pane ── */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {!selectedCampaignToken ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-gray-300">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <Search size={36} className="opacity-50" />
+            </div>
+            <p className="text-lg font-semibold text-gray-400">Select a campaign</p>
+            <p className="text-sm text-gray-400 mt-1">Pick a campaign from the left to see its data.</p>
+          </div>
         ) : (
-        <table className="w-full text-left text-sm md:whitespace-nowrap md:border-collapse block md:table">
-          <thead className="hidden md:table-header-group">
-            <tr className="bg-gray-100 border-b border-gray-200 text-gray-600 text-xs uppercase tracking-wider font-semibold">
-              <th className="px-6 py-3 border-r border-gray-200 w-12 text-center text-gray-400">#</th>
-              <th className="px-6 py-3 border-r border-gray-200">Speaker Name</th>
-              <th className="px-6 py-3 border-r border-gray-200">Email</th>
-              <th className="px-6 py-3 border-r border-gray-200">Delivery Status</th>
-              {showOpenedAt && <th className="px-6 py-3 border-r border-gray-200">Opened At</th>}
-              {showClickedAt && <th className="px-6 py-3 border-r border-gray-200">Clicked At</th>}
-              {showLinksClicked && <th className="px-6 py-3">Links Clicked</th>}
-            </tr>
-          </thead>
-          <tbody className="block md:table-row-group divide-y divide-gray-200 md:divide-none space-y-4 md:space-y-0">
-            {analytics?.data
-              .filter((row) => statusFilter === 'all' || row.delivery_status === statusFilter)
-              .map((row, index) => (
-              <tr key={index} className="flex flex-col md:table-row bg-white border border-gray-200 md:border-0 rounded-lg md:rounded-none p-4 md:p-0 md:hover:bg-gray-50 transition-colors shadow-sm md:shadow-none">
-                <td className="flex justify-between items-center md:table-cell px-0 md:px-6 py-2 md:py-3 border-b border-gray-100 md:border-b-0 md:border-r md:border-gray-200 md:text-center text-gray-400 md:bg-gray-50/50">
-                  <span className="md:hidden text-xs font-semibold uppercase text-gray-400">#</span>
-                  <span>{index + 1}</span>
-                </td>
-                <td className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center md:table-cell px-0 md:px-6 py-2 md:py-3 border-b border-gray-100 md:border-b-0 md:border-r md:border-gray-200 font-medium text-gray-900">
-                  <span className="md:hidden text-[10px] font-semibold uppercase text-gray-400 mb-0.5">Speaker Name</span>
-                  <span>{row.speaker_name || '—'}</span>
-                </td>
-                <td className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center md:table-cell px-0 md:px-6 py-2 md:py-3 border-b border-gray-100 md:border-b-0 md:border-r md:border-gray-200 text-gray-600">
-                  <span className="md:hidden text-[10px] font-semibold uppercase text-gray-400 mb-0.5">Email</span>
-                  <span className="break-all">{row.email}</span>
-                </td>
-                <td className="flex justify-between items-center md:table-cell px-0 md:px-6 py-2 md:py-3 border-b border-gray-100 md:border-b-0 md:border-r md:border-gray-200">
-                  <span className="md:hidden text-xs font-semibold uppercase text-gray-400">Delivery Status</span>
-                  <span className={`capitalize font-semibold ${statusColors[row.delivery_status] || 'text-gray-500'}`}>
-                    {row.delivery_status}
-                  </span>
-                </td>
-                {showOpenedAt && (
-                  <td className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center md:table-cell px-0 md:px-6 py-2 md:py-3 border-b border-gray-100 md:border-b-0 md:border-r md:border-gray-200 text-gray-600">
-                    <span className="md:hidden text-[10px] font-semibold uppercase text-gray-400 mb-0.5">Opened At</span>
-                    <span>{row.opened_at ? new Date(row.opened_at).toLocaleString() : <span className="text-gray-400">—</span>}</span>
-                  </td>
+          <>
+            {/* Toolbar */}
+            <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="font-bold text-gray-900 text-base">{analytics?.campaign_name ?? '...'}</div>
+                {analytics?.totals && !analyticsLoading && (
+                  <div className="flex gap-4 mt-1 text-xs text-gray-500">
+                    <span>Recipients: <strong className="text-gray-900">{analytics.totals.total_recipients}</strong></span>
+                    <span>Delivered: <strong className="text-gray-900">{analytics.totals.total_delivered}</strong></span>
+                    <span>Opens: <strong className="text-gray-900">{analytics.totals.total_opens}</strong></span>
+                    <span>Clicks: <strong className="text-gray-900">{analytics.totals.total_clicks}</strong></span>
+                  </div>
                 )}
-                {showClickedAt && (
-                  <td className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center md:table-cell px-0 md:px-6 py-2 md:py-3 border-b border-gray-100 md:border-b-0 md:border-r md:border-gray-200 text-gray-600">
-                    <span className="md:hidden text-[10px] font-semibold uppercase text-gray-400 mb-0.5">Clicked At</span>
-                    <span>{row.clicked_at ? new Date(row.clicked_at).toLocaleString() : <span className="text-gray-400">—</span>}</span>
-                  </td>
-                )}
-                {showLinksClicked && (
-                  <td className="flex flex-col md:table-cell px-0 md:px-6 py-2 md:py-3 text-gray-600 pt-3 md:pt-3">
-                    <span className="md:hidden text-[10px] font-semibold uppercase text-gray-400 mb-2">Links Clicked</span>
-                    {row.links_clicked ? (
-                      <div className="flex gap-2 items-center flex-wrap">
-                        {row.links_clicked.split(',').map((link, i) => (
-                          <span key={i} className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-md border border-blue-100 break-all w-fit max-w-full">
-                            {link.trim()}
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Status filter pills */}
+                <div className="flex gap-1 flex-wrap">
+                  {['all', 'delivered', 'opened', 'clicked', 'sent', 'pending', 'failed'].map(s => (
+                    <button
+                      key={s}
+                      onClick={() => setStatusFilter(s)}
+                      className={`px-2.5 py-1 text-xs rounded-full font-medium transition-colors ${
+                        statusFilter === s ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={refreshAnalytics}
+                  className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  <RefreshCw size={12} className={analyticsLoading ? 'animate-spin' : ''} />
+                  Sync
+                </button>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="flex-1 overflow-auto">
+              {analyticsLoading ? (
+                <div className="flex items-center justify-center py-20 text-gray-400">
+                  <Loader2 className="animate-spin mr-2" size={20} /> Loading data...
+                </div>
+              ) : (
+                <table className="w-full text-sm text-left border-collapse">
+                  <thead className="bg-gray-50 sticky top-0 z-10">
+                    <tr className="text-xs text-gray-500 uppercase tracking-wider font-semibold border-b border-gray-200">
+                      <th className="px-5 py-3 w-10 text-center">#</th>
+                      <th className="px-5 py-3">Name</th>
+                      <th className="px-5 py-3">Email</th>
+                      <th className="px-5 py-3">Status</th>
+                      {showOpenedAt && <th className="px-5 py-3">Opened At</th>}
+                      {showClickedAt && <th className="px-5 py-3">Clicked At</th>}
+                      {showLinksClicked && <th className="px-5 py-3">Links</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredRows.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="py-16 text-center text-gray-400 text-sm">No recipients match the selected filter.</td>
+                      </tr>
+                    ) : filteredRows.map((row, i) => (
+                      <tr key={i} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td className="px-5 py-3 text-center text-gray-400 text-xs">{i + 1}</td>
+                        <td className="px-5 py-3 font-medium text-gray-900">{row.speaker_name || '—'}</td>
+                        <td className="px-5 py-3 text-gray-500">{row.email}</td>
+                        <td className="px-5 py-3">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${statusColors[row.delivery_status] || 'text-gray-500'} ${statusBg[row.delivery_status] || 'bg-gray-100'}`}>
+                            {row.delivery_status}
                           </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-gray-400">—</span>
-                    )}
-                  </td>
-                )}
-              </tr>
-            ))}
-            {analytics?.data.length === 0 ? (
-              <tr>
-                <td colSpan={4 + (showOpenedAt ? 1 : 0) + (showClickedAt ? 1 : 0) + (showLinksClicked ? 1 : 0)} className="px-6 py-12 text-center text-gray-500">
-                  No recipients found for this campaign yet.
-                </td>
-              </tr>
-            ) : analytics?.data.filter((row) => statusFilter === 'all' || row.delivery_status === statusFilter).length === 0 ? (
-              <tr>
-                <td colSpan={4 + (showOpenedAt ? 1 : 0) + (showClickedAt ? 1 : 0) + (showLinksClicked ? 1 : 0)} className="px-6 py-12 text-center text-gray-500">
-                  No recipients found matching the selected status.
-                </td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
+                        </td>
+                        {showOpenedAt && (
+                          <td className="px-5 py-3 text-gray-500 text-xs">
+                            {row.opened_at ? new Date(row.opened_at).toLocaleString() : <span className="text-gray-300">—</span>}
+                          </td>
+                        )}
+                        {showClickedAt && (
+                          <td className="px-5 py-3 text-gray-500 text-xs">
+                            {row.clicked_at ? new Date(row.clicked_at).toLocaleString() : <span className="text-gray-300">—</span>}
+                          </td>
+                        )}
+                        {showLinksClicked && (
+                          <td className="px-5 py-3 text-xs">
+                            {row.links_clicked
+                              ? row.links_clicked.split(',').map((link, li) => (
+                                  <span key={li} className="inline-flex px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md border border-blue-100 mr-1 mb-1 break-all">{link.trim()}</span>
+                                ))
+                              : <span className="text-gray-300">—</span>
+                            }
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -269,12 +269,18 @@ export default function CampaignsPage() {
 function MasterLinkModal({ onClose }: { onClose: () => void }) {
   const [token, setToken] = useState('');
   const [isActive, setIsActive] = useState(false);
+  const [password, setPassword] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [hasPassword, setHasPassword] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     apiClient.get('/api/v1/master-link/settings/').then(res => {
       setToken(res.token);
       setIsActive(res.is_active);
+      setHasPassword(res.has_password);
       setLoading(false);
     }).catch(err => {
       console.error('Failed to load master link settings', err);
@@ -286,15 +292,45 @@ function MasterLinkModal({ onClose }: { onClose: () => void }) {
     try {
       const res = await apiClient.post('/api/v1/master-link/settings/', { is_active: !isActive });
       setIsActive(res.is_active);
+      setHasPassword(res.has_password);
     } catch (err) {
       console.error('Failed to update master link settings', err);
     }
   };
 
+  const handleSavePassword = async () => {
+    setSavingPassword(true);
+    try {
+      const res = await apiClient.post('/api/v1/master-link/settings/', { password: passwordInput });
+      setHasPassword(res.has_password);
+      setPasswordInput('');
+      setPassword('');
+    } catch (err) {
+      console.error('Failed to save password', err);
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
+  const handleRemovePassword = async () => {
+    setSavingPassword(true);
+    try {
+      const res = await apiClient.post('/api/v1/master-link/settings/', { password: '' });
+      setHasPassword(res.has_password);
+      setPasswordInput('');
+    } catch (err) {
+      console.error('Failed to remove password', err);
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
   const copyLink = () => {
     const url = `${window.location.origin}/public/master/${token}`;
-    navigator.clipboard.writeText(url);
-    alert('Link copied to clipboard!');
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   };
 
   return (
@@ -308,6 +344,7 @@ function MasterLinkModal({ onClose }: { onClose: () => void }) {
           <p className="text-foreground/50">Loading...</p>
         ) : (
           <div className="space-y-6">
+            {/* Toggle */}
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-medium">Enable Master Link</div>
@@ -320,9 +357,46 @@ function MasterLinkModal({ onClose }: { onClose: () => void }) {
                 <div className={`w-4 h-4 bg-background rounded-full absolute top-1 transition-transform ${isActive ? 'translate-x-6' : 'translate-x-1'}`} />
               </button>
             </div>
+
+            {/* Password Protection */}
+            <div className="space-y-2 border-t border-border pt-5">
+              <div className="font-medium text-sm">Password Protection</div>
+              <div className="text-xs text-foreground/50 mb-3">Visitors must enter this password before they can view the master link.</div>
+              {hasPassword && (
+                <div className="flex items-center gap-2 mb-2 p-2 bg-green-500/10 border border-green-500/20 rounded-md">
+                  <span className="text-xs text-green-600 dark:text-green-400 flex-1">✓ Password is currently set</span>
+                  <button
+                    onClick={handleRemovePassword}
+                    disabled={savingPassword}
+                    className="text-xs text-red-500 hover:text-red-700 underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <input
+                  type="password"
+                  placeholder={hasPassword ? 'Enter new password to change...' : 'Set a password (optional)...'}
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && passwordInput && handleSavePassword()}
+                  className="flex-1 bg-foreground/5 border border-border p-2 rounded-md text-sm outline-none focus:border-foreground/30"
+                />
+                <Button
+                  onClick={handleSavePassword}
+                  disabled={!passwordInput || savingPassword}
+                  variant="outline"
+                  className="px-3 whitespace-nowrap"
+                >
+                  {savingPassword ? 'Saving...' : 'Set'}
+                </Button>
+              </div>
+            </div>
             
+            {/* Public URL */}
             {isActive && (
-              <div className="space-y-2">
+              <div className="space-y-2 border-t border-border pt-5">
                 <div className="text-sm font-medium">Public URL</div>
                 <div className="flex items-center gap-2">
                   <input 
@@ -331,7 +405,9 @@ function MasterLinkModal({ onClose }: { onClose: () => void }) {
                     value={`${window.location.origin}/public/master/${token}`} 
                     className="flex-1 bg-foreground/5 border border-border p-2 rounded-md text-sm outline-none" 
                   />
-                  <Button onClick={copyLink} variant="outline" className="px-4">Copy</Button>
+                  <Button onClick={copyLink} variant="outline" className="px-4">
+                    {copied ? 'Copied!' : 'Copy'}
+                  </Button>
                 </div>
               </div>
             )}

@@ -353,7 +353,8 @@ class MasterLinkSettingsView(views.APIView):
         settings = MasterLinkSettings.get_settings()
         return Response({
             'token': str(settings.token),
-            'is_active': settings.is_active
+            'is_active': settings.is_active,
+            'has_password': bool(settings.password),
         })
 
     def post(self, request):
@@ -361,10 +362,14 @@ class MasterLinkSettingsView(views.APIView):
         is_active = request.data.get('is_active')
         if is_active is not None:
             settings.is_active = bool(is_active)
-            settings.save()
+        # Handle password update — empty string means remove password
+        if 'password' in request.data:
+            settings.password = request.data.get('password', '').strip()
+        settings.save()
         return Response({
             'token': str(settings.token),
-            'is_active': settings.is_active
+            'is_active': settings.is_active,
+            'has_password': bool(settings.password),
         })
 
 class PublicMasterLinkCampaignsView(views.APIView):
@@ -375,7 +380,13 @@ class PublicMasterLinkCampaignsView(views.APIView):
             settings = MasterLinkSettings.objects.get(token=token, is_active=True)
         except MasterLinkSettings.DoesNotExist:
             return Response({'detail': 'This link is disabled or invalid.'}, status=status.HTTP_404_NOT_FOUND)
-        
+
+        # If password is set, require it via query param or header
+        if settings.password:
+            provided = request.query_params.get('password', '') or request.headers.get('X-Master-Password', '')
+            if provided != settings.password:
+                return Response({'detail': 'password_required', 'has_password': True}, status=status.HTTP_401_UNAUTHORIZED)
+
         # Return sent/scheduled/sending campaigns that would have analytics
         campaigns = Campaign.objects.exclude(status='draft').order_by('-created_at')
         data = []

@@ -77,6 +77,7 @@ import uuid
 class MasterLinkSettings(models.Model):
     token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     is_active = models.BooleanField(default=False)
+    password = models.CharField(max_length=128, blank=True, default='')
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
