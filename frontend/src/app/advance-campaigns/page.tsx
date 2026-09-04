@@ -9,7 +9,7 @@ import { apiClient } from '../../services/apiClient';
 import { AdvanceCampaign, ContactList, Campaign } from '../../types';
 
 export default function AdvanceCampaignsPage() {
-  const [activeTab, setActiveTab] = useState<'recent' | 'all'>('recent');
+  const [activeTab, setActiveTab] = useState<'all' | 'recent'>('all');
   const [campaigns, setCampaigns] = useState<AdvanceCampaign[]>([]);
   const [recentBlasts, setRecentBlasts] = useState<Campaign[]>([]);
   const [lists, setLists] = useState<ContactList[]>([]);
@@ -22,17 +22,34 @@ export default function AdvanceCampaignsPage() {
 
   async function loadInitialData() {
     setLoading(true);
+    setActionError('');
     try {
-      const [campaignsRes, listsRes, recentRes] = await Promise.all([
+      const [campaignsRes, listsRes, recentRes] = await Promise.allSettled([
         apiClient.get('/api/v1/advance-campaigns/?limit=10000'),
         apiClient.get('/api/v1/contact-lists/?limit=10000'),
         apiClient.get('/api/v1/advance-campaigns/recent-blasts/')
       ]);
-      setCampaigns(campaignsRes.results || []);
-      setLists(listsRes.results || []);
-      setRecentBlasts(recentRes.results || []);
-    } catch (err) {
+
+      if (campaignsRes.status === 'fulfilled') {
+        setCampaigns(campaignsRes.value.results || []);
+      } else {
+        console.error('Failed to load campaigns:', campaignsRes.reason);
+      }
+
+      if (listsRes.status === 'fulfilled') {
+        setLists(listsRes.value.results || []);
+      } else {
+        console.error('Failed to load lists:', listsRes.reason);
+      }
+
+      if (recentRes.status === 'fulfilled') {
+        setRecentBlasts(recentRes.value.results || []);
+      } else {
+        console.error('Failed to load recent blasts:', recentRes.reason);
+      }
+    } catch (err: any) {
       console.error('Failed to load advance campaigns initial data:', err);
+      setActionError(err.message || 'Failed to load campaigns data.');
     } finally {
       setLoading(false);
     }
@@ -76,16 +93,6 @@ export default function AdvanceCampaignsPage() {
       {/* Subnavbar */}
       <div className="flex items-center space-x-6 border-b border-border mb-6 px-1">
         <button
-          onClick={() => setActiveTab('recent')}
-          className={`pb-3 text-sm font-medium transition-colors border-b-2 ${
-            activeTab === 'recent' 
-              ? 'border-foreground text-foreground' 
-              : 'border-transparent text-foreground/50 hover:text-foreground hover:border-border'
-          }`}
-        >
-          Recent Campaigns
-        </button>
-        <button
           onClick={() => setActiveTab('all')}
           className={`pb-3 text-sm font-medium transition-colors border-b-2 ${
             activeTab === 'all' 
@@ -94,6 +101,16 @@ export default function AdvanceCampaignsPage() {
           }`}
         >
           Campaigns
+        </button>
+        <button
+          onClick={() => setActiveTab('recent')}
+          className={`pb-3 text-sm font-medium transition-colors border-b-2 ${
+            activeTab === 'recent' 
+              ? 'border-foreground text-foreground' 
+              : 'border-transparent text-foreground/50 hover:text-foreground hover:border-border'
+          }`}
+        >
+          Recent Blasts
         </button>
       </div>
 
