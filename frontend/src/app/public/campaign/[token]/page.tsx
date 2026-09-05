@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState, useMemo } from 'react';
+import { use, useEffect, useState } from 'react';
 import { AlertTriangle, RefreshCw, Layers, CheckCircle2, Eye, MousePointerClick, Search, Info, X } from 'lucide-react';
 
 interface BlastItem {
@@ -187,9 +187,15 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
   const showClickedAt = ['clicked'].includes(statusFilter);
   const showLinksClicked = ['clicked'].includes(statusFilter);
 
+  const parseTimestamp = (val: string | null | undefined): number => {
+    if (!val) return 0;
+    const t = new Date(val).getTime();
+    return isNaN(t) ? 0 : t;
+  };
+
   // Filter and sort recipient rows so recent action is always on top
-  const filteredRows = useMemo(() => {
-    const list = (analytics?.data || []).filter(row => {
+  const filteredRows = (analytics?.data || [])
+    .filter(row => {
       const matchesStatus = statusFilter === 'all' || row.delivery_status === statusFilter;
       if (!matchesStatus) return false;
 
@@ -199,33 +205,32 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
       const email = (row.email || '').toLowerCase();
       const combined = `${speaker} ${email}`;
       return tokens.every(t => combined.includes(t));
-    });
-
-    return [...list].sort((a, b) => {
+    })
+    .sort((a, b) => {
       // 1. If currently on the "clicked" filter, sort newest clicked_at first
       if (statusFilter === 'clicked') {
-        const timeA = a.clicked_at ? new Date(a.clicked_at).getTime() : 0;
-        const timeB = b.clicked_at ? new Date(b.clicked_at).getTime() : 0;
+        const timeA = parseTimestamp(a.clicked_at);
+        const timeB = parseTimestamp(b.clicked_at);
         if (timeA !== timeB) return timeB - timeA;
       }
 
       // 2. If currently on the "opened" filter, sort newest opened_at first
       if (statusFilter === 'opened') {
-        const timeA = a.opened_at ? new Date(a.opened_at).getTime() : 0;
-        const timeB = b.opened_at ? new Date(b.opened_at).getTime() : 0;
+        const timeA = parseTimestamp(a.opened_at);
+        const timeB = parseTimestamp(b.opened_at);
         if (timeA !== timeB) return timeB - timeA;
       }
 
       // 3. For other filters (including "all"): sort by most recent action timestamp overall
       const timeA = Math.max(
-        a.clicked_at ? new Date(a.clicked_at).getTime() : 0,
-        a.opened_at ? new Date(a.opened_at).getTime() : 0,
-        a.last_event_at ? new Date(a.last_event_at).getTime() : 0
+        parseTimestamp(a.clicked_at),
+        parseTimestamp(a.opened_at),
+        parseTimestamp(a.last_event_at)
       );
       const timeB = Math.max(
-        b.clicked_at ? new Date(b.clicked_at).getTime() : 0,
-        b.opened_at ? new Date(b.opened_at).getTime() : 0,
-        b.last_event_at ? new Date(b.last_event_at).getTime() : 0
+        parseTimestamp(b.clicked_at),
+        parseTimestamp(b.opened_at),
+        parseTimestamp(b.last_event_at)
       );
 
       if (timeA !== timeB) {
@@ -250,7 +255,6 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
       // Fallback: alphabetical by speaker name
       return (a.speaker_name || '').localeCompare(b.speaker_name || '');
     });
-  }, [analytics?.data, statusFilter, searchQuery]);
 
   return (
     <div className="min-h-screen bg-gray-50/50">
