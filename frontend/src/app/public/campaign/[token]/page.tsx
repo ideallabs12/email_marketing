@@ -95,6 +95,9 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
           if (isCurrent) setIsRetiredLink(true);
           throw new Error('retired_link');
         }
+        if (res.status === 404) {
+          throw new Error('not_found');
+        }
         if (!res.ok) {
           throw new Error('Failed to load campaign');
         }
@@ -112,7 +115,11 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
       .catch((err) => {
         if (isCurrent && err.message !== 'retired_link') {
           console.error(err);
-          setError('Unable to load campaign analytics. Please check the link or try again.');
+          if (err.message === 'not_found') {
+            setError('Campaign not found. Please verify the URL or contact your campaign administrator.');
+          } else {
+            setError('Unable to load campaign analytics. Please check the link or try again.');
+          }
         }
       })
       .finally(() => {

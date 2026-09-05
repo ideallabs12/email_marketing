@@ -25,11 +25,13 @@ class PublicAdvanceCampaignView(views.APIView):
 
     def get(self, request, token):
         import uuid
+        import re
         from django.http import Http404
         from django.utils.text import slugify
 
         adv_campaign = None
         direct_blast = None
+        single_campaign = None
         token_str = str(token).strip()
         token_clean = token_str.lower().replace('_', '-')
 
@@ -44,54 +46,87 @@ class PublicAdvanceCampaignView(views.APIView):
                     direct_blast = single_campaign
         except Exception:
             adv_campaign = None
+            single_campaign = None
 
-        # 2. Try finding by matching slugified name of AdvanceCampaign
-        if not adv_campaign:
-            try:
-                for ac in AdvanceCampaign.objects.all():
-                    ac_slug = slugify(ac.name)
-                    ac_hyphen = ac.name.lower().strip().replace('_', '-')
-                    if (
-                        token_clean == ac_slug
-                        or token_clean == ac_hyphen
-                        or token_clean.replace('-', '') == ac_slug.replace('-', '')
-                        or token_clean == f"{ac_slug}-{ac.id}"
-                        or token_clean == str(ac.id)
-                    ):
-                        adv_campaign = ac
-                        break
-            except Exception:
-                pass
+        # Helper matching function for slug / name variations
+        token_base = re.sub(r'[-_]campaigns?$', '', token_clean)
+        token_alphanumeric = re.sub(r'[^a-z0-9]', '', token_str.lower())
+        token_base_alphanumeric = re.sub(r'[^a-z0-9]', '', token_base)
 
-        # 3. Try finding by matching single Campaign blast slug
-        if not adv_campaign:
-            try:
-                for camp in Campaign.objects.all():
-                    camp_slug = slugify(camp.name)
-                    camp_hyphen = camp.name.lower().strip().replace('_', '-')
-                    if (
-                        token_clean == camp_slug
-                        or token_clean == camp_hyphen
-                        or token_clean.replace('-', '') == camp_slug.replace('-', '')
-                        or token_clean == f"{camp_slug}-{camp.id}"
-                        or token_clean == str(camp.id)
-                    ):
-                        if camp.advance_campaign:
-                            adv_campaign = camp.advance_campaign
-                            direct_blast = camp
-                            break
-            except Exception:
-                pass
+        def matches_token(name, item_id):
+            if not name:
+                return token_clean == str(item_id)
+            name_lower = str(name).lower().strip()
+            name_slug = slugify(name)
+            name_hyphen = name_lower.replace('_', '-')
+            name_base = re.sub(r'[-_]campaigns?$', '', name_slug)
+            name_alphanumeric = re.sub(r'[^a-z0-9]', '', name_lower)
+            name_base_alphanumeric = re.sub(r'[^a-z0-9]', '', name_base)
+
+            # Direct matches
+            if (
+                token_clean == name_slug
+                or token_clean == name_hyphen
+                or token_clean.replace('-', '') == name_slug.replace('-', '')
+                or token_clean == f"{name_slug}-{item_id}"
+                or token_clean == str(item_id)
+                or (token_alphanumeric and token_alphanumeric == name_alphanumeric)
+            ):
+                return True
+
+            # Suffix variations (e.g. "raghu_campaigns" <-> "Raghu", "Raghu Campaign", "Raghu Campaigns")
+            if token_base and name_base and (
+                token_base == name_base
+                or token_base == name_slug
+                or token_clean == name_base
+                or token_base_alphanumeric == name_base_alphanumeric
+            ):
+                return True
+
+            # Word boundary matches (e.g. "raghu_campaigns" matches "Raghu Conference" or "Raghu")
+            if len(token_base) >= 3:
+                words = [w for w in re.split(r'[-_\s]+', name_lower) if w]
+                if token_base in words or any(w.startswith(token_base) for w in words):
+                    return True
+
+            return False
+
+        # Safely fetch AdvanceCampaign query set
+        try:
+            list(AdvanceCampaign.objects.only('id', 'share_token')[:1])
+            all_adv = list(AdvanceCampaign.objects.all())
+        except Exception:
+            all_adv = list(AdvanceCampaign.objects.defer('share_token').all())
+
+        all_camps = list(Campaign.objects.all())
+
+        # 2. Try finding by matching slugified name / variations of AdvanceCampaign
+        if not adv_campaign and not single_campaign:
+            for ac in all_adv:
+                if matches_token(ac.name, ac.id):
+                    adv_campaign = ac
+                    break
+
+        # 3. Try finding by matching single Campaign blast slug / variations
+        if not adv_campaign and not single_campaign:
+            for camp in all_camps:
+                if matches_token(camp.name, camp.id):
+                    if camp.advance_campaign:
+                        adv_campaign = camp.advance_campaign
+                        direct_blast = camp
+                    else:
+                        single_campaign = camp
+                    break
 
         # 4. Fallback: match deterministic uuid5
         if not adv_campaign and not single_campaign:
             try:
-                for ac in AdvanceCampaign.objects.all():
+                for ac in all_adv:
                     if str(uuid.uuid5(uuid.NAMESPACE_DNS, f"advance-campaign-{ac.id}")) == token_str:
                         adv_campaign = ac
                         break
                 if not adv_campaign:
-                    for camp in Campaign.objects.all():
+                    for camp in all_camps:
                         if str(uuid.uuid5(uuid.NAMESPACE_DNS, f"campaign-{camp.id}")) == token_str:
                             if camp.advance_campaign:
                                 adv_campaign = camp.advance_campaign
@@ -109,19 +144,19 @@ class PublicAdvanceCampaignView(views.APIView):
             blasts_qs = adv_campaign.campaigns.all().order_by('-created_at')
             camp_id = adv_campaign.id
             camp_name = adv_campaign.name
-            camp_created_at = adv_campaign.created_at.isoformat()
+            camp_created_at = adv_campaign.created_at.isoformat() if adv_campaign.created_at else None
         else:
             blasts_qs = Campaign.objects.filter(id=single_campaign.id)
             camp_id = single_campaign.id
             camp_name = single_campaign.name
-            camp_created_at = single_campaign.created_at.isoformat()
+            camp_created_at = single_campaign.created_at.isoformat() if single_campaign.created_at else None
 
         blasts_data = [{
             'id': b.id,
             'name': b.name,
             'status': b.status,
             'sent_at': b.sent_at.isoformat() if b.sent_at else None,
-            'created_at': b.created_at.isoformat(),
+            'created_at': b.created_at.isoformat() if b.created_at else None,
         } for b in blasts_qs]
 
         blast_id = request.query_params.get('blast_id')
@@ -213,10 +248,18 @@ class PublicCampaignAnalyticsView(views.APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, token):
-        campaign = Campaign.objects.select_related('advance_campaign').filter(share_token=token).first()
+        campaign = None
+        try:
+            campaign = Campaign.objects.select_related('advance_campaign').filter(share_token=token).first()
+        except Exception:
+            campaign = None
         if not campaign:
             token_str = str(token).strip()
-            for camp in Campaign.objects.select_related('advance_campaign').all():
+            try:
+                camps = list(Campaign.objects.select_related('advance_campaign').all())
+            except Exception:
+                camps = list(Campaign.objects.defer('share_token').select_related('advance_campaign').all())
+            for camp in camps:
                 if str(uuid.uuid5(uuid.NAMESPACE_DNS, f"campaign-{camp.id}")) == token_str:
                     campaign = camp
                     break
