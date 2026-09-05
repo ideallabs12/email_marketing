@@ -202,11 +202,13 @@ class PublicAdvanceCampaignView(views.APIView):
                     links_str = ", ".join(links)
                     opened_at = item.opened_at.isoformat() if item.opened_at else None
                     clicked_at = item.clicked_at.isoformat() if item.clicked_at else None
+                    last_event_at = item.last_event_at.isoformat() if item.last_event_at else None
                 else:
                     status_val = 'pending'
                     links_str = ''
                     opened_at = None
                     clicked_at = None
+                    last_event_at = None
                 
                 rows.append({
                     "speaker_name": speaker_name,
@@ -214,8 +216,19 @@ class PublicAdvanceCampaignView(views.APIView):
                     "delivery_status": status_val,
                     "links_clicked": links_str,
                     "opened_at": opened_at,
-                    "clicked_at": clicked_at
+                    "clicked_at": clicked_at,
+                    "last_event_at": last_event_at,
                 })
+
+            # Sort rows so recent actions are on top
+            def row_sort_key(r):
+                c = r.get('clicked_at') or ''
+                o = r.get('opened_at') or ''
+                l = r.get('last_event_at') or ''
+                latest = max(c, o, l)
+                return (1 if latest else 0, latest)
+
+            rows.sort(key=row_sort_key, reverse=True)
 
             counts = recipient_statuses.aggregate(
                 delivered=Count('id', filter=Q(status__in=['delivered', 'opened', 'clicked'])),
@@ -293,11 +306,13 @@ class PublicCampaignAnalyticsView(views.APIView):
                 links_str = ", ".join(links)
                 opened_at = item.opened_at.isoformat() if item.opened_at else None
                 clicked_at = item.clicked_at.isoformat() if item.clicked_at else None
+                last_event_at = item.last_event_at.isoformat() if item.last_event_at else None
             else:
                 status_val = 'pending'
                 links_str = ''
                 opened_at = None
                 clicked_at = None
+                last_event_at = None
             
             rows.append({
                 "speaker_name": speaker_name,
@@ -305,8 +320,19 @@ class PublicCampaignAnalyticsView(views.APIView):
                 "delivery_status": status_val,
                 "links_clicked": links_str,
                 "opened_at": opened_at,
-                "clicked_at": clicked_at
+                "clicked_at": clicked_at,
+                "last_event_at": last_event_at,
             })
+
+        # Sort rows so recent actions are on top
+        def row_sort_key(r):
+            c = r.get('clicked_at') or ''
+            o = r.get('opened_at') or ''
+            l = r.get('last_event_at') or ''
+            latest = max(c, o, l)
+            return (1 if latest else 0, latest)
+
+        rows.sort(key=row_sort_key, reverse=True)
 
         counts = recipient_statuses.aggregate(
             delivered=Count('id', filter=Q(status__in=['delivered', 'opened', 'clicked'])),
@@ -386,9 +412,18 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
             else:
                 filtered_statuses = recipient_statuses.filter(status=status_filter)
 
-            recipients = CampaignRecipientStatusSerializer(
+            recipients = list(CampaignRecipientStatusSerializer(
                 filtered_statuses, many=True,
-            ).data
+            ).data)
+
+        # Sort recipients so recent action is on top
+        def get_rec_action(r):
+            c = r.get('clicked_at') or ''
+            o = r.get('opened_at') or ''
+            l = r.get('last_event_at') or ''
+            latest = max(c, o, l)
+            return (1 if latest else 0, latest)
+        recipients.sort(key=get_rec_action, reverse=True)
 
         counts = recipient_statuses.aggregate(
             sent=Count('id', filter=Q(status__in=['sent', 'delivered', 'opened', 'clicked'])),

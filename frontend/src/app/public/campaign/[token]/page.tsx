@@ -1,7 +1,7 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
-import { AlertTriangle, RefreshCw, Layers, CheckCircle2, Eye, MousePointerClick, Search, Info } from 'lucide-react';
+import { use, useEffect, useState, useMemo } from 'react';
+import { AlertTriangle, RefreshCw, Layers, CheckCircle2, Eye, MousePointerClick, Search, Info, X } from 'lucide-react';
 
 interface BlastItem {
   id: number;
@@ -33,6 +33,7 @@ interface CampaignPublicData {
       links_clicked: string;
       opened_at: string | null;
       clicked_at: string | null;
+      last_event_at?: string | null;
     }>;
   } | null;
 }
@@ -186,18 +187,70 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
   const showClickedAt = ['clicked'].includes(statusFilter);
   const showLinksClicked = ['clicked'].includes(statusFilter);
 
-  // Filter recipient rows using multi-token search
-  const filteredRows = (analytics?.data || []).filter(row => {
-    const matchesStatus = statusFilter === 'all' || row.delivery_status === statusFilter;
-    if (!matchesStatus) return false;
+  // Filter and sort recipient rows so recent action is always on top
+  const filteredRows = useMemo(() => {
+    const list = (analytics?.data || []).filter(row => {
+      const matchesStatus = statusFilter === 'all' || row.delivery_status === statusFilter;
+      if (!matchesStatus) return false;
 
-    if (!searchQuery.trim()) return true;
-    const tokens = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
-    const speaker = (row.speaker_name || '').toLowerCase();
-    const email = (row.email || '').toLowerCase();
-    const combined = `${speaker} ${email}`;
-    return tokens.every(t => combined.includes(t));
-  });
+      if (!searchQuery.trim()) return true;
+      const tokens = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
+      const speaker = (row.speaker_name || '').toLowerCase();
+      const email = (row.email || '').toLowerCase();
+      const combined = `${speaker} ${email}`;
+      return tokens.every(t => combined.includes(t));
+    });
+
+    return [...list].sort((a, b) => {
+      // 1. If currently on the "clicked" filter, sort newest clicked_at first
+      if (statusFilter === 'clicked') {
+        const timeA = a.clicked_at ? new Date(a.clicked_at).getTime() : 0;
+        const timeB = b.clicked_at ? new Date(b.clicked_at).getTime() : 0;
+        if (timeA !== timeB) return timeB - timeA;
+      }
+
+      // 2. If currently on the "opened" filter, sort newest opened_at first
+      if (statusFilter === 'opened') {
+        const timeA = a.opened_at ? new Date(a.opened_at).getTime() : 0;
+        const timeB = b.opened_at ? new Date(b.opened_at).getTime() : 0;
+        if (timeA !== timeB) return timeB - timeA;
+      }
+
+      // 3. For other filters (including "all"): sort by most recent action timestamp overall
+      const timeA = Math.max(
+        a.clicked_at ? new Date(a.clicked_at).getTime() : 0,
+        a.opened_at ? new Date(a.opened_at).getTime() : 0,
+        a.last_event_at ? new Date(a.last_event_at).getTime() : 0
+      );
+      const timeB = Math.max(
+        b.clicked_at ? new Date(b.clicked_at).getTime() : 0,
+        b.opened_at ? new Date(b.opened_at).getTime() : 0,
+        b.last_event_at ? new Date(b.last_event_at).getTime() : 0
+      );
+
+      if (timeA !== timeB) {
+        return timeB - timeA;
+      }
+
+      // 4. Status engagement priority: clicked > opened > delivered > sent > pending > failed
+      const statusWeight: Record<string, number> = {
+        clicked: 6,
+        opened: 5,
+        delivered: 4,
+        sent: 3,
+        pending: 2,
+        failed: 1,
+      };
+      const weightA = statusWeight[a.delivery_status] || 0;
+      const weightB = statusWeight[b.delivery_status] || 0;
+      if (weightA !== weightB) {
+        return weightB - weightA;
+      }
+
+      // Fallback: alphabetical by speaker name
+      return (a.speaker_name || '').localeCompare(b.speaker_name || '');
+    });
+  }, [analytics?.data, statusFilter, searchQuery]);
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -314,39 +367,49 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
         {/* ── Recipient Spreadsheet Section ── */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           {/* Controls Bar */}
-          <div className="p-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-gray-50/50">
-            <div className="flex items-center gap-2">
+          <div className="p-4 sm:p-5 border-b border-gray-200 flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 bg-gray-50/50">
+            <div className="flex items-center gap-2.5">
               <h2 className="font-bold text-gray-900 text-sm sm:text-base">
                 Recipient Details
               </h2>
-              <span className="text-xs text-gray-400">
-                ({filteredRows.length} of {analytics?.data.length || 0})
+              <span className="text-xs font-semibold text-gray-500 bg-gray-200/80 px-2.5 py-0.5 rounded-full">
+                {filteredRows.length} of {analytics?.data.length || 0}
               </span>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-              {/* Search */}
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              {/* Prominent Search Bar */}
+              <div className="relative w-full sm:w-80 md:w-96 lg:w-[420px]">
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Search name or email..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 pr-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs w-full sm:w-60 focus:outline-none focus:border-gray-500"
+                  className="w-full pl-10 pr-9 py-2 bg-white border border-gray-300 rounded-xl text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all shadow-sm"
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                    title="Clear search"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
               </div>
 
               {/* Status Filter */}
-              <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
                 {['all', 'delivered', 'opened', 'clicked', 'sent', 'pending', 'failed'].map((s) => (
                   <button
                     key={s}
                     onClick={() => setStatusFilter(s)}
-                    className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-colors whitespace-nowrap ${
+                    className={`px-3 py-2 text-xs rounded-xl font-medium transition-all whitespace-nowrap shadow-sm ${
                       statusFilter === s
-                        ? 'bg-gray-900 text-white'
-                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'
+                        ? 'bg-gray-900 text-white shadow'
+                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
                     {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
