@@ -1,10 +1,9 @@
 from django.db import migrations, models
 
-
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tracking', '0004_campaignrecipientstatus_clicked_links_and_more'),
+        ('tracking', '0005_masterlinksettings'),
     ]
 
     operations = [
