@@ -717,7 +717,12 @@ class PublicMasterLinkCampaignsView(views.APIView):
 
         containers = []
         for ac in advance_campaigns:
-            blasts = ac.campaigns.all().order_by('-created_at')
+            # Sort blasts inside each campaign by most recent sent_at or created_at
+            raw_blasts = list(ac.campaigns.all())
+            raw_blasts.sort(
+                key=lambda c: c.sent_at.isoformat() if c.sent_at else (c.created_at.isoformat() if c.created_at else ''),
+                reverse=True
+            )
             ac_share_token = ''
             try:
                 raw_token = getattr(ac, 'share_token', None)
@@ -740,14 +745,18 @@ class PublicMasterLinkCampaignsView(views.APIView):
                     'share_token': str(c.share_token) if getattr(c, 'share_token', None) else str(uuid.uuid5(uuid.NAMESPACE_DNS, f"campaign-{c.id}")),
                     'sent_at': c.sent_at.isoformat() if c.sent_at else None,
                     'created_at': c.created_at.isoformat() if c.created_at else None,
-                } for c in blasts]
+                } for c in raw_blasts]
             })
 
         # Also include standalone campaigns (no advance_campaign parent)
-        standalone = Campaign.objects.filter(
+        standalone = list(Campaign.objects.filter(
             advance_campaign__isnull=True
-        ).order_by('-created_at')
-        if standalone.exists():
+        ))
+        if standalone:
+            standalone.sort(
+                key=lambda c: c.sent_at.isoformat() if c.sent_at else (c.created_at.isoformat() if c.created_at else ''),
+                reverse=True
+            )
             containers.append({
                 'id': None,
                 'name': 'Other Campaigns',
@@ -763,5 +772,14 @@ class PublicMasterLinkCampaignsView(views.APIView):
                     'created_at': c.created_at.isoformat() if c.created_at else None,
                 } for c in standalone]
             })
+
+        # Sort containers so campaigns with recent blasts are displayed at the top
+        def get_container_recency(c):
+            dates = [b['sent_at'] or b['created_at'] for b in c['blasts'] if b.get('sent_at') or b.get('created_at')]
+            if dates:
+                return max(dates)
+            return c.get('created_at') or ''
+
+        containers.sort(key=get_container_recency, reverse=True)
 
         return Response(containers)

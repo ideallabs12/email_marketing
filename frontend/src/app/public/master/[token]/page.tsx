@@ -1,7 +1,7 @@
 'use client';
 
 import { use, useEffect, useState, useMemo } from 'react';
-import { AlertTriangle, RefreshCw, ChevronDown, ChevronRight, Search, Lock, Eye, EyeOff, Loader2, ExternalLink } from 'lucide-react';
+import { AlertTriangle, RefreshCw, ChevronDown, ChevronRight, ChevronLeft, Menu, Search, Lock, Eye, EyeOff, Loader2, ExternalLink } from 'lucide-react';
 import { getCampaignUrl } from '@/utils/slug';
 import { getLinkBadgeStyle } from '@/utils/linkStyles';
 
@@ -145,6 +145,29 @@ const getStatusDot = (status: string) => {
   return colors[status] || 'bg-gray-400';
 };
 
+const sortContainersByRecentBlast = (list: ContainerSummary[]): ContainerSummary[] => {
+  return [...list]
+    .map(c => ({
+      ...c,
+      blasts: [...c.blasts].sort((a, b) => {
+        const timeA = a.sent_at ? new Date(a.sent_at).getTime() : (a.created_at ? new Date(a.created_at).getTime() : 0);
+        const timeB = b.sent_at ? new Date(b.sent_at).getTime() : (b.created_at ? new Date(b.created_at).getTime() : 0);
+        return timeB - timeA;
+      })
+    }))
+    .sort((a, b) => {
+      const getRecency = (c: ContainerSummary) => {
+        let maxTime = c.created_at ? new Date(c.created_at).getTime() : 0;
+        for (const blast of c.blasts) {
+          const t = blast.sent_at ? new Date(blast.sent_at).getTime() : (blast.created_at ? new Date(blast.created_at).getTime() : 0);
+          if (t > maxTime) maxTime = t;
+        }
+        return maxTime;
+      };
+      return getRecency(b) - getRecency(a);
+    });
+};
+
 export default function MasterLinkPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params);
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
@@ -153,6 +176,7 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [needsPassword, setNeedsPassword] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedContainerId, setExpandedContainerId] = useState<number | null | 'other'>(null);
@@ -196,12 +220,13 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
     fetchContainers(savedPwd)
       .then((data) => {
         if (isCurrent) {
-          setContainers(data);
+          const sorted = sortContainersByRecentBlast(data);
+          setContainers(sorted);
           setLoading(false);
-          if (data.length > 0) {
-            setExpandedContainerId(data[0].id ?? 'other');
-            if (data[0].blasts && data[0].blasts.length > 0) {
-              setSelectedBlastToken(data[0].blasts[0].share_token);
+          if (sorted.length > 0) {
+            setExpandedContainerId(sorted[0].id ?? 'other');
+            if (sorted[0].blasts && sorted[0].blasts.length > 0) {
+              setSelectedBlastToken(sorted[0].blasts[0].share_token);
             }
           }
         }
@@ -221,13 +246,14 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(`master_pwd_${token}`, password);
     }
-    setContainers(data);
+    const sorted = sortContainersByRecentBlast(data);
+    setContainers(sorted);
     setNeedsPassword(false);
     setLoading(false);
-    if (data.length > 0) {
-      setExpandedContainerId(data[0].id ?? 'other');
-      if (data[0].blasts && data[0].blasts.length > 0) {
-        setSelectedBlastToken(data[0].blasts[0].share_token);
+    if (sorted.length > 0) {
+      setExpandedContainerId(sorted[0].id ?? 'other');
+      if (sorted[0].blasts && sorted[0].blasts.length > 0) {
+        setSelectedBlastToken(sorted[0].blasts[0].share_token);
       }
     }
   };
@@ -310,11 +336,24 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
 
-      {/* ── Left Pane ── */}
-      <div className="w-[300px] lg:w-[340px] flex-shrink-0 bg-white border-r border-gray-200 flex flex-col">
+      {/* ── Left Pane (Collapsible Sidebar) ── */}
+      <div
+        className={`transition-all duration-300 ease-in-out flex-shrink-0 bg-white border-r border-gray-200 flex flex-col ${
+          isSidebarOpen ? 'w-[300px] lg:w-[340px]' : 'w-0 border-r-0 overflow-hidden opacity-0 pointer-events-none'
+        }`}
+      >
         {/* Header */}
         <div className="p-4 border-b border-gray-100 flex-shrink-0">
-          <h1 className="font-bold text-lg text-gray-900">Master Analytics</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="font-bold text-lg text-gray-900 truncate">Master Analytics</h1>
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+              title="Collapse sidebar"
+            >
+              <ChevronLeft size={18} />
+            </button>
+          </div>
           <p className="text-xs text-gray-400 mt-0.5">{totalBlasts} blasts across {containers.length} campaigns</p>
           <div className="relative mt-3">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
@@ -374,7 +413,12 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                       return (
                         <button
                           key={blast.id}
-                          onClick={() => setSelectedBlastToken(blast.share_token)}
+                          onClick={() => {
+                            setSelectedBlastToken(blast.share_token);
+                            if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                              setIsSidebarOpen(false);
+                            }
+                          }}
                           className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-sm transition-all ${
                             isSelected
                               ? 'bg-gray-900 text-white shadow-sm'
@@ -402,7 +446,15 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
       {/* ── Right Pane ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {!selectedBlastToken ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-300">
+          <div className="flex-1 flex flex-col items-center justify-center text-gray-300 relative">
+            {!isSidebarOpen && (
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="absolute top-4 left-4 p-2 bg-white border border-gray-200 shadow-sm text-gray-700 hover:text-gray-900 rounded-lg transition-colors flex items-center gap-2 text-xs font-medium cursor-pointer"
+              >
+                <Menu size={16} /> Show Campaigns
+              </button>
+            )}
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
               <Search size={36} className="opacity-40" />
             </div>
@@ -413,21 +465,33 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
           <>
             {/* Toolbar */}
             <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                {analytics?.advance_campaign_name && (
-                  <div className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-0.5">
-                    {analytics.advance_campaign_name}
-                  </div>
+              <div className="flex items-center gap-3">
+                {!isSidebarOpen && (
+                  <button
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors flex items-center gap-1.5 text-xs font-medium shrink-0 cursor-pointer shadow-xs"
+                    title="Expand campaigns sidebar"
+                  >
+                    <Menu size={16} />
+                    <span className="hidden sm:inline">Campaigns</span>
+                  </button>
                 )}
-                <div className="font-bold text-gray-900 text-base">{analytics?.campaign_name ?? '...'}</div>
-                {analytics?.totals && !analyticsLoading && (
-                  <div className="flex gap-4 mt-1 text-xs text-gray-500">
-                    <span>Recipients: <strong className="text-gray-900">{analytics.totals.total_recipients}</strong></span>
-                    <span>Delivered: <strong className="text-gray-900">{analytics.totals.total_delivered}</strong></span>
-                    <span>Opens: <strong className="text-gray-900">{analytics.totals.total_opens}</strong></span>
-                    <span>Clicks: <strong className="text-gray-900">{analytics.totals.total_clicks}</strong></span>
-                  </div>
-                )}
+                <div>
+                  {analytics?.advance_campaign_name && (
+                    <div className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-0.5">
+                      {analytics.advance_campaign_name}
+                    </div>
+                  )}
+                  <div className="font-bold text-gray-900 text-base">{analytics?.campaign_name ?? '...'}</div>
+                  {analytics?.totals && !analyticsLoading && (
+                    <div className="flex gap-4 mt-1 text-xs text-gray-500">
+                      <span>Recipients: <strong className="text-gray-900">{analytics.totals.total_recipients}</strong></span>
+                      <span>Delivered: <strong className="text-gray-900">{analytics.totals.total_delivered}</strong></span>
+                      <span>Opens: <strong className="text-gray-900">{analytics.totals.total_opens}</strong></span>
+                      <span>Clicks: <strong className="text-gray-900">{analytics.totals.total_clicks}</strong></span>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <div className="flex gap-1 flex-wrap">
