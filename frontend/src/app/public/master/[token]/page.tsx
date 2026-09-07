@@ -3,6 +3,7 @@
 import { use, useEffect, useState, useMemo } from 'react';
 import { AlertTriangle, RefreshCw, ChevronDown, ChevronRight, Search, Lock, Eye, EyeOff, Loader2, ExternalLink } from 'lucide-react';
 import { getCampaignUrl } from '@/utils/slug';
+import { getLinkBadgeStyle } from '@/utils/linkStyles';
 
 interface BlastSummary {
   id: number;
@@ -500,12 +501,24 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                         )}
                         {showLinksClicked && (
                           <td className="px-5 py-3 text-xs">
-                            {row.links_clicked
-                              ? row.links_clicked.split(',').map((link, li) => (
-                                  <span key={li} className="inline-flex px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md border border-blue-100 mr-1 mb-1 break-all">{link.trim()}</span>
-                                ))
-                              : <span className="text-gray-300">—</span>
-                            }
+                            {row.links_clicked ? (
+                              <div className="flex gap-1.5 flex-wrap">
+                                {row.links_clicked.split(',').map((link, li) => {
+                                  const trimmed = link.trim();
+                                  if (!trimmed) return null;
+                                  return (
+                                    <span
+                                      key={li}
+                                      className={`px-2 py-0.5 text-[10px] rounded-md border break-all shadow-xs transition-colors ${getLinkBadgeStyle(trimmed)}`}
+                                    >
+                                      {trimmed}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <span className="text-gray-300">—</span>
+                            )}
                           </td>
                         )}
                       </tr>
