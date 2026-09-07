@@ -168,6 +168,72 @@ const sortContainersByRecentBlast = (list: ContainerSummary[]): ContainerSummary
     });
 };
 
+function getCampaignTimeStatus(container: ContainerSummary): string | null {
+  let latestDateStr: string | null = null;
+  let latestTime = 0;
+
+  for (const b of container.blasts) {
+    const d = b.sent_at || b.created_at;
+    if (d) {
+      const t = new Date(d).getTime();
+      if (t > latestTime) {
+        latestTime = t;
+        latestDateStr = d;
+      }
+    }
+  }
+
+  if (!latestDateStr && container.created_at) {
+    latestDateStr = container.created_at;
+  }
+
+  if (!latestDateStr) return null;
+
+  const date = new Date(latestDateStr);
+  if (isNaN(date.getTime())) return null;
+
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  if (diffMs < 0) return 'today';
+
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  const isSameDay =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const isYesterday =
+    date.getFullYear() === yesterday.getFullYear() &&
+    date.getMonth() === yesterday.getMonth() &&
+    date.getDate() === yesterday.getDate();
+
+  if (isSameDay) {
+    if (diffHours >= 1) {
+      return `${diffHours}h ago`;
+    }
+    return 'today';
+  }
+
+  if (isYesterday) {
+    return 'yesterday';
+  }
+
+  if (diffDays < 30) {
+    return `${Math.max(1, diffDays)}d ago`;
+  }
+
+  const diffMonths = Math.floor(diffDays / 30);
+  if (diffMonths < 12) {
+    return `${diffMonths}mo ago`;
+  }
+
+  return `${Math.floor(diffDays / 365)}y ago`;
+}
+
 export default function MasterLinkPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params);
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
@@ -374,13 +440,14 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
           ) : filteredContainers.map(container => {
             const key = container.id ?? 'other';
             const isExpanded = expandedContainerId === key;
+            const timeStatus = getCampaignTimeStatus(container);
 
             return (
               <div key={key} className="rounded-lg overflow-hidden">
                 {/* Container header row */}
                 <button
                   onClick={() => setExpandedContainerId(isExpanded ? null : key)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-gray-50 transition-colors group"
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-gray-50 transition-colors group cursor-pointer"
                 >
                   <span className="text-gray-400 group-hover:text-gray-600 transition-colors flex-shrink-0">
                     {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
@@ -401,7 +468,14 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                         </a>
                       )}
                     </div>
-                    <div className="text-[11px] text-gray-400 mt-0.5">{container.blasts.length} blast{container.blasts.length !== 1 ? 's' : ''}</div>
+                    <div className="flex items-center justify-between gap-1 text-[11px] text-gray-400 mt-0.5">
+                      <span>{container.blasts.length} blast{container.blasts.length !== 1 ? 's' : ''}</span>
+                      {timeStatus && (
+                        <span className="text-[10px] text-gray-400 font-medium text-right shrink-0">
+                          {timeStatus}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </button>
 
