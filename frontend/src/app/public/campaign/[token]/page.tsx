@@ -10,17 +10,26 @@ interface BlastItem {
   status: string;
   sent_at: string | null;
   created_at: string;
+  contact_list_name?: string;
+  targeted_batch_name?: string;
+  target_display?: string;
 }
 
 interface CampaignPublicData {
   campaign_id: number;
   campaign_name: string;
   created_at: string;
+  contact_list_name?: string;
+  targeted_batch_name?: string;
+  target_display?: string;
   blasts: BlastItem[];
   selected_blast_id: number | null;
   analytics: {
     blast_id: number;
     blast_name: string;
+    contact_list_name?: string;
+    targeted_batch_name?: string;
+    target_display?: string;
     totals: {
       total_recipients: number;
       total_delivered: number;
@@ -257,6 +266,9 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
       return (a.speaker_name || '').localeCompare(b.speaker_name || '');
     });
 
+  const currentBlast = data?.blasts?.find((b) => b.id === selectedBlastId);
+  const activeTargetDisplay = currentBlast?.target_display || data?.analytics?.target_display || data?.target_display;
+
   return (
     <div className="min-h-screen bg-gray-50/50">
       {/* ── Top Header Bar ── */}
@@ -269,9 +281,17 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
               </span>
               <span className="text-xs text-gray-400">Live View</span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
-              {data?.campaign_name}
-            </h1>
+            <div className="flex items-center gap-3 flex-wrap mt-1">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+                {data?.campaign_name}
+              </h1>
+              {activeTargetDisplay && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200 shadow-xs" title={`Targeted: ${activeTargetDisplay}`}>
+                  <span className="text-gray-500 font-normal">Target:</span>
+                  <span className="font-semibold text-gray-900">{activeTargetDisplay}</span>
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -303,21 +323,28 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
                   <button
                     key={b.id}
                     onClick={() => handleSelectBlast(b.id)}
-                    className={`flex items-center gap-2.5 px-4 py-2 rounded-lg text-xs font-medium transition-all flex-shrink-0 ${
+                    className={`flex flex-col gap-0.5 px-3.5 py-2 rounded-lg text-xs font-medium transition-all flex-shrink-0 text-left cursor-pointer ${
                       isSelected
                         ? 'bg-gray-900 text-white shadow'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200/80'
                     }`}
                   >
-                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                      b.status === 'sent' ? 'bg-emerald-400' :
-                      b.status === 'sending' ? 'bg-blue-400 animate-pulse' :
-                      b.status === 'failed' ? 'bg-red-400' : 'bg-gray-400'
-                    }`} />
-                    <span className="font-semibold">{b.name}</span>
-                    <span className={`text-[10px] ${isSelected ? 'text-gray-300' : 'text-gray-400'}`}>
-                      {b.sent_at ? new Date(b.sent_at).toLocaleDateString() : 'Draft'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                        b.status === 'sent' ? 'bg-emerald-400' :
+                        b.status === 'sending' ? 'bg-blue-400 animate-pulse' :
+                        b.status === 'failed' ? 'bg-red-400' : 'bg-gray-400'
+                      }`} />
+                      <span className="font-semibold">{b.name}</span>
+                      <span className={`text-[10px] ${isSelected ? 'text-gray-300' : 'text-gray-400'}`}>
+                        {b.sent_at ? new Date(b.sent_at).toLocaleDateString() : 'Draft'}
+                      </span>
+                    </div>
+                    {b.target_display && (
+                      <span className={`text-[10px] pl-4 truncate max-w-[240px] ${isSelected ? 'text-gray-300 font-normal' : 'text-gray-500'}`} title={b.target_display}>
+                        {b.target_display}
+                      </span>
+                    )}
                   </button>
                 );
               })}

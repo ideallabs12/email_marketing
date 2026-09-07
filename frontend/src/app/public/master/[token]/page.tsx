@@ -12,6 +12,9 @@ interface BlastSummary {
   share_token: string;
   sent_at: string | null;
   created_at: string;
+  contact_list_name?: string;
+  targeted_batch_name?: string;
+  target_display?: string;
 }
 
 interface ContainerSummary {
@@ -26,6 +29,9 @@ interface ContainerSummary {
 interface PublicAnalyticsData {
   campaign_name: string;
   advance_campaign_name?: string | null;
+  contact_list_name?: string | null;
+  targeted_batch_name?: string | null;
+  target_display?: string | null;
   totals?: {
     total_recipients: number;
     total_delivered: number;
@@ -157,12 +163,15 @@ const sortContainersByRecentBlast = (list: ContainerSummary[]): ContainerSummary
     }))
     .sort((a, b) => {
       const getRecency = (c: ContainerSummary) => {
-        let maxTime = c.created_at ? new Date(c.created_at).getTime() : 0;
+        let latestBlastTime = 0;
         for (const blast of c.blasts) {
-          const t = blast.sent_at ? new Date(blast.sent_at).getTime() : (blast.created_at ? new Date(blast.created_at).getTime() : 0);
-          if (t > maxTime) maxTime = t;
+          const t = blast.sent_at
+            ? new Date(blast.sent_at).getTime()
+            : (blast.created_at ? new Date(blast.created_at).getTime() : 0);
+          if (t > latestBlastTime) latestBlastTime = t;
         }
-        return maxTime;
+        if (latestBlastTime > 0) return latestBlastTime;
+        return c.created_at ? new Date(c.created_at).getTime() : 0;
       };
       return getRecency(b) - getRecency(a);
     });
@@ -197,41 +206,32 @@ function getCampaignTimeStatus(container: ContainerSummary): string | null {
   if (diffMs < 0) return 'today';
 
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  const isSameDay =
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate();
+  const nowDayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const dateDayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const calendarDaysDiff = Math.round((nowDayStart - dateDayStart) / (1000 * 60 * 60 * 24));
 
-  const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const isYesterday =
-    date.getFullYear() === yesterday.getFullYear() &&
-    date.getMonth() === yesterday.getMonth() &&
-    date.getDate() === yesterday.getDate();
-
-  if (isSameDay) {
+  if (calendarDaysDiff <= 0) {
     if (diffHours >= 1) {
       return `${diffHours}h ago`;
     }
     return 'today';
   }
 
-  if (isYesterday) {
+  if (calendarDaysDiff === 1) {
     return 'yesterday';
   }
 
-  if (diffDays < 30) {
-    return `${Math.max(1, diffDays)}d ago`;
+  if (calendarDaysDiff < 30) {
+    return `${calendarDaysDiff}d ago`;
   }
 
-  const diffMonths = Math.floor(diffDays / 30);
+  const diffMonths = Math.floor(calendarDaysDiff / 30);
   if (diffMonths < 12) {
     return `${diffMonths}mo ago`;
   }
 
-  return `${Math.floor(diffDays / 365)}y ago`;
+  return `${Math.floor(calendarDaysDiff / 365)}y ago`;
 }
 
 export default function MasterLinkPage({ params }: { params: Promise<{ token: string }> }) {
@@ -434,27 +434,43 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
         </div>
 
         {/* Accordion List */}
-        <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+        <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {filteredContainers.length === 0 ? (
             <div className="py-10 text-center text-sm text-gray-400">No campaigns found.</div>
           ) : filteredContainers.map(container => {
             const key = container.id ?? 'other';
             const isExpanded = expandedContainerId === key;
             const timeStatus = getCampaignTimeStatus(container);
+            const containsSelected = container.blasts.some(b => b.share_token === selectedBlastToken);
 
             return (
-              <div key={key} className="rounded-lg overflow-hidden">
+              <div
+                key={key}
+                className={`rounded-xl border transition-all overflow-hidden ${
+                  containsSelected
+                    ? 'border-blue-200 bg-blue-50/40 shadow-xs'
+                    : isExpanded
+                    ? 'border-gray-200 bg-white shadow-xs'
+                    : 'border-transparent hover:border-gray-200 hover:bg-gray-50/80'
+                }`}
+              >
                 {/* Container header row */}
                 <button
                   onClick={() => setExpandedContainerId(isExpanded ? null : key)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-gray-50 transition-colors group cursor-pointer"
+                  className="w-full flex items-start gap-2.5 px-3 py-2.5 text-left transition-colors group cursor-pointer"
                 >
-                  <span className="text-gray-400 group-hover:text-gray-600 transition-colors flex-shrink-0">
+                  <span className={`mt-0.5 transition-colors flex-shrink-0 ${
+                    containsSelected ? 'text-blue-600 font-bold' : 'text-gray-400 group-hover:text-gray-600'
+                  }`}>
                     {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="font-semibold text-sm text-gray-800 truncate">{container.name}</span>
+                    <div className="flex items-center justify-between gap-1.5">
+                      <span className={`font-semibold text-sm truncate ${
+                        containsSelected ? 'text-blue-950 font-bold' : 'text-gray-800'
+                      }`}>
+                        {container.name}
+                      </span>
                       {(container.share_token || container.name) && (
                         <a
                           href={getCampaignUrl(container)}
@@ -468,10 +484,10 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                         </a>
                       )}
                     </div>
-                    <div className="flex items-center justify-between gap-1 text-[11px] text-gray-400 mt-0.5">
-                      <span>{container.blasts.length} blast{container.blasts.length !== 1 ? 's' : ''}</span>
+                    <div className="flex items-center justify-between gap-1.5 text-[11px] text-gray-500 mt-1">
+                      <span className="text-gray-400">{container.blasts.length} blast{container.blasts.length !== 1 ? 's' : ''}</span>
                       {timeStatus && (
-                        <span className="text-[10px] text-gray-400 font-medium text-right shrink-0">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100/90 text-gray-600 font-medium text-right shrink-0">
                           {timeStatus}
                         </span>
                       )}
@@ -481,7 +497,7 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
 
                 {/* Blasts nested under container */}
                 {isExpanded && (
-                  <div className="pl-7 pr-2 pb-1 space-y-0.5">
+                  <div className="px-2 pb-2 pt-0.5 space-y-1 bg-white/60 border-t border-gray-100/80">
                     {container.blasts.map(blast => {
                       const isSelected = selectedBlastToken === blast.share_token;
                       return (
@@ -493,15 +509,20 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                               setIsSidebarOpen(false);
                             }
                           }}
-                          className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-sm transition-all ${
+                          className={`w-full flex items-start gap-2.5 px-3 py-2 rounded-lg text-left text-sm transition-all cursor-pointer ${
                             isSelected
                               ? 'bg-gray-900 text-white shadow-sm'
-                              : 'text-gray-600 hover:bg-gray-100'
+                              : 'text-gray-700 hover:bg-gray-100'
                           }`}
                         >
-                          <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getStatusDot(blast.status)}`} />
+                          <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${getStatusDot(blast.status)}`} />
                           <div className="flex-1 min-w-0">
                             <div className="truncate font-medium text-[13px]">{blast.name}</div>
+                            {blast.target_display && (
+                              <div className={`truncate text-[10px] mt-0.5 font-medium ${isSelected ? 'text-gray-300' : 'text-gray-500'}`} title={blast.target_display}>
+                                {blast.target_display}
+                              </div>
+                            )}
                             <div className={`text-[10px] mt-0.5 ${isSelected ? 'text-gray-300' : 'text-gray-400'}`}>
                               {blast.sent_at ? new Date(blast.sent_at).toLocaleDateString() : 'Not sent'}
                             </div>
@@ -524,9 +545,9 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
             {!isSidebarOpen && (
               <button
                 onClick={() => setIsSidebarOpen(true)}
-                className="absolute top-4 left-4 p-2 bg-white border border-gray-200 shadow-sm text-gray-700 hover:text-gray-900 rounded-lg transition-colors flex items-center gap-2 text-xs font-medium cursor-pointer"
+                className="absolute top-4 left-4 inline-flex items-center gap-2 px-3.5 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg shadow-sm text-xs font-semibold transition-all cursor-pointer"
               >
-                <Menu size={16} /> Show Campaigns
+                <Menu size={14} /> Show Campaigns
               </button>
             )}
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -538,27 +559,38 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
         ) : (
           <>
             {/* Toolbar */}
-            <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
+            <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-3.5 flex flex-col xl:flex-row xl:items-center justify-between gap-3.5">
+              <div className="flex items-center gap-3.5 min-w-0">
                 {!isSidebarOpen && (
-                  <button
-                    onClick={() => setIsSidebarOpen(true)}
-                    className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors flex items-center gap-1.5 text-xs font-medium shrink-0 cursor-pointer shadow-xs"
-                    title="Expand campaigns sidebar"
-                  >
-                    <Menu size={16} />
-                    <span className="hidden sm:inline">Campaigns</span>
-                  </button>
+                  <>
+                    <button
+                      onClick={() => setIsSidebarOpen(true)}
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg text-xs font-semibold shadow-xs transition-all cursor-pointer shrink-0"
+                      title="Open campaigns sidebar"
+                    >
+                      <Menu size={14} />
+                      <span>Campaigns</span>
+                    </button>
+                    <div className="h-6 w-px bg-gray-200 shrink-0" />
+                  </>
                 )}
-                <div>
+                <div className="min-w-0">
                   {analytics?.advance_campaign_name && (
-                    <div className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-0.5">
+                    <div className="text-[11px] font-bold text-blue-600 uppercase tracking-wider mb-0.5">
                       {analytics.advance_campaign_name}
                     </div>
                   )}
-                  <div className="font-bold text-gray-900 text-base">{analytics?.campaign_name ?? '...'}</div>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h2 className="font-bold text-gray-900 text-base leading-snug">{analytics?.campaign_name ?? '...'}</h2>
+                    {analytics?.target_display && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200 shadow-xs" title={`Target: ${analytics.target_display}`}>
+                        <span className="text-gray-400 font-normal">Target:</span>
+                        <strong className="text-gray-900 font-semibold">{analytics.target_display}</strong>
+                      </span>
+                    )}
+                  </div>
                   {analytics?.totals && !analyticsLoading && (
-                    <div className="flex gap-4 mt-1 text-xs text-gray-500">
+                    <div className="flex gap-4 mt-1.5 text-xs text-gray-500 flex-wrap">
                       <span>Recipients: <strong className="text-gray-900">{analytics.totals.total_recipients}</strong></span>
                       <span>Delivered: <strong className="text-gray-900">{analytics.totals.total_delivered}</strong></span>
                       <span>Opens: <strong className="text-gray-900">{analytics.totals.total_opens}</strong></span>
@@ -567,13 +599,13 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2 flex-shrink-0 self-start xl:self-center">
                 <div className="flex gap-1 flex-wrap">
                   {['all', 'delivered', 'opened', 'clicked', 'sent', 'pending', 'failed'].map(s => (
                     <button
                       key={s}
                       onClick={() => setStatusFilter(s)}
-                      className={`px-2.5 py-1 text-xs rounded-full font-medium transition-colors ${
+                      className={`px-2.5 py-1 text-xs rounded-full font-medium transition-colors cursor-pointer ${
                         statusFilter === s ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >

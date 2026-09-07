@@ -20,6 +20,22 @@ def get_campaign_target_contacts(campaign):
         contacts = contacts.filter(batches__in=campaign.target_batches.all()).distinct()
     return contacts.order_by('email')
 
+def format_campaign_target(campaign):
+    if not campaign:
+        return "", "", ""
+    list_name = campaign.target_list.name if getattr(campaign, 'target_list', None) else ""
+    batch_names = []
+    if hasattr(campaign, 'target_batches'):
+        batch_names = list(campaign.target_batches.values_list('name', flat=True))
+    targeted_batch = ", ".join(batch_names) if batch_names else "All Contacts"
+    if list_name and targeted_batch:
+        target_display = f"{list_name} : {targeted_batch}"
+    elif list_name:
+        target_display = list_name
+    else:
+        target_display = targeted_batch
+    return list_name, targeted_batch, target_display
+
 class PublicAdvanceCampaignView(views.APIView):
     permission_classes = [AllowAny]
 
@@ -151,13 +167,19 @@ class PublicAdvanceCampaignView(views.APIView):
             camp_name = single_campaign.name
             camp_created_at = single_campaign.created_at.isoformat() if single_campaign.created_at else None
 
-        blasts_data = [{
-            'id': b.id,
-            'name': b.name,
-            'status': b.status,
-            'sent_at': b.sent_at.isoformat() if b.sent_at else None,
-            'created_at': b.created_at.isoformat() if b.created_at else None,
-        } for b in blasts_qs]
+        blasts_data = []
+        for b in blasts_qs.select_related('target_list').prefetch_related('target_batches'):
+            b_list_name, b_batch_name, b_display = format_campaign_target(b)
+            blasts_data.append({
+                'id': b.id,
+                'name': b.name,
+                'status': b.status,
+                'contact_list_name': b_list_name,
+                'targeted_batch_name': b_batch_name,
+                'target_display': b_display,
+                'sent_at': b.sent_at.isoformat() if b.sent_at else None,
+                'created_at': b.created_at.isoformat() if b.created_at else None,
+            })
 
         blast_id = request.query_params.get('blast_id')
         selected_blast = None
@@ -236,9 +258,13 @@ class PublicAdvanceCampaignView(views.APIView):
                 clicked=Count('id', filter=Q(clicked_at__isnull=False) | Q(status='clicked')),
             )
 
+            sel_list_name, sel_batch_name, sel_display = format_campaign_target(selected_blast)
             analytics_data = {
                 "blast_id": selected_blast.id,
                 "blast_name": selected_blast.name,
+                "contact_list_name": sel_list_name,
+                "targeted_batch_name": sel_batch_name,
+                "target_display": sel_display,
                 "totals": {
                     "total_recipients": contacts.count(),
                     "total_delivered": counts['delivered'],
@@ -248,10 +274,16 @@ class PublicAdvanceCampaignView(views.APIView):
                 "data": rows
             }
 
+        top_ref = selected_blast or direct_blast or single_campaign
+        top_list, top_batch, top_display = format_campaign_target(top_ref)
+
         return Response({
             "campaign_id": camp_id,
             "campaign_name": camp_name,
             "created_at": camp_created_at,
+            "contact_list_name": top_list,
+            "targeted_batch_name": top_batch,
+            "target_display": top_display,
             "blasts": blasts_data,
             "selected_blast_id": selected_blast.id if selected_blast else None,
             "analytics": analytics_data
@@ -340,9 +372,13 @@ class PublicCampaignAnalyticsView(views.APIView):
             clicked=Count('id', filter=Q(clicked_at__isnull=False) | Q(status='clicked')),
         )
 
+        list_name, batch_name, display = format_campaign_target(campaign)
         return Response({
             "campaign_name": campaign.name,
             "advance_campaign_name": campaign.advance_campaign.name if campaign.advance_campaign else None,
+            "contact_list_name": list_name,
+            "targeted_batch_name": batch_name,
+            "target_display": display,
             "totals": {
                 "total_recipients": contacts.count(),
                 "total_delivered": counts['delivered'] or 0,
@@ -718,7 +754,7 @@ class PublicMasterLinkCampaignsView(views.APIView):
         containers = []
         for ac in advance_campaigns:
             # Sort blasts inside each campaign by most recent sent_at or created_at
-            raw_blasts = list(ac.campaigns.all())
+            raw_blasts = list(ac.campaigns.select_related('target_list').prefetch_related('target_batches').all())
             raw_blasts.sort(
                 key=lambda c: c.sent_at.isoformat() if c.sent_at else (c.created_at.isoformat() if c.created_at else ''),
                 reverse=True
@@ -732,45 +768,60 @@ class PublicMasterLinkCampaignsView(views.APIView):
             if not ac_share_token:
                 ac_share_token = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"advance-campaign-{ac.id}"))
 
+            formatted_blasts = []
+            for c in raw_blasts:
+                b_list, b_batch, b_display = format_campaign_target(c)
+                formatted_blasts.append({
+                    'id': c.id,
+                    'name': c.name,
+                    'status': c.status,
+                    'contact_list_name': b_list,
+                    'targeted_batch_name': b_batch,
+                    'target_display': b_display,
+                    'share_token': str(c.share_token) if getattr(c, 'share_token', None) else str(uuid.uuid5(uuid.NAMESPACE_DNS, f"campaign-{c.id}")),
+                    'sent_at': c.sent_at.isoformat() if c.sent_at else None,
+                    'created_at': c.created_at.isoformat() if c.created_at else None,
+                })
+
             containers.append({
                 'id': ac.id,
                 'name': ac.name,
                 'slug': slugify(ac.name),
                 'share_token': ac_share_token,
                 'created_at': ac.created_at.isoformat() if ac.created_at else None,
-                'blasts': [{
-                    'id': c.id,
-                    'name': c.name,
-                    'status': c.status,
-                    'share_token': str(c.share_token) if getattr(c, 'share_token', None) else str(uuid.uuid5(uuid.NAMESPACE_DNS, f"campaign-{c.id}")),
-                    'sent_at': c.sent_at.isoformat() if c.sent_at else None,
-                    'created_at': c.created_at.isoformat() if c.created_at else None,
-                } for c in raw_blasts]
+                'blasts': formatted_blasts,
             })
 
         # Also include standalone campaigns (no advance_campaign parent)
         standalone = list(Campaign.objects.filter(
             advance_campaign__isnull=True
-        ))
+        ).select_related('target_list').prefetch_related('target_batches'))
         if standalone:
             standalone.sort(
                 key=lambda c: c.sent_at.isoformat() if c.sent_at else (c.created_at.isoformat() if c.created_at else ''),
                 reverse=True
             )
+            formatted_standalone = []
+            for c in standalone:
+                b_list, b_batch, b_display = format_campaign_target(c)
+                formatted_standalone.append({
+                    'id': c.id,
+                    'name': c.name,
+                    'status': c.status,
+                    'contact_list_name': b_list,
+                    'targeted_batch_name': b_batch,
+                    'target_display': b_display,
+                    'share_token': str(c.share_token) if getattr(c, 'share_token', None) else str(uuid.uuid5(uuid.NAMESPACE_DNS, f"campaign-{c.id}")),
+                    'sent_at': c.sent_at.isoformat() if c.sent_at else None,
+                    'created_at': c.created_at.isoformat() if c.created_at else None,
+                })
             containers.append({
                 'id': None,
                 'name': 'Other Campaigns',
                 'slug': 'other-campaigns',
                 'share_token': '',
                 'created_at': None,
-                'blasts': [{
-                    'id': c.id,
-                    'name': c.name,
-                    'status': c.status,
-                    'share_token': str(c.share_token) if getattr(c, 'share_token', None) else str(uuid.uuid5(uuid.NAMESPACE_DNS, f"campaign-{c.id}")),
-                    'sent_at': c.sent_at.isoformat() if c.sent_at else None,
-                    'created_at': c.created_at.isoformat() if c.created_at else None,
-                } for c in standalone]
+                'blasts': formatted_standalone,
             })
 
         # Sort containers so campaigns with recent blasts are displayed at the top
