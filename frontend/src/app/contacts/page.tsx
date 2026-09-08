@@ -11,7 +11,7 @@ import Link from 'next/link';
 export default function ContactsPage() {
   const [lists, setLists] = useState<ContactList[]>([]);
   const [allBatches, setAllBatches] = useState<ContactBatch[]>([]);
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [totalContactsCount, setTotalContactsCount] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -52,14 +52,14 @@ export default function ContactsPage() {
   async function loadData() {
     setLoading(true);
     try {
-      const [listsRes, batchesRes, contactsRes] = await Promise.all([
-        apiClient.get('/api/v1/contact-lists/?limit=10000'),
-        apiClient.get('/api/v1/contact-batches/?limit=10000'),
-        apiClient.get('/api/v1/contacts/?limit=10000'),
+      const [listsRes, batchesRes, contactsCountRes] = await Promise.all([
+        apiClient.get('/api/v1/contact-lists/?limit=500'),
+        apiClient.get('/api/v1/contact-batches/?limit=500'),
+        apiClient.get('/api/v1/contacts/?limit=1'),
       ]);
       setLists(listsRes.results || []);
       setAllBatches(batchesRes.results || []);
-      setContacts(contactsRes.results || []);
+      setTotalContactsCount(contactsCountRes.count ?? (contactsCountRes.results?.length || 0));
     } catch (err) {
       console.error('Failed to load contact lists data:', err);
     } finally {
@@ -279,7 +279,7 @@ export default function ContactsPage() {
                 </div>
                 <div className="mt-6 flex items-end justify-between border-t border-border pt-3">
                   <div className="text-2xl font-bold text-foreground">
-                    {contacts.length} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Contacts</span>
+                    {totalContactsCount} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Contacts</span>
                   </div>
                 </div>
               </Link>
@@ -312,7 +312,7 @@ export default function ContactsPage() {
                   </div>
                   <div className="mt-6 flex items-end justify-between border-t border-border pt-3">
                     <div className="text-2xl font-bold text-foreground">
-                      {contacts.filter(c => c.lists.includes(list.id)).length} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Contacts</span>
+                      {list.contacts_count ?? 0} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Contacts</span>
                     </div>
                   </div>
                 </Link>

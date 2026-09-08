@@ -2,9 +2,16 @@ from rest_framework import serializers
 from .models import Contact, ContactList, IgnoredContact, ContactBatch
 
 class ContactListSerializer(serializers.ModelSerializer):
+    contacts_count = serializers.SerializerMethodField()
+
     class Meta:
         model = ContactList
-        fields = ['id', 'name', 'description', 'is_default', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'description', 'is_default', 'contacts_count', 'created_at', 'updated_at']
+
+    def get_contacts_count(self, obj):
+        if hasattr(obj, 'contacts_count'):
+            return obj.contacts_count
+        return obj.contacts.count()
 
 class ContactSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,6 +24,13 @@ class IgnoredContactSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ContactBatchSerializer(serializers.ModelSerializer):
+    contacts_count = serializers.SerializerMethodField()
+
     class Meta:
         model = ContactBatch
-        fields = '__all__'
+        fields = ['id', 'name', 'contact_list', 'contacts_count', 'created_at']
+
+    def get_contacts_count(self, obj):
+        if hasattr(obj, 'contacts_count'):
+            return obj.contacts_count
+        return obj.contacts.count()

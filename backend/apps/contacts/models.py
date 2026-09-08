@@ -20,13 +20,19 @@ class ContactBatch(models.Model):
 
 class Contact(models.Model):
     email = models.EmailField(unique=True)
-    first_name = models.CharField(max_length=255, blank=True)
-    last_name = models.CharField(max_length=255, blank=True)
-    is_subscribed = models.BooleanField(default=True)
+    first_name = models.CharField(max_length=255, blank=True, db_index=True)
+    last_name = models.CharField(max_length=255, blank=True, db_index=True)
+    is_subscribed = models.BooleanField(default=True, db_index=True)
     lists = models.ManyToManyField(ContactList, related_name='contacts', blank=True)
     batches = models.ManyToManyField(ContactBatch, related_name='contacts', blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['first_name', 'last_name']),
+            models.Index(fields=['-created_at']),
+        ]
 
     def __str__(self):
         return self.email

@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Card from '../../../components/Card';
 import Button from '../../../components/Button';
-import { Users, Search, X, Trash2, ArrowLeft, Calendar, Layers, Edit } from 'lucide-react';
+import { Users, Search, X, Trash2, ArrowLeft, Calendar, Layers, Edit, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { apiClient } from '../../../services/apiClient';
 import { Contact, ContactList, ContactBatch } from '../../../types';
 import Link from 'next/link';
@@ -18,9 +18,14 @@ export default function ContactListDetailsPage() {
   const [batches, setBatches] = useState<ContactBatch[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingContacts, setLoadingContacts] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedBatchFilter, setSelectedBatchFilter] = useState<string>('all');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  const [totalCount, setTotalCount] = useState(0);
 
   const [showEditListModal, setShowEditListModal] = useState(false);
   const [editListName, setEditListName] = useState('');
@@ -37,31 +42,61 @@ export default function ContactListDetailsPage() {
       router.push('/contacts');
       return;
     }
-    loadData();
+    loadListInfo();
   }, [listId, router]);
 
-  async function loadData() {
+  async function loadListInfo() {
     setLoading(true);
     try {
-      const [listRes, batchesRes, contactsRes] = await Promise.all([
+      const [listRes, batchesRes] = await Promise.all([
         apiClient.get(`/api/v1/contact-lists/${listId}/`),
-        apiClient.get(`/api/v1/contact-batches/?contact_list=${listId}&limit=10000`),
-        apiClient.get(`/api/v1/contacts/?lists=${listId}&limit=10000`),
+        apiClient.get(`/api/v1/contact-batches/?contact_list=${listId}&limit=500`),
       ]);
 
       setList(listRes);
-      // Ensure we only keep batches for this specific list (just in case the API filter didn't work perfectly)
       const listBatches = (batchesRes.results || []).filter((b: ContactBatch) => b.contact_list === listId);
       setBatches(listBatches);
-      
-      const listContacts = (contactsRes.results || []).filter((c: Contact) => c.lists.includes(listId));
-      setContacts(listContacts);
     } catch (err) {
       console.error('Failed to load contact list details:', err);
     } finally {
       setLoading(false);
     }
   }
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Load contacts when debouncedSearch, selectedBatchFilter, page, or pageSize changes
+  const loadContacts = useCallback(async () => {
+    if (!listId || isNaN(listId)) return;
+    setLoadingContacts(true);
+    try {
+      let url = `/api/v1/contacts/?lists=${listId}&page=${page}&limit=${pageSize}`;
+      if (debouncedSearch.trim()) {
+        url += `&search=${encodeURIComponent(debouncedSearch.trim())}`;
+      }
+      if (selectedBatchFilter !== 'all') {
+        url += `&batches=${encodeURIComponent(selectedBatchFilter)}`;
+      }
+      const res = await apiClient.get(url);
+      setContacts(res.results || []);
+      setTotalCount(res.count ?? (res.results?.length || 0));
+    } catch (err) {
+      console.error('Failed to load contacts for list:', err);
+    } finally {
+      setLoadingContacts(false);
+    }
+  }, [listId, debouncedSearch, selectedBatchFilter, page, pageSize]);
+
+  useEffect(() => {
+    loadContacts();
+  }, [loadContacts]);
 
   const handleEditList = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +112,7 @@ export default function ContactListDetailsPage() {
         description: editListDesc,
       });
       setShowEditListModal(false);
-      loadData();
+      loadListInfo();
     } catch (err: any) {
       setEditListError(err.message || 'Failed to update list.');
     }
@@ -105,7 +140,7 @@ export default function ContactListDetailsPage() {
       });
       setShowEditBatchModal(false);
       setEditingBatchId(null);
-      loadData();
+      loadListInfo();
     } catch (err: any) {
       setEditBatchError(err.message || 'Failed to update batch.');
     }
@@ -123,40 +158,13 @@ export default function ContactListDetailsPage() {
     if (!confirm('Are you sure you want to remove this contact?')) return;
     try {
       await apiClient.delete(`/api/v1/contacts/${id}/`);
-      loadData();
+      loadContacts();
+      loadListInfo();
     } catch (err: any) {
       console.error('Failed to delete contact:', err);
       alert('Failed to delete contact.');
     }
   };
-
-  const filteredContacts = contacts.filter(c => {
-    let matchesSearch = true;
-    if (searchQuery.trim()) {
-      const tokens = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
-      const firstName = (c.first_name || '').toLowerCase();
-      const lastName = (c.last_name || '').toLowerCase();
-      const fullName = `${firstName} ${lastName}`.trim();
-      const reverseFullName = `${lastName} ${firstName}`.trim();
-      const email = (c.email || '').toLowerCase();
-
-      matchesSearch = tokens.every(token =>
-        firstName.includes(token) ||
-        lastName.includes(token) ||
-        fullName.includes(token) ||
-        reverseFullName.includes(token) ||
-        email.includes(token)
-      );
-    }
-      
-    let matchesBatch = true;
-    if (selectedBatchFilter !== 'all') {
-      const batchId = Number(selectedBatchFilter);
-      matchesBatch = c.batches && c.batches.includes(batchId);
-    }
-    
-    return matchesSearch && matchesBatch;
-  });
 
   if (loading) {
     return <div className="text-sm text-foreground/40 py-12 text-center">Loading contact list details...</div>;
@@ -209,25 +217,30 @@ export default function ContactListDetailsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             <Card 
               className={`p-4 cursor-pointer transition-all border-2 ${selectedBatchFilter === 'all' ? 'border-primary' : 'border-transparent hover:border-foreground/10'}`}
-              onClick={() => setSelectedBatchFilter('all')}
+              onClick={() => {
+                setSelectedBatchFilter('all');
+                setPage(1);
+              }}
             >
               <h3 className="font-semibold text-lg text-foreground">All Contacts</h3>
               <div className="mt-4 flex items-end justify-between border-t border-border pt-3">
                 <div className="text-2xl font-bold text-foreground">
-                  {contacts.length} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Total</span>
+                  {list.contacts_count ?? totalCount} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Total</span>
                 </div>
               </div>
             </Card>
 
             {batches.map(batch => {
-              const batchContacts = contacts.filter(c => c.batches && c.batches.includes(batch.id));
               const isSelected = selectedBatchFilter === String(batch.id);
               
               return (
                 <Card 
                   key={batch.id} 
                   className={`p-4 cursor-pointer transition-all border-2 relative group overflow-hidden ${isSelected ? 'border-primary' : 'border-transparent hover:border-foreground/10'}`}
-                  onClick={() => setSelectedBatchFilter(String(batch.id))}
+                  onClick={() => {
+                    setSelectedBatchFilter(String(batch.id));
+                    setPage(1);
+                  }}
                 >
                   <div className="absolute top-2 right-2 flex items-center gap-1 opacity-50 group-hover:opacity-100 transition-opacity z-10">
                     <button
@@ -247,7 +260,7 @@ export default function ContactListDetailsPage() {
                   )}
                   <div className="mt-3 flex items-end justify-between border-t border-border pt-3">
                     <div className="text-2xl font-bold text-foreground">
-                      {batchContacts.length} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Contacts</span>
+                      {batch.contacts_count ?? 0} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Contacts</span>
                     </div>
                   </div>
                 </Card>
@@ -268,17 +281,22 @@ export default function ContactListDetailsPage() {
               placeholder="Search contacts in this list..."
               className="w-full text-sm bg-transparent border-0 focus:outline-none focus:ring-0"
             />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')}>
+            {loadingContacts ? (
+              <Loader2 size={16} className="text-foreground/40 animate-spin shrink-0" />
+            ) : searchQuery ? (
+              <button onClick={() => { setSearchQuery(''); setDebouncedSearch(''); setPage(1); }}>
                 <X size={16} className="text-foreground/40 hover:text-foreground" />
               </button>
-            )}
+            ) : null}
           </div>
           
           <div className="w-full max-w-xs">
             <select
               value={selectedBatchFilter}
-              onChange={(e) => setSelectedBatchFilter(e.target.value)}
+              onChange={(e) => {
+                setSelectedBatchFilter(e.target.value);
+                setPage(1);
+              }}
               className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background h-[38px]"
             >
               <option value="all">All Batches</option>
@@ -298,13 +316,18 @@ export default function ContactListDetailsPage() {
             <span className="col-span-1 text-right"></span>
           </div>
 
-          {filteredContacts.length === 0 ? (
+          {loadingContacts && contacts.length === 0 ? (
+            <div className="text-sm text-foreground/40 py-12 text-center flex items-center justify-center gap-2">
+              <Loader2 size={18} className="animate-spin" />
+              Loading contacts...
+            </div>
+          ) : contacts.length === 0 ? (
             <div className="text-sm text-foreground/40 py-12 text-center">
-              No contacts found in this list or batch.
+              {debouncedSearch ? 'No contacts match your search in this list.' : 'No contacts found in this list or batch.'}
             </div>
           ) : (
-            <div className="divide-y divide-border">
-              {filteredContacts.map(c => (
+            <div className={`divide-y divide-border ${loadingContacts ? 'opacity-60 transition-opacity' : ''}`}>
+              {contacts.map(c => (
                 <div key={c.id} className="flex flex-col md:grid md:grid-cols-12 gap-1 md:gap-0 py-4 md:py-3 text-sm items-start md:items-center hover:bg-foreground/5 rounded-lg md:rounded-md border border-border md:border-transparent bg-foreground/[0.02] md:bg-transparent px-3 md:px-2 -mx-3 md:-mx-2 mb-3 md:mb-0 transition-colors shadow-sm md:shadow-none group relative">
                   
                   <div className="flex flex-col md:col-span-4 min-w-0 pr-8 md:pr-0 w-full mb-2 md:mb-0">
@@ -344,6 +367,68 @@ export default function ContactListDetailsPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {totalCount > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t border-border text-sm text-foreground/60">
+              <div className="flex flex-wrap items-center gap-2">
+                <span>
+                  Showing <span className="font-semibold text-foreground">{totalCount === 0 ? 0 : (page - 1) * pageSize + 1}</span> to{' '}
+                  <span className="font-semibold text-foreground">{Math.min(page * pageSize, totalCount)}</span> of{' '}
+                  <span className="font-semibold text-foreground">{totalCount}</span> contacts
+                </span>
+                {debouncedSearch && (
+                  <span className="text-xs bg-foreground/5 border border-border px-2 py-0.5 rounded text-foreground/80">
+                    &ldquo;{debouncedSearch}&rdquo;
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs">Per page:</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setPage(1);
+                    }}
+                    className="border border-border rounded px-2 py-1 text-xs bg-background text-foreground"
+                  >
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page <= 1 || loadingContacts}
+                    className="h-8 px-2 flex items-center gap-1 disabled:opacity-40"
+                  >
+                    <ChevronLeft size={16} />
+                    <span className="hidden sm:inline">Prev</span>
+                  </Button>
+
+                  <span className="text-xs font-medium px-2">
+                    Page {page} of {Math.max(1, Math.ceil(totalCount / pageSize))}
+                  </span>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => setPage(p => Math.min(Math.max(1, Math.ceil(totalCount / pageSize)), p + 1))}
+                    disabled={page >= Math.max(1, Math.ceil(totalCount / pageSize)) || loadingContacts}
+                    className="h-8 px-2 flex items-center gap-1 disabled:opacity-40"
+                  >
+                    <span className="hidden sm:inline">Next</span>
+                    <ChevronRight size={16} />
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </div>

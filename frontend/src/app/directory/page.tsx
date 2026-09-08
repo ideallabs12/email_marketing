@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
-import { Plus, Upload, Search, X, Check, AlertCircle, Trash2, Users } from 'lucide-react';
+import { Plus, Upload, Search, X, Check, AlertCircle, Trash2, Users, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 import { Contact, ContactList } from '../../types';
 import Link from 'next/link';
@@ -12,8 +12,12 @@ export default function DirectoryPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [lists, setLists] = useState<ContactList[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedListFilter, setSelectedListFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  const [totalCount, setTotalCount] = useState(0);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -30,25 +34,54 @@ export default function DirectoryPage() {
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState('');
   const [importing, setImporting] = useState(false);
+
+  // Load lists once on mount
   useEffect(() => {
-    loadData();
+    loadLists();
   }, []);
 
-  async function loadData() {
-    setLoading(true);
+  async function loadLists() {
     try {
-      const [contactsRes, listsRes] = await Promise.all([
-        apiClient.get('/api/v1/contacts/?limit=10000'),
-        apiClient.get('/api/v1/contact-lists/?limit=10000'),
-      ]);
-      setContacts(contactsRes.results || []);
+      const listsRes = await apiClient.get('/api/v1/contact-lists/?limit=500');
       setLists(listsRes.results || []);
     } catch (err) {
-      console.error('Failed to load contacts data:', err);
+      console.error('Failed to load contact lists:', err);
+    }
+  }
+
+  // Debounce search query by 300ms to keep input instant and smooth
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Load contacts whenever debouncedSearch, selectedListFilter, page, or pageSize changes
+  const loadContacts = useCallback(async () => {
+    setLoading(true);
+    try {
+      let url = `/api/v1/contacts/?page=${page}&limit=${pageSize}`;
+      if (debouncedSearch.trim()) {
+        url += `&search=${encodeURIComponent(debouncedSearch.trim())}`;
+      }
+      if (selectedListFilter !== 'all') {
+        url += `&lists=${encodeURIComponent(selectedListFilter)}`;
+      }
+      const res = await apiClient.get(url);
+      setContacts(res.results || []);
+      setTotalCount(res.count ?? (res.results?.length || 0));
+    } catch (err) {
+      console.error('Failed to load contacts:', err);
     } finally {
       setLoading(false);
     }
-  }
+  }, [debouncedSearch, selectedListFilter, page, pageSize]);
+
+  useEffect(() => {
+    loadContacts();
+  }, [loadContacts]);
 
   const handleAddContact = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +105,8 @@ export default function DirectoryPage() {
       setNewLastName('');
       setNewSubscribed(true);
       setNewSelectedLists([]);
-      loadData();
+      loadContacts();
+      loadLists();
     } catch (err: any) {
       setAddError(err.message || 'Failed to add contact.');
     }
@@ -118,7 +152,8 @@ export default function DirectoryPage() {
       setTimeout(() => {
         setShowImportModal(false);
         setImportSuccess('');
-        loadData();
+        loadContacts();
+        loadLists();
       }, 3000);
     } catch (err: any) {
       setImportError(err.message || 'An error occurred during import.');
@@ -131,36 +166,13 @@ export default function DirectoryPage() {
     if (!confirm('Are you sure you want to delete this contact?')) return;
     try {
       await apiClient.delete(`/api/v1/contacts/${id}/`);
-      loadData();
+      loadContacts();
+      loadLists();
     } catch (err: any) {
       console.error('Failed to delete contact:', err);
       alert('Failed to delete contact.');
     }
   };
-
-  const filteredContacts = contacts.filter(c => {
-    let matchesSearch = true;
-    if (searchQuery.trim()) {
-      const tokens = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
-      const firstName = (c.first_name || '').toLowerCase();
-      const lastName = (c.last_name || '').toLowerCase();
-      const fullName = `${firstName} ${lastName}`.trim();
-      const reverseFullName = `${lastName} ${firstName}`.trim();
-      const email = (c.email || '').toLowerCase();
-
-      matchesSearch = tokens.every(token =>
-        firstName.includes(token) ||
-        lastName.includes(token) ||
-        fullName.includes(token) ||
-        reverseFullName.includes(token) ||
-        email.includes(token)
-      );
-    }
-      
-    const matchesList = selectedListFilter === 'all' || c.lists.includes(Number(selectedListFilter));
-    
-    return matchesSearch && matchesList;
-  });
 
   return (
     <div className="space-y-8">
@@ -203,17 +215,22 @@ export default function DirectoryPage() {
               placeholder="Search contacts by name or email..."
               className="w-full text-sm bg-transparent border-0 focus:outline-none focus:ring-0"
             />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')}>
+            {loading ? (
+              <Loader2 size={16} className="text-foreground/40 animate-spin shrink-0" />
+            ) : searchQuery ? (
+              <button onClick={() => { setSearchQuery(''); setDebouncedSearch(''); setPage(1); }}>
                 <X size={16} className="text-foreground/40 hover:text-foreground" />
               </button>
-            )}
+            ) : null}
           </div>
           
           <div className="w-full max-w-xs">
             <select
               value={selectedListFilter}
-              onChange={(e) => setSelectedListFilter(e.target.value)}
+              onChange={(e) => {
+                setSelectedListFilter(e.target.value);
+                setPage(1);
+              }}
               className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background h-[38px]"
             >
               <option value="all">All Contacts</option>
@@ -234,15 +251,18 @@ export default function DirectoryPage() {
             <span className="col-span-1 text-right"></span>
           </div>
 
-          {loading ? (
-            <div className="text-sm text-foreground/40 py-12 text-center">Loading contacts...</div>
-          ) : filteredContacts.length === 0 ? (
+          {loading && contacts.length === 0 ? (
+            <div className="text-sm text-foreground/40 py-12 text-center flex items-center justify-center gap-2">
+              <Loader2 size={18} className="animate-spin" />
+              Loading contacts...
+            </div>
+          ) : contacts.length === 0 ? (
             <div className="text-sm text-foreground/40 py-12 text-center">
-              No contacts found. Use buttons above to add subscribers.
+              {debouncedSearch ? 'No contacts match your search query.' : 'No contacts found. Use buttons above to add subscribers.'}
             </div>
           ) : (
-            <div className="divide-y divide-border">
-              {filteredContacts.map(c => (
+            <div className={`divide-y divide-border ${loading ? 'opacity-60 transition-opacity' : ''}`}>
+              {contacts.map(c => (
                 <div key={c.id} className="flex flex-col md:grid md:grid-cols-12 gap-1 md:gap-0 py-4 md:py-3 text-sm items-start md:items-center hover:bg-foreground/5 rounded-lg md:rounded-md border border-border md:border-transparent bg-foreground/[0.02] md:bg-transparent px-3 md:px-2 -mx-3 md:-mx-2 mb-3 md:mb-0 transition-colors shadow-sm md:shadow-none group relative">
                   
                   {/* Mobile: Combined Email & Name */}
@@ -299,6 +319,68 @@ export default function DirectoryPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {totalCount > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t border-border text-sm text-foreground/60">
+              <div className="flex flex-wrap items-center gap-2">
+                <span>
+                  Showing <span className="font-semibold text-foreground">{totalCount === 0 ? 0 : (page - 1) * pageSize + 1}</span> to{' '}
+                  <span className="font-semibold text-foreground">{Math.min(page * pageSize, totalCount)}</span> of{' '}
+                  <span className="font-semibold text-foreground">{totalCount}</span> contacts
+                </span>
+                {debouncedSearch && (
+                  <span className="text-xs bg-foreground/5 border border-border px-2 py-0.5 rounded text-foreground/80">
+                    &ldquo;{debouncedSearch}&rdquo;
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs">Per page:</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setPage(1);
+                    }}
+                    className="border border-border rounded px-2 py-1 text-xs bg-background text-foreground"
+                  >
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page <= 1 || loading}
+                    className="h-8 px-2 flex items-center gap-1 disabled:opacity-40"
+                  >
+                    <ChevronLeft size={16} />
+                    <span className="hidden sm:inline">Prev</span>
+                  </Button>
+
+                  <span className="text-xs font-medium px-2">
+                    Page {page} of {Math.max(1, Math.ceil(totalCount / pageSize))}
+                  </span>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => setPage(p => Math.min(Math.max(1, Math.ceil(totalCount / pageSize)), p + 1))}
+                    disabled={page >= Math.max(1, Math.ceil(totalCount / pageSize)) || loading}
+                    className="h-8 px-2 flex items-center gap-1 disabled:opacity-40"
+                  >
+                    <span className="hidden sm:inline">Next</span>
+                    <ChevronRight size={16} />
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </div>

@@ -1,15 +1,23 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 import csv
 import io
 from .models import Contact, ContactList, IgnoredContact, ContactBatch
 from .serializers import ContactSerializer, ContactListSerializer, IgnoredContactSerializer, ContactBatchSerializer
-from django.db.models import ProtectedError
+from django.db.models import ProtectedError, Count, Q
 
 class ContactListViewSet(viewsets.ModelViewSet):
-    queryset = ContactList.objects.all().order_by('-created_at')
     serializer_class = ContactListSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'created_at']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        return ContactList.objects.annotate(
+            contacts_count=Count('contacts', distinct=True)
+        ).order_by('-created_at')
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -21,8 +29,53 @@ class ContactListViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Cannot delete this list because it is currently linked to one or more campaigns.'}, status=status.HTTP_400_BAD_REQUEST)
 
 class ContactViewSet(viewsets.ModelViewSet):
-    queryset = Contact.objects.all().order_by('-created_at')
     serializer_class = ContactSerializer
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['email', 'first_name', 'last_name', 'created_at']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        qs = Contact.objects.prefetch_related('lists', 'batches')
+
+        # Filter by list if provided
+        list_param = self.request.query_params.get('lists') or self.request.query_params.get('list_id')
+        if list_param and list_param != 'all':
+            try:
+                qs = qs.filter(lists__id=int(list_param))
+            except (ValueError, TypeError):
+                pass
+
+        # Filter by batch if provided
+        batch_param = self.request.query_params.get('batches') or self.request.query_params.get('batch_id')
+        if batch_param and batch_param != 'all':
+            try:
+                qs = qs.filter(batches__id=int(batch_param))
+            except (ValueError, TypeError):
+                pass
+
+        # Fast server-side search across email, first_name, last_name, or multi-word tokens
+        search = self.request.query_params.get('search', '').strip()
+        if search:
+            tokens = search.split()
+            search_query = Q()
+            for token in tokens:
+                search_query &= (
+                    Q(email__icontains=token) |
+                    Q(first_name__icontains=token) |
+                    Q(last_name__icontains=token)
+                )
+            qs = qs.filter(search_query)
+
+        return qs.order_by('-created_at')
+
+    @action(detail=False, methods=['get'], url_path='summary')
+    def summary(self, request):
+        total_contacts = Contact.objects.count()
+        subscribed_contacts = Contact.objects.filter(is_subscribed=True).count()
+        return Response({
+            'total_contacts': total_contacts,
+            'subscribed_contacts': subscribed_contacts,
+        })
 
     def perform_create(self, serializer):
         contact = serializer.save()
@@ -164,11 +217,12 @@ class IgnoredContactViewSet(viewsets.ReadOnlyModelViewSet):
         return Response({'message': f'Successfully cleared {count} ignored contacts.'}, status=status.HTTP_200_OK)
 
 class ContactBatchViewSet(viewsets.ModelViewSet):
-    queryset = ContactBatch.objects.all().order_by('-created_at')
     serializer_class = ContactBatchSerializer
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = ContactBatch.objects.annotate(
+            contacts_count=Count('contacts', distinct=True)
+        ).order_by('-created_at')
         list_id = self.request.query_params.get('contact_list')
         if list_id:
             qs = qs.filter(contact_list_id=list_id)

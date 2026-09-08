@@ -10,6 +10,7 @@ export interface ContactList {
   name: string;
   description: string;
   is_default?: boolean;
+  contacts_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -18,6 +19,7 @@ export interface ContactBatch {
   id: number;
   name: string;
   contact_list: number;
+  contacts_count?: number;
   created_at: string;
 }
 
