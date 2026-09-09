@@ -253,7 +253,7 @@ class PublicAdvanceCampaignView(views.APIView):
             rows.sort(key=row_sort_key, reverse=True)
 
             counts = recipient_statuses.aggregate(
-                delivered=Count('id', filter=Q(status__in=['delivered', 'opened', 'clicked'])),
+                delivered=Count('id', filter=Q(delivered_at__isnull=False) | Q(status__in=['delivered', 'opened', 'clicked', 'bot_scanned'])),
                 opened=Count('id', filter=Q(opened_at__isnull=False) | Q(status__in=['opened', 'clicked'])),
                 clicked=Count('id', filter=Q(clicked_at__isnull=False) | Q(status='clicked')),
             )
@@ -367,7 +367,7 @@ class PublicCampaignAnalyticsView(views.APIView):
         rows.sort(key=row_sort_key, reverse=True)
 
         counts = recipient_statuses.aggregate(
-            delivered=Count('id', filter=Q(status__in=['delivered', 'opened', 'clicked'])),
+            delivered=Count('id', filter=Q(delivered_at__isnull=False) | Q(status__in=['delivered', 'opened', 'clicked', 'bot_scanned'])),
             opened=Count('id', filter=Q(opened_at__isnull=False) | Q(status__in=['opened', 'clicked'])),
             clicked=Count('id', filter=Q(clicked_at__isnull=False) | Q(status='clicked')),
         )
@@ -412,7 +412,7 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
     def analytics(self, request, pk=None):
         campaign = self.get_object()
         status_filter = request.query_params.get('status', 'all')
-        allowed_filters = {'all', 'delivered', 'failed', 'opened', 'clicked', 'sent', 'pending', 'unsubscribed', 'complaint', 'deferred', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error'}
+        allowed_filters = {'all', 'delivered', 'failed', 'opened', 'clicked', 'bot_scanned', 'sent', 'pending', 'unsubscribed', 'complaint', 'deferred', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error'}
         if status_filter not in allowed_filters:
             return Response({'detail': 'Invalid status filter.'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -438,11 +438,15 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
                     })
         else:
             if status_filter == 'sent':
-                filtered_statuses = recipient_statuses.filter(status__in=['sent', 'delivered', 'opened', 'clicked'])
+                filtered_statuses = recipient_statuses.filter(Q(sent_at__isnull=False) | Q(status__in=['sent', 'delivered', 'opened', 'clicked', 'bot_scanned']))
             elif status_filter == 'delivered':
-                filtered_statuses = recipient_statuses.filter(status__in=['delivered', 'opened', 'clicked'])
+                filtered_statuses = recipient_statuses.filter(Q(delivered_at__isnull=False) | Q(status__in=['delivered', 'opened', 'clicked', 'bot_scanned']))
             elif status_filter == 'opened':
-                filtered_statuses = recipient_statuses.filter(status__in=['opened', 'clicked'])
+                filtered_statuses = recipient_statuses.filter(Q(opened_at__isnull=False) | Q(status__in=['opened', 'clicked']))
+            elif status_filter == 'clicked':
+                filtered_statuses = recipient_statuses.filter(Q(clicked_at__isnull=False) | Q(status='clicked'))
+            elif status_filter == 'bot_scanned':
+                filtered_statuses = recipient_statuses.filter(status='bot_scanned')
             elif status_filter == 'failed':
                 filtered_statuses = recipient_statuses.filter(status__in=['failed', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error'])
             else:
@@ -462,11 +466,12 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
         recipients.sort(key=get_rec_action, reverse=True)
 
         counts = recipient_statuses.aggregate(
-            sent=Count('id', filter=Q(status__in=['sent', 'delivered', 'opened', 'clicked'])),
-            delivered=Count('id', filter=Q(status__in=['delivered', 'opened', 'clicked'])),
+            sent=Count('id', filter=Q(sent_at__isnull=False) | Q(status__in=['sent', 'delivered', 'opened', 'clicked', 'bot_scanned'])),
+            delivered=Count('id', filter=Q(delivered_at__isnull=False) | Q(status__in=['delivered', 'opened', 'clicked', 'bot_scanned'])),
             failed=Count('id', filter=Q(status__in=['failed', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error'])),
             opened=Count('id', filter=Q(opened_at__isnull=False) | Q(status__in=['opened', 'clicked'])),
             clicked=Count('id', filter=Q(clicked_at__isnull=False) | Q(status='clicked')),
+            bot_scanned=Count('id', filter=Q(status='bot_scanned')),
             unsubscribed=Count('id', filter=Q(status='unsubscribed')),
             complaints=Count('id', filter=Q(status='complaint')),
             deferred=Count('id', filter=Q(status='deferred')),
@@ -602,15 +607,18 @@ class BrevoWebhookView(views.APIView):
             now = timezone.now()
             if event_type == 'delivered':
                 performance.total_delivered += 1
-                if recipient and recipient.status not in ('opened', 'clicked', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error', 'failed'):
-                    recipient.status = 'delivered'
-                    recipient.delivered_at = now
+                if recipient:
+                    recipient.delivered_at = recipient.delivered_at or now
+                    if recipient.status not in ('opened', 'clicked', 'bot_scanned', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error', 'failed'):
+                        recipient.status = 'delivered'
             elif event_type in ('opened', 'unique_opened', 'first_opening', 'proxy_open'):
                 performance.total_opens += 1
                 if recipient:
                     if recipient.status not in ('clicked', 'unsubscribed', 'complaint', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error', 'failed'):
                         recipient.status = 'opened'
                     recipient.opened_at = recipient.opened_at or now
+                    if not isinstance(recipient.metadata, dict):
+                        recipient.metadata = {}
                     if 'ip' in data:
                         recipient.metadata['ip'] = data['ip']
                     if 'user_agent' in data:
@@ -637,6 +645,8 @@ class BrevoWebhookView(views.APIView):
                     if recipient:
                         if recipient.status != 'clicked':
                             recipient.status = 'bot_scanned'
+                        if not isinstance(recipient.metadata, dict):
+                            recipient.metadata = {}
                         recipient.metadata['bot_scan_detected'] = True
                         # Do not increment performance.total_clicks
                 else:
@@ -653,14 +663,17 @@ class BrevoWebhookView(views.APIView):
                         
                     if recipient:
                         recipient.clicked_at = recipient.clicked_at or now
+                        if not isinstance(recipient.metadata, dict):
+                            recipient.metadata = {}
                         if 'ip' in data:
                             recipient.metadata['ip'] = data['ip']
                         if 'user_agent' in data:
                             recipient.metadata['user_agent'] = data['user_agent']
                         link = data.get('link')
-                        if link and isinstance(recipient.clicked_links, list):
-                            if link not in recipient.clicked_links:
-                                recipient.clicked_links.append(link)
+                        if not isinstance(recipient.clicked_links, list):
+                            recipient.clicked_links = []
+                        if link and link not in recipient.clicked_links:
+                            recipient.clicked_links.append(link)
             elif event_type == 'unsubscribe':
                 performance.total_unsubscribed += 1
                 if recipient:

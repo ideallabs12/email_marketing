@@ -130,22 +130,24 @@ export default function CampaignAnalyticsView({ campaignId }: { campaignId: stri
   };
 
   const summary = analytics?.summary;
+  const sent = summary?.sent ?? 0;
   const delivered = summary?.delivered ?? 0;
   const opened = summary?.opened ?? 0;
   const clicked = summary?.clicked ?? 0;
+  const botScanned = summary?.bot_scanned ?? 0;
   
   const openRate = delivered > 0 ? ((opened / delivered) * 100).toFixed(1) : '0.0';
   const ctr = delivered > 0 ? ((clicked / delivered) * 100).toFixed(1) : '0.0';
 
   const stats = [
     { label: 'Recipients', value: summary?.total_recipients ?? 0, icon: MailCheck },
+    { label: 'Sent', value: sent, icon: MailCheck },
     { label: 'Delivered', value: delivered, icon: CheckCircle2 },
-    { label: 'Failed', value: summary?.failed ?? 0, icon: CircleX },
     { label: 'Opened', value: opened, icon: Eye, rate: openRate },
     { label: 'Clicked', value: clicked, icon: MousePointerClick, rate: ctr },
+    { label: 'Bot Scanned', value: botScanned, icon: ShieldAlert },
+    { label: 'Failed', value: summary?.failed ?? 0, icon: CircleX },
     { label: 'Unsubscribed', value: summary?.unsubscribed ?? 0, icon: UserMinus },
-    { label: 'Complaints', value: summary?.complaints ?? 0, icon: ShieldAlert },
-    { label: 'Deferred', value: summary?.deferred ?? 0, icon: Clock },
     { label: 'Hard Bounces', value: summary?.hard_bounces ?? 0, icon: MailWarning },
     { label: 'Soft Bounces', value: summary?.soft_bounces ?? 0, icon: AlertTriangle },
   ];
