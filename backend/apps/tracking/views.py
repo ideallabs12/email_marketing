@@ -625,34 +625,58 @@ class BrevoWebhookView(views.APIView):
                         recipient.metadata['user_agent'] = data['user_agent']
             elif event_type == 'click':
                 is_bot = False
-                
+                link = data.get('link')
+
+                if recipient:
+                    if not isinstance(recipient.clicked_links, list):
+                        recipient.clicked_links = []
+                    if not isinstance(recipient.metadata, dict):
+                        recipient.metadata = {}
+
                 # Bot Rule 1: Time from delivery/send
-                # If clicked within 15 seconds of delivery, it's a security scanner.
+                # Corporate security scanners often scan within 45 seconds of delivery
                 if recipient and recipient.delivered_at:
-                    if (now - recipient.delivered_at).total_seconds() < 15:
+                    if 0 <= (now - recipient.delivered_at).total_seconds() < 45:
                         is_bot = True
                 elif recipient and recipient.sent_at:
-                    if (now - recipient.sent_at).total_seconds() < 15:
+                    if 0 <= (now - recipient.sent_at).total_seconds() < 60:
                         is_bot = True
 
-                # Bot Rule 2: Simultaneous Clicks
-                # If multiple distinct links are clicked within 3 seconds of the first click.
-                if not is_bot and recipient and isinstance(recipient.clicked_links, list) and len(recipient.clicked_links) >= 1:
-                    if recipient.clicked_at and (now - recipient.clicked_at).total_seconds() < 3:
+                # Bot Rule 2: Multi-Link Burst (Sandboxes queued for 1-3 minutes)
+                # Security crawlers hit another URL within 30 seconds of previous click
+                if not is_bot and recipient and recipient.clicked_at:
+                    sec_since_last_click = (now - recipient.clicked_at).total_seconds()
+                    if 0 <= sec_since_last_click < 30:
                         is_bot = True
+
+                # Bot Rule 3: Multiple distinct links clicked
+                # Scanners crawl all links in the email body/footer (socials + calendly + web)
+                if not is_bot and recipient:
+                    if link and link not in recipient.clicked_links and len(recipient.clicked_links) >= 1:
+                        is_bot = True
+                    elif len(recipient.clicked_links) >= 2:
+                        is_bot = True
+
+                # Bot Rule 4: Already flagged in metadata
+                if not is_bot and recipient and recipient.metadata.get('bot_scan_detected'):
+                    is_bot = True
 
                 if is_bot:
                     if recipient:
-                        if recipient.status != 'clicked':
+                        if recipient.status == 'clicked':
+                            # Revert from clicked to bot_scanned and adjust click count
                             recipient.status = 'bot_scanned'
-                        if not isinstance(recipient.metadata, dict):
-                            recipient.metadata = {}
+                            performance.total_clicks = max(0, performance.total_clicks - 1)
+                        elif recipient.status != 'bot_scanned':
+                            recipient.status = 'bot_scanned'
                         recipient.metadata['bot_scan_detected'] = True
-                        # Do not increment performance.total_clicks
+                        recipient.clicked_at = recipient.clicked_at or now
+                        if link and link not in recipient.clicked_links:
+                            recipient.clicked_links.append(link)
                 else:
                     # Genuine human click
                     if recipient and recipient.status == 'bot_scanned':
-                        # Upgrading from bot_scanned to clicked
+                        # Upgrading from bot_scanned to clicked (subsequent human engagement)
                         performance.total_clicks += 1
                         recipient.status = 'clicked'
                     elif recipient and recipient.status != 'clicked':
@@ -663,17 +687,14 @@ class BrevoWebhookView(views.APIView):
                         
                     if recipient:
                         recipient.clicked_at = recipient.clicked_at or now
-                        if not isinstance(recipient.metadata, dict):
-                            recipient.metadata = {}
-                        if 'ip' in data:
-                            recipient.metadata['ip'] = data['ip']
-                        if 'user_agent' in data:
-                            recipient.metadata['user_agent'] = data['user_agent']
-                        link = data.get('link')
-                        if not isinstance(recipient.clicked_links, list):
-                            recipient.clicked_links = []
                         if link and link not in recipient.clicked_links:
                             recipient.clicked_links.append(link)
+
+                if recipient:
+                    if 'ip' in data:
+                        recipient.metadata['ip'] = data['ip']
+                    if 'user_agent' in data:
+                        recipient.metadata['user_agent'] = data['user_agent']
             elif event_type == 'unsubscribe':
                 performance.total_unsubscribed += 1
                 if recipient:
