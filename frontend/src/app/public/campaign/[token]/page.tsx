@@ -35,6 +35,7 @@ interface CampaignPublicData {
       total_delivered: number;
       total_opens: number;
       total_clicks: number;
+      total_bot_scanned?: number;
     };
     data: Array<{
       speaker_name: string;
@@ -391,9 +392,16 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
                 <MousePointerClick size={16} className="text-violet-500" />
               </div>
               <div className="text-2xl font-bold text-gray-900 mt-1">{totals.total_clicks}</div>
-              <span className="text-[11px] text-violet-600 font-semibold mt-0.5 block">
-                {totals.total_delivered > 0 ? ((totals.total_clicks / totals.total_delivered) * 100).toFixed(1) : '0.0'}% click rate
-              </span>
+              <div className="flex items-center justify-between mt-0.5 flex-wrap gap-1">
+                <span className="text-[11px] text-violet-600 font-semibold">
+                  {totals.total_delivered > 0 ? ((totals.total_clicks / totals.total_delivered) * 100).toFixed(1) : '0.0'}% click rate
+                </span>
+                {Boolean(totals.total_bot_scanned && totals.total_bot_scanned > 0) && (
+                  <span className="text-[10px] bg-amber-100 text-amber-800 font-semibold px-1.5 py-0.5 rounded" title={`${totals.total_bot_scanned} scanner clicks filtered out`}>
+                    {totals.total_bot_scanned} bot filtered
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         )}

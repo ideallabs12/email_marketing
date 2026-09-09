@@ -255,7 +255,8 @@ class PublicAdvanceCampaignView(views.APIView):
             counts = recipient_statuses.aggregate(
                 delivered=Count('id', filter=Q(delivered_at__isnull=False) | Q(status__in=['delivered', 'opened', 'clicked', 'bot_scanned'])),
                 opened=Count('id', filter=Q(opened_at__isnull=False) | Q(status__in=['opened', 'clicked'])),
-                clicked=Count('id', filter=Q(clicked_at__isnull=False) | Q(status='clicked')),
+                clicked=Count('id', filter=Q(status='clicked')),
+                bot_scanned=Count('id', filter=Q(status='bot_scanned')),
             )
 
             sel_list_name, sel_batch_name, sel_display = format_campaign_target(selected_blast)
@@ -270,6 +271,7 @@ class PublicAdvanceCampaignView(views.APIView):
                     "total_delivered": counts['delivered'],
                     "total_opens": counts['opened'],
                     "total_clicks": counts['clicked'],
+                    "total_bot_scanned": counts['bot_scanned'],
                 },
                 "data": rows
             }
@@ -369,7 +371,8 @@ class PublicCampaignAnalyticsView(views.APIView):
         counts = recipient_statuses.aggregate(
             delivered=Count('id', filter=Q(delivered_at__isnull=False) | Q(status__in=['delivered', 'opened', 'clicked', 'bot_scanned'])),
             opened=Count('id', filter=Q(opened_at__isnull=False) | Q(status__in=['opened', 'clicked'])),
-            clicked=Count('id', filter=Q(clicked_at__isnull=False) | Q(status='clicked')),
+            clicked=Count('id', filter=Q(status='clicked')),
+            bot_scanned=Count('id', filter=Q(status='bot_scanned')),
         )
 
         list_name, batch_name, display = format_campaign_target(campaign)
@@ -384,6 +387,7 @@ class PublicCampaignAnalyticsView(views.APIView):
                 "total_delivered": counts['delivered'] or 0,
                 "total_opens": counts['opened'] or 0,
                 "total_clicks": counts['clicked'] or 0,
+                "total_bot_scanned": counts['bot_scanned'] or 0,
             },
             "data": rows
         })
@@ -470,7 +474,7 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
             delivered=Count('id', filter=Q(delivered_at__isnull=False) | Q(status__in=['delivered', 'opened', 'clicked', 'bot_scanned'])),
             failed=Count('id', filter=Q(status__in=['failed', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error'])),
             opened=Count('id', filter=Q(opened_at__isnull=False) | Q(status__in=['opened', 'clicked'])),
-            clicked=Count('id', filter=Q(clicked_at__isnull=False) | Q(status='clicked')),
+            clicked=Count('id', filter=Q(status='clicked')),
             bot_scanned=Count('id', filter=Q(status='bot_scanned')),
             unsubscribed=Count('id', filter=Q(status='unsubscribed')),
             complaints=Count('id', filter=Q(status='complaint')),
