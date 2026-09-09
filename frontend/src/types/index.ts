@@ -86,7 +86,7 @@ export interface CampaignPerformance {
   updated_at: string;
 }
 
-export type CampaignRecipientFilter = 'all' | 'delivered' | 'failed' | 'opened' | 'clicked' | 'sent' | 'pending' | 'unsubscribed' | 'complaint' | 'deferred' | 'hard_bounce' | 'soft_bounce' | 'invalid_email' | 'blocked' | 'error';
+export type CampaignRecipientFilter = 'all' | 'delivered' | 'failed' | 'opened' | 'clicked' | 'bot_scanned' | 'sent' | 'pending' | 'unsubscribed' | 'complaint' | 'deferred' | 'hard_bounce' | 'soft_bounce' | 'invalid_email' | 'blocked' | 'error';
 
 export interface CampaignRecipientStatus {
   id: number | null;
@@ -115,6 +115,7 @@ export interface CampaignAnalytics {
     failed: number;
     opened: number;
     clicked: number;
+    bot_scanned?: number;
     pending: number;
     unsubscribed: number;
     complaints: number;
