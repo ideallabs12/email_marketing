@@ -252,6 +252,10 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
 
+  const [viewMode, setViewMode] = useState<'analytics' | 'recents'>('analytics');
+  const [recents, setRecents] = useState<any[]>([]);
+  const [recentsLoading, setRecentsLoading] = useState(false);
+
   const fetchContainers = async (password = '') => {
     const trimmed = password.trim();
     const url = trimmed
@@ -343,6 +347,29 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
       .then(r => r.json()).then(data => setAnalytics(data)).catch(console.error)
       .finally(() => setAnalyticsLoading(false));
   };
+
+  useEffect(() => {
+    if (viewMode === 'recents' && recents.length === 0) {
+      let isCurrent = true;
+      setRecentsLoading(true);
+      const savedPwd = typeof window !== 'undefined' ? sessionStorage.getItem(`master_pwd_${token}`) || '' : '';
+      const trimmed = savedPwd.trim();
+      const url = trimmed
+        ? `${API_BASE_URL}/api/v1/public/master-link/${token}/recents/?password=${encodeURIComponent(trimmed)}`
+        : `${API_BASE_URL}/api/v1/public/master-link/${token}/recents/`;
+      
+      const headers: Record<string, string> = {};
+      if (trimmed) headers['X-Master-Password'] = trimmed;
+      
+      fetch(url, { headers, cache: 'no-store' })
+        .then(r => r.json())
+        .then(data => { if (isCurrent) setRecents(data.data || []); })
+        .catch(console.error)
+        .finally(() => { if (isCurrent) setRecentsLoading(false); });
+        
+      return () => { isCurrent = false; };
+    }
+  }, [viewMode, token, API_BASE_URL, recents.length]);
 
   // Filter containers + blasts by search query
   const filteredContainers = useMemo(() => {
@@ -540,7 +567,81 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
 
       {/* ── Right Pane ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {!selectedBlastToken ? (
+        {/* Tabs */}
+        <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-0 flex items-center gap-6">
+           <button onClick={() => setViewMode('analytics')} className={`py-3 font-semibold text-sm transition-colors border-b-2 ${viewMode === 'analytics' ? 'text-gray-900 border-gray-900' : 'text-gray-500 border-transparent hover:text-gray-700'}`}>Analytics Viewer</button>
+           <button onClick={() => setViewMode('recents')} className={`py-3 font-semibold text-sm transition-colors border-b-2 ${viewMode === 'recents' ? 'text-gray-900 border-gray-900' : 'text-gray-500 border-transparent hover:text-gray-700'}`}>Recent Clicks</button>
+        </div>
+
+        {viewMode === 'recents' ? (
+          <div className="flex-1 overflow-auto">
+            {recentsLoading ? (
+              <div className="flex items-center justify-center py-20 text-gray-400">
+                <Loader2 className="animate-spin mr-2" size={20} /> Loading recent clicks...
+              </div>
+            ) : (
+              <table className="w-full text-sm text-left border-collapse">
+                <thead className="bg-gray-50 sticky top-0 z-10">
+                  <tr className="text-xs text-gray-500 uppercase tracking-wider font-semibold border-b border-gray-200">
+                    <th className="px-5 py-3 w-10 text-center">#</th>
+                    <th className="px-5 py-3">Name</th>
+                    <th className="px-5 py-3">Email</th>
+                    <th className="px-5 py-3">Campaign</th>
+                    <th className="px-5 py-3">Batch / Blast</th>
+                    <th className="px-5 py-3">Status</th>
+                    <th className="px-5 py-3">Clicked At</th>
+                    <th className="px-5 py-3">Links</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recents.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-16 text-center text-gray-400 text-sm">
+                        No recent clicks found.
+                      </td>
+                    </tr>
+                  ) : recents.map((row, i) => (
+                    <tr key={i} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <td className="px-5 py-3 text-center text-gray-400 text-xs">{i + 1}</td>
+                      <td className="px-5 py-3 font-medium text-gray-900">{row.speaker_name || '—'}</td>
+                      <td className="px-5 py-3 text-gray-500">{row.email}</td>
+                      <td className="px-5 py-3 text-gray-900">{row.campaign_name || '—'}</td>
+                      <td className="px-5 py-3 text-gray-500">{row.blast_name || '—'}</td>
+                      <td className="px-5 py-3">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${statusColors[row.delivery_status] || 'text-gray-500'} ${statusBg[row.delivery_status] || 'bg-gray-100'}`}>
+                          {row.delivery_status}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-gray-500 text-xs">
+                        {row.clicked_at ? new Date(row.clicked_at).toLocaleString() : <span className="text-gray-300">—</span>}
+                      </td>
+                      <td className="px-5 py-3 text-xs">
+                        {row.links_clicked ? (
+                          <div className="flex gap-1.5 flex-wrap">
+                            {row.links_clicked.split(',').map((link: string, li: number) => {
+                              const trimmed = link.trim();
+                              if (!trimmed) return null;
+                              return (
+                                <span
+                                  key={li}
+                                  className={`px-2 py-0.5 text-[10px] rounded-md border break-all shadow-xs transition-colors ${getLinkBadgeStyle(trimmed)}`}
+                                >
+                                  {trimmed}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        ) : !selectedBlastToken ? (
           <div className="flex-1 flex flex-col items-center justify-center text-gray-300 relative">
             {!isSidebarOpen && (
               <button

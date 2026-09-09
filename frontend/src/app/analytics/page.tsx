@@ -63,9 +63,9 @@ export default function CentralizedAnalyticsPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-theme(spacing.16))] -m-8 md:-m-12">
+    <div className="flex h-[calc(100vh-theme(spacing.16))] -m-4 sm:-m-6 md:-m-10 overflow-hidden">
       {/* Left Pane: Selection Menu */}
-      <div className="w-full md:w-[350px] lg:w-[400px] border-r border-border bg-surface flex flex-col flex-shrink-0">
+      <div className="w-full md:w-[250px] lg:w-[280px] border-r border-border bg-surface flex flex-col flex-shrink-0">
         
         {/* Header & Search — NOT sticky, is a flex sibling so it never overlaps the list */}
         <div className="p-4 border-b border-border bg-background/50 flex-shrink-0">

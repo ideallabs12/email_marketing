@@ -834,3 +834,74 @@ class PublicMasterLinkCampaignsView(views.APIView):
         containers.sort(key=get_container_recency, reverse=True)
 
         return Response(containers)
+
+class PublicMasterLinkRecentsView(views.APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        try:
+            settings = MasterLinkSettings.objects.get(token=token, is_active=True)
+        except MasterLinkSettings.DoesNotExist:
+            return Response({'detail': 'This link is disabled or invalid.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if settings.password:
+            import urllib.parse
+            header_pwd = request.headers.get('X-Master-Password', '')
+            param_pwd = request.query_params.get('password', '')
+            unquoted_param = urllib.parse.unquote(param_pwd)
+            expected = str(settings.password).strip()
+
+            matches = any(
+                str(p).strip() == expected
+                for p in [header_pwd, param_pwd, unquoted_param]
+                if p
+            )
+            if not matches:
+                return Response({'detail': 'password_required', 'has_password': True}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # Get top 25 recent clicks
+        # We need to query CampaignRecipientStatus where clicked_at is not null
+        recent_clicks = CampaignRecipientStatus.objects.filter(
+            clicked_at__isnull=False
+        ).select_related(
+            'contact',
+            'campaign',
+            'campaign__advance_campaign',
+            'campaign__target_list'
+        ).prefetch_related(
+            'campaign__target_batches'
+        ).order_by('-clicked_at')[:25]
+
+        data = []
+        for item in recent_clicks:
+            contact = item.contact
+            speaker_name = f"{contact.first_name} {contact.last_name}".strip()
+            
+            # Format campaign and batch
+            campaign = item.campaign
+            advance_campaign_name = campaign.advance_campaign.name if campaign.advance_campaign else campaign.name
+            blast_name = campaign.name
+
+            links = []
+            for link in item.clicked_links:
+                try:
+                    domain = urlparse(link).netloc.replace('www.', '')
+                    domain = domain.split('.')[0] if domain else str(link)
+                    if domain and domain not in links:
+                        links.append(domain)
+                except Exception:
+                    if link and str(link) not in links:
+                        links.append(str(link))
+            links_str = ", ".join(links)
+
+            data.append({
+                'speaker_name': speaker_name,
+                'email': contact.email,
+                'campaign_name': advance_campaign_name,
+                'blast_name': blast_name,
+                'delivery_status': item.status,
+                'clicked_at': item.clicked_at.isoformat() if item.clicked_at else None,
+                'links_clicked': links_str
+            })
+
+        return Response({'data': data})
