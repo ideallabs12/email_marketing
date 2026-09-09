@@ -616,17 +616,51 @@ class BrevoWebhookView(views.APIView):
                     if 'user_agent' in data:
                         recipient.metadata['user_agent'] = data['user_agent']
             elif event_type == 'click':
-                performance.total_clicks += 1
-                if recipient:
-                    recipient.status = 'clicked'
-                    recipient.clicked_at = recipient.clicked_at or now
-                    if 'ip' in data:
-                        recipient.metadata['ip'] = data['ip']
-                    if 'user_agent' in data:
-                        recipient.metadata['user_agent'] = data['user_agent']
-                    link = data.get('link')
-                    if link and isinstance(recipient.clicked_links, list):
-                        recipient.clicked_links.append(link)
+                is_bot = False
+                
+                # Bot Rule 1: Time from delivery/send
+                # If clicked within 15 seconds of delivery, it's a security scanner.
+                if recipient and recipient.delivered_at:
+                    if (now - recipient.delivered_at).total_seconds() < 15:
+                        is_bot = True
+                elif recipient and recipient.sent_at:
+                    if (now - recipient.sent_at).total_seconds() < 15:
+                        is_bot = True
+
+                # Bot Rule 2: Simultaneous Clicks
+                # If multiple distinct links are clicked within 3 seconds of the first click.
+                if not is_bot and recipient and isinstance(recipient.clicked_links, list) and len(recipient.clicked_links) >= 1:
+                    if recipient.clicked_at and (now - recipient.clicked_at).total_seconds() < 3:
+                        is_bot = True
+
+                if is_bot:
+                    if recipient:
+                        if recipient.status != 'clicked':
+                            recipient.status = 'bot_scanned'
+                        recipient.metadata['bot_scan_detected'] = True
+                        # Do not increment performance.total_clicks
+                else:
+                    # Genuine human click
+                    if recipient and recipient.status == 'bot_scanned':
+                        # Upgrading from bot_scanned to clicked
+                        performance.total_clicks += 1
+                        recipient.status = 'clicked'
+                    elif recipient and recipient.status != 'clicked':
+                        performance.total_clicks += 1
+                        recipient.status = 'clicked'
+                    elif not recipient:
+                        performance.total_clicks += 1
+                        
+                    if recipient:
+                        recipient.clicked_at = recipient.clicked_at or now
+                        if 'ip' in data:
+                            recipient.metadata['ip'] = data['ip']
+                        if 'user_agent' in data:
+                            recipient.metadata['user_agent'] = data['user_agent']
+                        link = data.get('link')
+                        if link and isinstance(recipient.clicked_links, list):
+                            if link not in recipient.clicked_links:
+                                recipient.clicked_links.append(link)
             elif event_type == 'unsubscribe':
                 performance.total_unsubscribed += 1
                 if recipient:

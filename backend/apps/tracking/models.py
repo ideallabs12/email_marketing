@@ -36,6 +36,7 @@ class CampaignRecipientStatus(models.Model):
         ('delivered', 'Delivered'),
         ('opened', 'Opened'),
         ('clicked', 'Clicked'),
+        ('bot_scanned', 'Bot Scanned'),
         ('failed', 'Failed'),
         ('deferred', 'Deferred'),
         ('unsubscribed', 'Unsubscribed'),

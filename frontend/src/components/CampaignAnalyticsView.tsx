@@ -14,6 +14,7 @@ const filters: { value: CampaignRecipientFilter; label: string }[] = [
   { value: 'failed', label: 'Failed' },
   { value: 'opened', label: 'Opened' },
   { value: 'clicked', label: 'Clicked' },
+  { value: 'bot_scanned', label: 'Bot Scanned' },
   { value: 'sent', label: 'Sent' },
   { value: 'pending', label: 'Pending' },
   { value: 'unsubscribed', label: 'Unsubscribed' },
@@ -32,6 +33,7 @@ const statusStyles: Record<CampaignRecipientStatus['status'], string> = {
   delivered: 'border-emerald-600/40 text-emerald-700 dark:text-emerald-400',
   opened: 'border-blue-600/40 text-blue-700 dark:text-blue-400',
   clicked: 'border-violet-600/40 text-violet-700 dark:text-violet-400',
+  bot_scanned: 'border-amber-600/40 text-amber-700 dark:text-amber-400',
   failed: 'border-red-600/40 text-red-600 dark:text-red-400',
   unsubscribed: 'border-orange-600/40 text-orange-600 dark:text-orange-400',
   complaint: 'border-red-800/40 text-red-800 dark:text-red-500 bg-red-100 dark:bg-red-950',
@@ -317,8 +319,8 @@ export default function CampaignAnalyticsView({ campaignId }: { campaignId: stri
                     <span className="text-xs text-foreground/50 truncate mt-0.5">{recipient.email}</span>
                   </div>
                   <div className="md:col-span-2 flex flex-col md:block mt-1 md:mt-0">
-                    <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] md:text-xs capitalize font-bold md:font-medium ${statusStyles[recipient.status]}`}>
-                      {recipient.status}
+                    <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] md:text-xs font-bold md:font-medium ${recipient.status === 'bot_scanned' ? '' : 'capitalize'} ${statusStyles[recipient.status]}`}>
+                      {recipient.status === 'bot_scanned' ? 'Bot Scanned' : recipient.status}
                     </span>
                   </div>
                 </div>
