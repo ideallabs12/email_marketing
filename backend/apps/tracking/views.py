@@ -168,7 +168,7 @@ class PublicAdvanceCampaignView(views.APIView):
             camp_created_at = single_campaign.created_at.isoformat() if single_campaign.created_at else None
 
         blasts_data = []
-        for b in blasts_qs.select_related('target_list').prefetch_related('target_batches'):
+        for b in blasts_qs.select_related('template', 'target_list').prefetch_related('target_batches'):
             b_list_name, b_batch_name, b_display = format_campaign_target(b)
             blasts_data.append({
                 'id': b.id,
@@ -177,6 +177,8 @@ class PublicAdvanceCampaignView(views.APIView):
                 'contact_list_name': b_list_name,
                 'targeted_batch_name': b_batch_name,
                 'target_display': b_display,
+                'template_id': b.template_id if b.template_id else None,
+                'template_name': b.template.name if getattr(b, 'template', None) else None,
                 'sent_at': b.sent_at.isoformat() if b.sent_at else None,
                 'created_at': b.created_at.isoformat() if b.created_at else None,
             })
@@ -185,7 +187,7 @@ class PublicAdvanceCampaignView(views.APIView):
         selected_blast = None
         if blast_id:
             try:
-                selected_blast = blasts_qs.get(id=int(blast_id))
+                selected_blast = blasts_qs.select_related('template').get(id=int(blast_id))
             except (ValueError, Campaign.DoesNotExist):
                 selected_blast = None
         elif direct_blast:
@@ -194,7 +196,7 @@ class PublicAdvanceCampaignView(views.APIView):
             selected_blast = single_campaign
         
         if not selected_blast and blasts_qs.exists():
-            selected_blast = blasts_qs.first()
+            selected_blast = blasts_qs.select_related('template').first()
 
         analytics_data = None
         if selected_blast:
@@ -259,6 +261,18 @@ class PublicAdvanceCampaignView(views.APIView):
                 bot_scanned=Count('id', filter=Q(status='bot_scanned')),
             )
 
+            sel_template = None
+            if selected_blast and getattr(selected_blast, 'template', None):
+                t = selected_blast.template
+                sel_template = {
+                    "id": t.id,
+                    "name": t.name,
+                    "subject": selected_blast.subject or t.subject or '',
+                    "from_email": selected_blast.from_email or '',
+                    "html_content": t.html_content or '',
+                    "body": t.body or '',
+                }
+
             sel_list_name, sel_batch_name, sel_display = format_campaign_target(selected_blast)
             analytics_data = {
                 "blast_id": selected_blast.id,
@@ -266,6 +280,7 @@ class PublicAdvanceCampaignView(views.APIView):
                 "contact_list_name": sel_list_name,
                 "targeted_batch_name": sel_batch_name,
                 "target_display": sel_display,
+                "template": sel_template,
                 "totals": {
                     "total_recipients": contacts.count(),
                     "total_delivered": counts['delivered'],
@@ -376,12 +391,25 @@ class PublicCampaignAnalyticsView(views.APIView):
         )
 
         list_name, batch_name, display = format_campaign_target(campaign)
+        single_template = None
+        if getattr(campaign, 'template', None):
+            t = campaign.template
+            single_template = {
+                "id": t.id,
+                "name": t.name,
+                "subject": campaign.subject or t.subject or '',
+                "from_email": campaign.from_email or '',
+                "html_content": t.html_content or '',
+                "body": t.body or '',
+            }
+
         return Response({
             "campaign_name": campaign.name,
             "advance_campaign_name": campaign.advance_campaign.name if campaign.advance_campaign else None,
             "contact_list_name": list_name,
             "targeted_batch_name": batch_name,
             "target_display": display,
+            "template": single_template,
             "totals": {
                 "total_recipients": contacts.count(),
                 "total_delivered": counts['delivered'] or 0,

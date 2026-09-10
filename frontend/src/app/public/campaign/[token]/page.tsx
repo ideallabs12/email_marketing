@@ -1,7 +1,22 @@
 'use client';
 
 import { use, useEffect, useState } from 'react';
-import { AlertTriangle, RefreshCw, Layers, CheckCircle2, Eye, MousePointerClick, Search, Info, X } from 'lucide-react';
+import { 
+  AlertTriangle, 
+  RefreshCw, 
+  Layers, 
+  CheckCircle2, 
+  Eye, 
+  MousePointerClick, 
+  Search, 
+  Info, 
+  X,
+  Mail,
+  Monitor,
+  Smartphone,
+  Copy,
+  Check
+} from 'lucide-react';
 import { getLinkBadgeStyle } from '@/utils/linkStyles';
 
 interface BlastItem {
@@ -13,6 +28,17 @@ interface BlastItem {
   contact_list_name?: string;
   targeted_batch_name?: string;
   target_display?: string;
+  template_id?: number | null;
+  template_name?: string | null;
+}
+
+interface CampaignTemplateData {
+  id: number;
+  name: string;
+  subject: string;
+  from_email: string;
+  html_content: string;
+  body?: string;
 }
 
 interface CampaignPublicData {
@@ -30,6 +56,7 @@ interface CampaignPublicData {
     contact_list_name?: string;
     targeted_batch_name?: string;
     target_display?: string;
+    template?: CampaignTemplateData | null;
     totals: {
       total_recipients: number;
       total_delivered: number;
@@ -95,6 +122,24 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
   const [refreshKey, setRefreshKey] = useState(0);
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
+  const [copiedSubject, setCopiedSubject] = useState(false);
+
+  // Close modal on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsTemplateModalOpen(false);
+      }
+    };
+    if (isTemplateModalOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isTemplateModalOpen]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -270,7 +315,55 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
     });
 
   const currentBlast = data?.blasts?.find((b) => b.id === selectedBlastId);
+  const activeTemplate = analytics?.template;
   const activeTargetDisplay = currentBlast?.target_display || data?.analytics?.target_display || data?.target_display;
+
+  const handleCopySubject = (text: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedSubject(true);
+    setTimeout(() => setCopiedSubject(false), 2000);
+  };
+
+  const getRenderedHtml = () => {
+    if (!activeTemplate?.html_content) {
+      if (activeTemplate?.body) {
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding:24px;line-height:1.6;color:#1e293b;white-space:pre-wrap;background:#fff;}</style></head><body>${activeTemplate.body}</body></html>`;
+      }
+      return '<!DOCTYPE html><html><body style="font-family:sans-serif;padding:40px;text-align:center;color:#64748b;"><p>No HTML email content available for this template.</p></body></html>';
+    }
+
+    let html = activeTemplate.html_content;
+
+    // Substitute sample tags with first recipient or realistic default
+    const sample = analytics?.data?.[0];
+    const sampleFirst = sample?.speaker_name ? sample.speaker_name.split(' ')[0] : 'Valued';
+    const sampleLast = sample?.speaker_name ? sample.speaker_name.split(' ').slice(1).join(' ') : 'Speaker';
+    const sampleEmail = sample?.email || 'speaker@example.com';
+    const sampleName = sample?.speaker_name || `${sampleFirst} ${sampleLast}`.trim();
+
+    const replacements: Record<string, string> = {
+      '{{first_name}}': sampleFirst,
+      '{{firstName}}': sampleFirst,
+      '{{FIRST_NAME}}': sampleFirst,
+      '{{last_name}}': sampleLast,
+      '{{lastName}}': sampleLast,
+      '{{LAST_NAME}}': sampleLast,
+      '{{speaker_name}}': sampleName,
+      '{{speakerName}}': sampleName,
+      '{{SPEAKER_NAME}}': sampleName,
+      '{{name}}': sampleName,
+      '{{NAME}}': sampleName,
+      '{{email}}': sampleEmail,
+      '{{EMAIL}}': sampleEmail,
+    };
+
+    for (const [tag, val] of Object.entries(replacements)) {
+      html = html.split(tag).join(val);
+    }
+
+    return html;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -348,9 +441,61 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
                         {b.target_display}
                       </span>
                     )}
+                    {b.template_name && (
+                      <span className={`text-[10px] pl-4 truncate max-w-[240px] flex items-center gap-1 ${isSelected ? 'text-blue-200' : 'text-blue-600'}`} title={`Template: ${b.template_name}`}>
+                        <Mail size={10} className="flex-shrink-0" />
+                        <span className="truncate">{b.template_name}</span>
+                      </span>
+                    )}
                   </button>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Template Context Bar ── */}
+        {activeTemplate && (
+          <div className="bg-white rounded-xl border border-blue-200/80 bg-gradient-to-r from-blue-50/60 via-indigo-50/20 to-white p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+            <div className="flex items-start sm:items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-blue-600/10 text-blue-600 flex items-center justify-center flex-shrink-0 border border-blue-200/60 shadow-xs">
+                <Mail size={18} />
+              </div>
+              <div className="min-w-0 space-y-0.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-100/90 px-2 py-0.5 rounded border border-blue-200/50">
+                    Email Template
+                  </span>
+                  <span className="font-bold text-gray-900 text-sm truncate" title={activeTemplate.name}>
+                    {activeTemplate.name}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-xs text-gray-600 flex-wrap">
+                  <p className="truncate max-w-lg" title={activeTemplate.subject}>
+                    <span className="font-semibold text-gray-700">Subject:</span>{' '}
+                    <span className="text-gray-800 font-medium">{activeTemplate.subject || '(No subject specified)'}</span>
+                  </p>
+                  {activeTemplate.from_email && (
+                    <span className="hidden md:inline-block text-gray-300">•</span>
+                  )}
+                  {activeTemplate.from_email && (
+                    <p className="text-[11px] text-gray-500 truncate" title={activeTemplate.from_email}>
+                      <span className="font-medium text-gray-600">From:</span> {activeTemplate.from_email}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-shrink-0 self-start sm:self-auto pt-1 sm:pt-0">
+              <button
+                type="button"
+                onClick={() => setIsTemplateModalOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 active:scale-[0.98] text-white text-xs font-semibold shadow-sm hover:shadow transition-all cursor-pointer"
+              >
+                <Eye size={14} />
+                Preview Email Template
+              </button>
             </div>
           </div>
         )}
@@ -537,6 +682,145 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
           </div>
         </div>
       </main>
+
+      {/* ── Email Template Preview Modal ── */}
+      {isTemplateModalOpen && activeTemplate && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-xs p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
+          onClick={() => setIsTemplateModalOpen(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="px-5 py-4 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded border border-blue-200/60">
+                    Template Preview
+                  </span>
+                  <span className="text-xs font-semibold text-gray-500 truncate">
+                    {currentBlast?.name || data?.campaign_name}
+                  </span>
+                </div>
+                <h2 className="text-base sm:text-lg font-bold text-gray-900 truncate mt-0.5" title={activeTemplate.name}>
+                  {activeTemplate.name}
+                </h2>
+              </div>
+
+              {/* Device Switcher & Close Button */}
+              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                <div className="inline-flex bg-gray-200/80 p-0.5 rounded-lg text-xs font-medium text-gray-600">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDevice('desktop')}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all cursor-pointer ${
+                      previewDevice === 'desktop'
+                        ? 'bg-white text-gray-900 shadow-xs font-semibold'
+                        : 'hover:text-gray-900'
+                    }`}
+                  >
+                    <Monitor size={13} />
+                    <span className="hidden sm:inline">Desktop</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDevice('mobile')}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all cursor-pointer ${
+                      previewDevice === 'mobile'
+                        ? 'bg-white text-gray-900 shadow-xs font-semibold'
+                        : 'hover:text-gray-900'
+                    }`}
+                  >
+                    <Smartphone size={13} />
+                    <span className="hidden sm:inline">Mobile</span>
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsTemplateModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-200/60 transition-colors cursor-pointer"
+                  title="Close (Esc)"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Email Meta Bar (Subject & From) */}
+            <div className="px-5 py-2.5 bg-gray-100/70 border-b border-gray-200 text-xs text-gray-600 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2 truncate min-w-0">
+                <span className="font-semibold text-gray-700 flex-shrink-0">Subject:</span>
+                <span className="text-gray-900 font-medium truncate" title={activeTemplate.subject}>
+                  {activeTemplate.subject || '(No subject specified)'}
+                </span>
+                {activeTemplate.subject && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopySubject(activeTemplate.subject)}
+                    className="text-gray-400 hover:text-gray-600 p-0.5 rounded transition-colors flex-shrink-0"
+                    title="Copy subject line"
+                  >
+                    {copiedSubject ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
+                  </button>
+                )}
+              </div>
+              {activeTemplate.from_email && (
+                <div className="truncate text-gray-500 flex-shrink-0">
+                  <span className="font-semibold text-gray-700">From:</span> {activeTemplate.from_email}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Body / Preview Canvas */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-100/70 flex justify-center items-start">
+              {previewDevice === 'desktop' ? (
+                <div className="w-full bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden min-h-[560px]">
+                  <iframe
+                    title="Template Preview Desktop"
+                    srcDoc={getRenderedHtml()}
+                    className="w-full h-[620px] border-0"
+                    sandbox="allow-same-origin allow-popups"
+                  />
+                </div>
+              ) : (
+                /* Mobile Phone Frame Simulation */
+                <div className="w-[380px] max-w-full bg-slate-900 rounded-[38px] p-3 shadow-2xl border-4 border-slate-700 mx-auto my-2">
+                  <div className="w-24 h-3.5 bg-slate-800 rounded-full mx-auto mb-2.5 flex items-center justify-center">
+                    <div className="w-2.5 h-2.5 rounded-full bg-slate-900 mr-2" />
+                    <div className="w-7 h-1 rounded-full bg-slate-700" />
+                  </div>
+                  <div className="bg-white rounded-[26px] overflow-hidden shadow-inner">
+                    <iframe
+                      title="Template Preview Mobile"
+                      srcDoc={getRenderedHtml()}
+                      className="w-full h-[580px] border-0"
+                      sandbox="allow-same-origin allow-popups"
+                    />
+                  </div>
+                  <div className="w-24 h-1 bg-slate-700 rounded-full mx-auto mt-2.5" />
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-5 py-3 border-t border-gray-200 bg-white flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
+              <span className="text-[11px] text-gray-400 text-center sm:text-left">
+                Showing rendered template used for this blast with sample preview tags.
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsTemplateModalOpen(false)}
+                className="w-full sm:w-auto px-4 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium transition-colors cursor-pointer text-center"
+              >
+                Close Preview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
