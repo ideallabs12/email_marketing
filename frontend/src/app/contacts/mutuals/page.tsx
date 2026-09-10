@@ -193,32 +193,32 @@ export default function MutualContactsPage() {
       </div>
 
       {/* Main Table */}
-      <Card className="p-0 overflow-hidden bg-transparent md:bg-background border-none md:border-solid">
-        <div className="w-full px-2 md:px-0 mt-2 md:mt-0">
-          <table className="w-full text-left md:border-collapse block md:table">
-            <thead className="hidden md:table-header-group">
+      <Card className="p-0 bg-background border border-border shadow-sm rounded-xl overflow-hidden">
+        <div className="w-full overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[1000px]">
+            <thead>
               <tr className="bg-foreground/5 border-b border-border">
-                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-foreground/70">#</th>
-                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-foreground/70">Speaker Name</th>
-                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-foreground/70">Email</th>
-                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-foreground/70">Who is Importing</th>
-                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-foreground/70">Target List</th>
-                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-foreground/70">Already Exists In</th>
-                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-foreground/70">Imported At</th>
-                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-foreground/70 text-right">Action</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-foreground/70 w-12 whitespace-nowrap">#</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-foreground/70 whitespace-nowrap min-w-[160px]">Speaker Name</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-foreground/70 whitespace-nowrap min-w-[220px]">Email</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-foreground/70 whitespace-nowrap min-w-[140px]">Who is Importing</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-foreground/70 whitespace-nowrap min-w-[150px]">Target List</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-foreground/70 whitespace-nowrap min-w-[160px]">Already Exists In</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-foreground/70 whitespace-nowrap min-w-[180px]">Imported At</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-foreground/70 whitespace-nowrap w-16 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="block md:table-row-group space-y-4 md:space-y-0">
+            <tbody className="divide-y divide-border">
               {loading ? (
-                <tr className="block md:table-row">
-                  <td colSpan={8} className="p-8 text-center text-foreground/50 block md:table-cell">
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-foreground/50">
                     <div className="inline-block w-6 h-6 border-2 border-foreground border-t-transparent rounded-full animate-spin mb-2"></div>
                     <p>Loading mutual contacts...</p>
                   </td>
                 </tr>
               ) : filteredMutuals.length === 0 ? (
-                <tr className="block md:table-row">
-                  <td colSpan={8} className="p-8 text-center text-foreground/50 block md:table-cell">
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-foreground/50">
                     {searchQuery ? 'No mutual contacts match your search.' : 'No mutual contacts found. All lists are strictly unique!'}
                   </td>
                 </tr>
@@ -228,44 +228,38 @@ export default function MutualContactsPage() {
                   return (
                     <tr
                       key={contact.id}
-                      className="flex flex-col md:table-row bg-background border border-border md:border-0 rounded-lg md:rounded-none md:border-b hover:bg-foreground/5 transition-colors p-4 md:p-0"
+                      className="hover:bg-foreground/5 transition-colors"
                     >
-                      <td className="hidden md:table-cell p-4 text-xs text-foreground/40 font-mono">
+                      <td className="px-4 py-3 text-xs text-foreground/40 font-mono whitespace-nowrap">
                         {idx + 1}
                       </td>
-                      <td className="flex justify-between items-center md:table-cell p-2 md:p-4 text-foreground font-semibold border-b border-border/50 md:border-none">
-                        <span className="md:hidden text-xs font-semibold uppercase text-foreground/50">Speaker</span>
-                        <span>{speakerName}</span>
+                      <td className="px-4 py-3 text-foreground font-semibold text-sm whitespace-nowrap">
+                        {speakerName}
                       </td>
-                      <td className="flex justify-between items-center md:table-cell p-2 md:p-4 text-foreground font-mono text-sm border-b border-border/50 md:border-none">
-                        <span className="md:hidden text-xs font-semibold uppercase text-foreground/50">Email</span>
-                        <span className="truncate max-w-[60%] md:max-w-none">{contact.email}</span>
+                      <td className="px-4 py-3 text-foreground font-mono text-sm whitespace-nowrap">
+                        {contact.email}
                       </td>
-                      <td className="flex justify-between items-center md:table-cell p-2 md:p-4 text-foreground/80 text-sm border-b border-border/50 md:border-none">
-                        <span className="md:hidden text-xs font-semibold uppercase text-foreground/50">Who Imported</span>
+                      <td className="px-4 py-3 text-foreground/80 text-sm whitespace-nowrap">
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-500/10 text-blue-500 border border-blue-500/20">
                           {contact.who_is_importing || 'Admin'}
                         </span>
                       </td>
-                      <td className="flex justify-between items-center md:table-cell p-2 md:p-4 text-foreground/70 text-sm border-b border-border/50 md:border-none">
-                        <span className="md:hidden text-xs font-semibold uppercase text-foreground/50">Target List</span>
-                        <span>{contact.target_list_name || '-'}</span>
+                      <td className="px-4 py-3 text-foreground/70 text-sm whitespace-nowrap">
+                        {contact.target_list_name || '-'}
                       </td>
-                      <td className="flex justify-between items-center md:table-cell p-2 md:p-4 text-foreground border-b border-border/50 md:border-none">
-                        <span className="md:hidden text-xs font-semibold uppercase text-foreground/50">Already In</span>
+                      <td className="px-4 py-3 whitespace-nowrap">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/30">
                           {contact.already_exists_in}
                         </span>
                       </td>
-                      <td className="flex justify-between items-center md:table-cell p-2 md:p-4 text-foreground/60 text-xs border-b border-border/50 md:border-none">
-                        <span className="md:hidden text-xs font-semibold uppercase text-foreground/50">Imported At</span>
-                        <span>{new Date(contact.imported_at).toLocaleString()}</span>
+                      <td className="px-4 py-3 text-foreground/60 text-xs whitespace-nowrap">
+                        {new Date(contact.imported_at).toLocaleString()}
                       </td>
-                      <td className="flex justify-end items-center md:table-cell p-2 md:p-4 text-right">
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
                         <button
                           onClick={() => handleDeleteItem(contact.id)}
                           disabled={deletingId === contact.id}
-                          className="text-foreground/40 hover:text-red-500 p-1.5 rounded transition-colors"
+                          className="text-foreground/40 hover:text-red-500 p-1.5 rounded transition-colors inline-flex items-center justify-center"
                           title="Remove record"
                         >
                           <Trash2 size={16} />
