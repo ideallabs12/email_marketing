@@ -47,9 +47,14 @@ class Command(BaseCommand):
             # ── 1. DEFINITIVE BOT DETECTION RULES ──
             is_bot = False
 
+            # If recipient already demonstrated confirmed human re-engagement later
+            if meta.get('human_reengaged'):
+                is_bot = False
+                reasons.append("confirmed human re-engagement")
+
             # Rule A: 3 or more distinct links clicked (e.g. YouTube + Calendly + Instagram + LinkedIn + Facebook + X)
             # Enterprise security filters crawl all links in MIME body. No human clicks 3+ links simultaneously.
-            if link_count >= 3:
+            elif link_count >= 3:
                 is_bot = True
                 reasons.append(f"{link_count} distinct links clicked (crawler sweep)")
 
