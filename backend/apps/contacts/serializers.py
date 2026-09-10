@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Contact, ContactList, IgnoredContact, ContactBatch
+from .models import Contact, ContactList, IgnoredContact, ContactBatch, MutualContact
 
 class ContactListSerializer(serializers.ModelSerializer):
     contacts_count = serializers.SerializerMethodField()
@@ -34,3 +34,9 @@ class ContactBatchSerializer(serializers.ModelSerializer):
         if hasattr(obj, 'contacts_count'):
             return obj.contacts_count
         return obj.contacts.count()
+
+class MutualContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MutualContact
+        fields = '__all__'
+

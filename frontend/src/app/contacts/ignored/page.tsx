@@ -72,10 +72,14 @@ export default function IgnoredContactsPage() {
             <Link href="/contacts" className="text-primary hover:underline flex items-center gap-1 text-sm font-medium">
               <ArrowLeft size={16} /> Back to Contacts
             </Link>
+            <span className="text-foreground/30">|</span>
+            <Link href="/directory" className="text-foreground/60 hover:text-foreground hover:underline text-sm">
+              User Directory
+            </Link>
           </div>
           <h1 className="text-2xl font-bold text-text-main">Ignored Contacts</h1>
           <p className="text-text-muted mt-1">
-            Contacts that were skipped during CSV imports due to formatting errors or missing data.
+            Contacts that were skipped during CSV imports due to formatting errors, missing data, or cross-list rules.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -98,6 +102,22 @@ export default function IgnoredContactsPage() {
             {clearing ? 'Clearing...' : 'Clear List'}
           </Button>
         </div>
+      </div>
+
+      {/* Tab Switcher: Mutual Contacts vs Ignored Contacts */}
+      <div className="flex border-b border-border space-x-6 text-sm font-medium">
+        <Link
+          href="/contacts/mutuals"
+          className="pb-3 border-b-2 border-transparent text-foreground/60 hover:text-foreground hover:border-border flex items-center gap-2"
+        >
+          <span>Mutual Contacts</span>
+        </Link>
+        <Link
+          href="/contacts/ignored"
+          className="pb-3 border-b-2 border-primary text-primary flex items-center gap-2"
+        >
+          <span>Ignored / Invalid Contacts ({ignoredContacts.length})</span>
+        </Link>
       </div>
 
       {error && (

@@ -19,7 +19,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken.views import obtain_auth_token
 
-from apps.contacts.views import ContactViewSet, ContactListViewSet, IgnoredContactViewSet, ContactBatchViewSet
+from apps.contacts.views import ContactViewSet, ContactListViewSet, IgnoredContactViewSet, ContactBatchViewSet, MutualContactViewSet
 from apps.templates.views import EmailTemplateViewSet
 from apps.campaigns.views import CampaignViewSet, SenderListView, AdvanceCampaignViewSet
 from apps.tracking.views import CampaignPerformanceViewSet, CampaignAnalyticsViewSet, BrevoWebhookView, BouncedEmailViewSet, PublicCampaignAnalyticsView, MasterLinkSettingsView, PublicMasterLinkCampaignsView, PublicAdvanceCampaignView, PublicMasterLinkRecentsView
@@ -54,6 +54,19 @@ def ensure_db_schema():
                 END $$;
             """)
             cursor.execute("""
+                CREATE TABLE IF NOT EXISTS contacts_mutualcontact (
+                    id BIGSERIAL PRIMARY KEY,
+                    email VARCHAR(255) NOT NULL,
+                    first_name VARCHAR(255) NOT NULL DEFAULT '',
+                    last_name VARCHAR(255) NOT NULL DEFAULT '',
+                    who_is_importing VARCHAR(255) NOT NULL DEFAULT '',
+                    target_list_name VARCHAR(255) NOT NULL DEFAULT '',
+                    already_exists_in VARCHAR(255) NOT NULL DEFAULT '',
+                    reason TEXT NOT NULL DEFAULT 'Mutual: already exists in another list',
+                    imported_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+            """)
+            cursor.execute("""
                 INSERT INTO django_migrations (app, name, applied)
                 SELECT 'campaigns', '0011_advancecampaign_share_token', NOW()
                 WHERE NOT EXISTS (
@@ -69,6 +82,7 @@ router = DefaultRouter()
 router.register(r'contacts', ContactViewSet, basename='contact')
 router.register(r'contact-lists', ContactListViewSet, basename='contactlist')
 router.register(r'ignored-contacts', IgnoredContactViewSet, basename='ignoredcontact')
+router.register(r'mutual-contacts', MutualContactViewSet, basename='mutualcontact')
 router.register(r'contact-batches', ContactBatchViewSet, basename='contactbatch')
 router.register(r'templates', EmailTemplateViewSet, basename='emailtemplate')
 router.register(r'campaigns', CampaignViewSet, basename='campaign')

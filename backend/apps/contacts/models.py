@@ -47,3 +47,22 @@ class IgnoredContact(models.Model):
     def __str__(self):
         return f"{self.email or 'No Email'} - {self.reason}"
 
+
+class MutualContact(models.Model):
+    """Tracks contacts that were skipped during import because they already exist in another list."""
+    email = models.EmailField(max_length=255)
+    first_name = models.CharField(max_length=255, blank=True)
+    last_name = models.CharField(max_length=255, blank=True)
+    who_is_importing = models.CharField(max_length=255, blank=True)
+    target_list_name = models.CharField(max_length=255, blank=True)
+    already_exists_in = models.CharField(max_length=255)
+    reason = models.TextField(default="Mutual: already exists in another list")
+    imported_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-imported_at']
+
+    def __str__(self):
+        return f"{self.email} (in {self.already_exists_in})"
+
+

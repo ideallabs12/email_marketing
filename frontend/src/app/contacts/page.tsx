@@ -36,6 +36,7 @@ export default function ContactsPage() {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [targetListId, setTargetListId] = useState<string>('');
   const [batchName, setBatchName] = useState('');
+  const [whoIsImporting, setWhoIsImporting] = useState('');
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState('');
   const [importing, setImporting] = useState(false);
@@ -47,6 +48,10 @@ export default function ContactsPage() {
 
   useEffect(() => {
     loadData();
+    try {
+      const savedImporter = localStorage.getItem('who_is_importing');
+      if (savedImporter) setWhoIsImporting(savedImporter);
+    } catch (e) {}
   }, []);
 
   async function loadData() {
@@ -114,6 +119,12 @@ export default function ContactsPage() {
     }
     if (batchName) {
       formData.append('batch_name', batchName);
+    }
+    if (whoIsImporting.trim()) {
+      formData.append('who_is_importing', whoIsImporting.trim());
+      try {
+        localStorage.setItem('who_is_importing', whoIsImporting.trim());
+      } catch (e) {}
     }
 
     try {
@@ -233,6 +244,18 @@ export default function ContactsPage() {
           <p className="text-foreground/50 mt-1 text-sm">Manage and organize your contact lists.</p>
         </div>
         <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 w-full sm:w-auto mt-4 sm:mt-0">
+          <Link href="/contacts/mutuals" className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full sm:w-auto flex items-center justify-center gap-2 text-amber-500 hover:bg-amber-50 hover:border-amber-200">
+              <Users size={16} />
+              <span>Mutual Contacts</span>
+            </Button>
+          </Link>
+          <Link href="/contacts/ignored" className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full sm:w-auto flex items-center justify-center gap-2 text-red-500 hover:bg-red-50 hover:border-red-200">
+              <AlertCircle size={16} />
+              <span>Ignored Contacts</span>
+            </Button>
+          </Link>
           <Button onClick={() => setShowImportModal(true)} variant="outline" className="w-full sm:w-auto flex items-center justify-center gap-2">
             <Upload size={16} />
             <span>Import CSV</span>
@@ -547,6 +570,17 @@ export default function ContactsPage() {
                   />
                 </div>
               )}
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Who is Importing (Optional)</label>
+                <input
+                  type="text"
+                  value={whoIsImporting}
+                  onChange={e => setWhoIsImporting(e.target.value)}
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                  placeholder="e.g. Your name or team"
+                />
+              </div>
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50 font-medium">Select File</label>

@@ -31,6 +31,7 @@ export default function DirectoryPage() {
 
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [targetListId, setTargetListId] = useState<string>('');
+  const [whoIsImporting, setWhoIsImporting] = useState('');
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState('');
   const [importing, setImporting] = useState(false);
@@ -38,6 +39,10 @@ export default function DirectoryPage() {
   // Load lists once on mount
   useEffect(() => {
     loadLists();
+    try {
+      const savedImporter = localStorage.getItem('who_is_importing');
+      if (savedImporter) setWhoIsImporting(savedImporter);
+    } catch (e) {}
   }, []);
 
   async function loadLists() {
@@ -127,6 +132,12 @@ export default function DirectoryPage() {
     if (targetListId) {
       formData.append('list_id', targetListId);
     }
+    if (whoIsImporting.trim()) {
+      formData.append('who_is_importing', whoIsImporting.trim());
+      try {
+        localStorage.setItem('who_is_importing', whoIsImporting.trim());
+      } catch (e) {}
+    }
 
     try {
       const token = document.cookie.match(new RegExp('(^| )auth_token=([^;]+)'))?.[2];
@@ -186,6 +197,12 @@ export default function DirectoryPage() {
         </div>
         <div className="flex flex-col sm:flex-row flex-wrap gap-3 mt-4 sm:mt-0">
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Link href="/contacts/mutuals" className="w-full sm:w-auto">
+              <Button variant="outline" className="flex items-center justify-center gap-2 text-amber-500 hover:bg-amber-50 hover:border-amber-200 w-full">
+                <Users size={18} />
+                Mutual Contacts
+              </Button>
+            </Link>
             <Link href="/contacts/ignored" className="w-full sm:w-auto">
               <Button variant="outline" className="flex items-center justify-center gap-2 text-red-500 hover:bg-red-50 hover:border-red-200 w-full">
                 <AlertCircle size={18} />
@@ -499,6 +516,17 @@ export default function DirectoryPage() {
                     <option key={list.id} value={list.id}>{list.name}</option>
                   ))}
                 </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Who is Importing (Optional)</label>
+                <input
+                  type="text"
+                  value={whoIsImporting}
+                  onChange={e => setWhoIsImporting(e.target.value)}
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                  placeholder="e.g. Your name or team"
+                />
               </div>
 
               <div className="space-y-1">
