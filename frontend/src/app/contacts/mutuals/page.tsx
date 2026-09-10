@@ -83,6 +83,21 @@ export default function MutualContactsPage() {
     }
   };
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '-';
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
   const filteredMutuals = mutuals.filter((item) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase().trim();
@@ -97,10 +112,10 @@ export default function MutualContactsPage() {
   });
 
   return (
-    <div className="space-y-6">
-      {/* Top Breadcrumb & Navigation Tabs */}
+    <div className="space-y-6 w-full max-w-full">
+      {/* Top Breadcrumb & Action Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-2">
             <Link href="/contacts" className="text-primary hover:underline flex items-center gap-1 text-sm font-medium">
               <ArrowLeft size={16} /> Back to Contacts
@@ -111,7 +126,7 @@ export default function MutualContactsPage() {
             </Link>
           </div>
           <h1 className="text-2xl font-bold text-text-main flex items-center gap-2">
-            <Users className="w-6 h-6 text-primary" />
+            <Users className="w-6 h-6 text-primary shrink-0" />
             Mutual Contacts
           </h1>
           <p className="text-text-muted mt-1 text-sm">
@@ -120,23 +135,23 @@ export default function MutualContactsPage() {
         </div>
 
         {/* Global Action Buttons */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0">
           <Button
             variant="outline"
             onClick={handleDownloadCSV}
             disabled={mutuals.length === 0}
-            className="flex items-center gap-2 border-border hover:bg-foreground/5"
+            className="flex items-center gap-2 border-border hover:bg-foreground/5 text-xs sm:text-sm"
           >
-            <Download size={16} />
+            <Download size={15} />
             Download CSV
           </Button>
           <Button
             variant="outline"
             onClick={handleClearAll}
             disabled={mutuals.length === 0 || clearing}
-            className="flex items-center gap-2 text-red-500 hover:bg-red-50 hover:border-red-200"
+            className="flex items-center gap-2 text-red-500 hover:bg-red-50 hover:border-red-200 text-xs sm:text-sm"
           >
-            <Trash2 size={18} />
+            <Trash2 size={15} />
             {clearing ? 'Clearing...' : 'Clear List'}
           </Button>
         </div>
@@ -192,86 +207,90 @@ export default function MutualContactsPage() {
         )}
       </div>
 
-      {/* Main Table */}
-      <Card className="p-0 bg-background border border-border shadow-sm rounded-xl overflow-hidden">
-        <div className="w-full overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[1000px]">
-            <thead>
-              <tr className="bg-foreground/5 border-b border-border">
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-foreground/70 w-12 whitespace-nowrap">#</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-foreground/70 whitespace-nowrap min-w-[160px]">Speaker Name</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-foreground/70 whitespace-nowrap min-w-[220px]">Email</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-foreground/70 whitespace-nowrap min-w-[140px]">Who is Importing</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-foreground/70 whitespace-nowrap min-w-[150px]">Target List</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-foreground/70 whitespace-nowrap min-w-[160px]">Already Exists In</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-foreground/70 whitespace-nowrap min-w-[180px]">Imported At</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-foreground/70 whitespace-nowrap w-16 text-right">Action</th>
+      {/* Main Table - Fully responsive without horizontal scroll */}
+      <Card className="p-0 bg-background border border-border shadow-sm rounded-xl overflow-hidden w-full">
+        <table className="w-full table-fixed text-left border-collapse">
+          <thead>
+            <tr className="bg-foreground/5 border-b border-border text-[11px] font-semibold uppercase tracking-wider text-foreground/70">
+              <th className="py-3 px-3 w-9 text-center">#</th>
+              <th className="py-3 px-3 w-[18%]">Speaker Name</th>
+              <th className="py-3 px-3 w-[24%]">Email</th>
+              <th className="py-3 px-3 w-[13%]">Who Imported</th>
+              <th className="py-3 px-3 w-[14%]">Target List</th>
+              <th className="py-3 px-3 w-[16%]">Already Exists In</th>
+              <th className="py-3 px-3 w-[12%]">Imported At</th>
+              <th className="py-3 px-2 w-8 text-center"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {loading ? (
+              <tr>
+                <td colSpan={8} className="p-8 text-center text-foreground/50">
+                  <div className="inline-block w-6 h-6 border-2 border-foreground border-t-transparent rounded-full animate-spin mb-2"></div>
+                  <p className="text-xs">Loading mutual contacts...</p>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {loading ? (
-                <tr>
-                  <td colSpan={8} className="p-8 text-center text-foreground/50">
-                    <div className="inline-block w-6 h-6 border-2 border-foreground border-t-transparent rounded-full animate-spin mb-2"></div>
-                    <p>Loading mutual contacts...</p>
-                  </td>
-                </tr>
-              ) : filteredMutuals.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="p-8 text-center text-foreground/50">
-                    {searchQuery ? 'No mutual contacts match your search.' : 'No mutual contacts found. All lists are strictly unique!'}
-                  </td>
-                </tr>
-              ) : (
-                filteredMutuals.map((contact, idx) => {
-                  const speakerName = [contact.first_name, contact.last_name].filter(Boolean).join(' ') || '-';
-                  return (
-                    <tr
-                      key={contact.id}
-                      className="hover:bg-foreground/5 transition-colors"
-                    >
-                      <td className="px-4 py-3 text-xs text-foreground/40 font-mono whitespace-nowrap">
-                        {idx + 1}
-                      </td>
-                      <td className="px-4 py-3 text-foreground font-semibold text-sm whitespace-nowrap">
-                        {speakerName}
-                      </td>
-                      <td className="px-4 py-3 text-foreground font-mono text-sm whitespace-nowrap">
-                        {contact.email}
-                      </td>
-                      <td className="px-4 py-3 text-foreground/80 text-sm whitespace-nowrap">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-500/10 text-blue-500 border border-blue-500/20">
-                          {contact.who_is_importing || 'Admin'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-foreground/70 text-sm whitespace-nowrap">
-                        {contact.target_list_name || '-'}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/30">
-                          {contact.already_exists_in}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-foreground/60 text-xs whitespace-nowrap">
-                        {new Date(contact.imported_at).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-right whitespace-nowrap">
-                        <button
-                          onClick={() => handleDeleteItem(contact.id)}
-                          disabled={deletingId === contact.id}
-                          className="text-foreground/40 hover:text-red-500 p-1.5 rounded transition-colors inline-flex items-center justify-center"
-                          title="Remove record"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+            ) : filteredMutuals.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="p-8 text-center text-foreground/50 text-xs">
+                  {searchQuery ? 'No mutual contacts match your search.' : 'No mutual contacts found. All lists are strictly unique!'}
+                </td>
+              </tr>
+            ) : (
+              filteredMutuals.map((contact, idx) => {
+                const speakerName = [contact.first_name, contact.last_name].filter(Boolean).join(' ') || '-';
+                return (
+                  <tr
+                    key={contact.id}
+                    className="hover:bg-foreground/5 transition-colors text-xs"
+                  >
+                    <td className="py-2.5 px-3 text-center text-foreground/40 font-mono">
+                      {idx + 1}
+                    </td>
+                    <td className="py-2.5 px-3 text-foreground font-semibold truncate" title={speakerName}>
+                      {speakerName}
+                    </td>
+                    <td className="py-2.5 px-3 text-foreground font-mono truncate" title={contact.email}>
+                      {contact.email}
+                    </td>
+                    <td className="py-2.5 px-3 truncate">
+                      <span
+                        className="inline-block max-w-full px-2 py-0.5 rounded text-[11px] font-medium bg-blue-500/10 text-blue-500 border border-blue-500/20 truncate"
+                        title={contact.who_is_importing || 'Admin'}
+                      >
+                        {contact.who_is_importing || 'Admin'}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-foreground/70 truncate" title={contact.target_list_name || '-'}>
+                      {contact.target_list_name || '-'}
+                    </td>
+                    <td className="py-2.5 px-3 truncate">
+                      <span
+                        className="inline-block max-w-full px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/30 truncate"
+                        title={contact.already_exists_in}
+                      >
+                        {contact.already_exists_in}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-foreground/60 truncate" title={new Date(contact.imported_at).toLocaleString()}>
+                      {formatDate(contact.imported_at)}
+                    </td>
+                    <td className="py-2.5 px-2 text-center">
+                      <button
+                        onClick={() => handleDeleteItem(contact.id)}
+                        disabled={deletingId === contact.id}
+                        className="text-foreground/40 hover:text-red-500 p-1 rounded transition-colors inline-flex items-center justify-center"
+                        title="Remove record"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
       </Card>
     </div>
   );

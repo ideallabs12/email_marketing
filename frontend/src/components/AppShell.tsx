@@ -29,7 +29,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       <Sidebar mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
-      <main className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto">
+      <main className="flex-1 min-w-0 max-w-full p-4 sm:p-6 md:p-8 overflow-y-auto">
         {children}
       </main>
     </div>
