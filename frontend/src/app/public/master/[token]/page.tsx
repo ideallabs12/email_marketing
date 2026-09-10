@@ -595,35 +595,47 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
       {/* ── Right Pane ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Tabs & Actions Header */}
-        <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-0 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-6">
+        <div className="flex-shrink-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-0 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-5">
             <button
               type="button"
-              onClick={() => setViewMode('analytics')}
-              className={`py-3.5 font-semibold text-sm transition-colors border-b-2 cursor-pointer ${
-                viewMode === 'analytics'
-                  ? 'text-gray-900 border-gray-900'
-                  : 'text-gray-500 border-transparent hover:text-gray-700'
-              }`}
+              onClick={() => setIsSidebarOpen(prev => !prev)}
+              className="p-2 -ml-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer shrink-0"
+              title={isSidebarOpen ? "Hide campaigns sidebar" : "Show campaigns sidebar"}
+              aria-label="Toggle campaigns sidebar"
             >
-              Analytics Viewer
+              <Menu size={18} />
             </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('recents')}
-              className={`py-3.5 font-semibold text-sm transition-colors border-b-2 cursor-pointer flex items-center gap-2 ${
-                viewMode === 'recents'
-                  ? 'text-gray-900 border-gray-900'
-                  : 'text-gray-500 border-transparent hover:text-gray-700'
-              }`}
-            >
-              Recent Clicks
-              {recents.length > 0 && (
-                <span className="text-[11px] bg-blue-50 text-blue-700 border border-blue-200/60 font-semibold px-2 py-0.5 rounded-full">
-                  {recents.length}
-                </span>
-              )}
-            </button>
+            <div className="h-5 w-px bg-gray-200 shrink-0" />
+            <div className="flex items-center gap-6">
+              <button
+                type="button"
+                onClick={() => setViewMode('analytics')}
+                className={`py-3.5 font-semibold text-sm transition-colors border-b-2 cursor-pointer ${
+                  viewMode === 'analytics'
+                    ? 'text-gray-900 border-gray-900'
+                    : 'text-gray-500 border-transparent hover:text-gray-700'
+                }`}
+              >
+                Analytics Viewer
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('recents')}
+                className={`py-3.5 font-semibold text-sm transition-colors border-b-2 cursor-pointer flex items-center gap-2 ${
+                  viewMode === 'recents'
+                    ? 'text-gray-900 border-gray-900'
+                    : 'text-gray-500 border-transparent hover:text-gray-700'
+                }`}
+              >
+                Recent Clicks
+                {recents.length > 0 && (
+                  <span className="text-[11px] bg-blue-50 text-blue-700 border border-blue-200/60 font-semibold px-2 py-0.5 rounded-full">
+                    {recents.length}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-2 py-2">
@@ -709,14 +721,6 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
           </div>
         ) : !selectedBlastToken ? (
           <div className="flex-1 flex flex-col items-center justify-center text-gray-300 relative">
-            {!isSidebarOpen && (
-              <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="absolute top-4 left-4 inline-flex items-center gap-2 px-3.5 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg shadow-sm text-xs font-semibold transition-all cursor-pointer"
-              >
-                <Menu size={14} /> Show Campaigns
-              </button>
-            )}
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
               <Search size={36} className="opacity-40" />
             </div>
@@ -728,19 +732,6 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
             {/* Toolbar */}
             <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-3.5 flex flex-col xl:flex-row xl:items-center justify-between gap-3.5">
               <div className="flex items-center gap-3.5 min-w-0">
-                {!isSidebarOpen && (
-                  <>
-                    <button
-                      onClick={() => setIsSidebarOpen(true)}
-                      className="inline-flex items-center gap-2 px-3 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg text-xs font-semibold shadow-xs transition-all cursor-pointer shrink-0"
-                      title="Open campaigns sidebar"
-                    >
-                      <Menu size={14} />
-                      <span>Campaigns</span>
-                    </button>
-                    <div className="h-6 w-px bg-gray-200 shrink-0" />
-                  </>
-                )}
                 <div className="min-w-0">
                   {analytics?.advance_campaign_name && (
                     <div className="text-[11px] font-bold text-blue-600 uppercase tracking-wider mb-0.5">
