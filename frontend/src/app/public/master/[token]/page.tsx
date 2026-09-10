@@ -350,28 +350,55 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
       .finally(() => setAnalyticsLoading(false));
   };
 
-  useEffect(() => {
-    if (viewMode === 'recents' && recents.length === 0) {
-      let isCurrent = true;
-      setRecentsLoading(true);
-      const savedPwd = typeof window !== 'undefined' ? sessionStorage.getItem(`master_pwd_${token}`) || '' : '';
-      const trimmed = savedPwd.trim();
-      const url = trimmed
-        ? `${API_BASE_URL}/api/v1/public/master-link/${token}/recents/?password=${encodeURIComponent(trimmed)}`
-        : `${API_BASE_URL}/api/v1/public/master-link/${token}/recents/`;
-      
-      const headers: Record<string, string> = {};
-      if (trimmed) headers['X-Master-Password'] = trimmed;
-      
-      fetch(url, { headers, cache: 'no-store' })
-        .then(r => r.json())
-        .then(data => { if (isCurrent) setRecents(data.data || []); })
-        .catch(console.error)
-        .finally(() => { if (isCurrent) setRecentsLoading(false); });
-        
-      return () => { isCurrent = false; };
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const fetchRecents = async (showLoading = true) => {
+    if (showLoading) setRecentsLoading(true);
+    const savedPwd = typeof window !== 'undefined' ? sessionStorage.getItem(`master_pwd_${token}`) || '' : '';
+    const trimmed = savedPwd.trim();
+    const url = trimmed
+      ? `${API_BASE_URL}/api/v1/public/master-link/${token}/recents/?limit=100&password=${encodeURIComponent(trimmed)}`
+      : `${API_BASE_URL}/api/v1/public/master-link/${token}/recents/?limit=100`;
+    
+    const headers: Record<string, string> = {};
+    if (trimmed) headers['X-Master-Password'] = trimmed;
+    
+    try {
+      const res = await fetch(url, { headers, cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        setRecents(data.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to load recent clicks:', err);
+    } finally {
+      if (showLoading) setRecentsLoading(false);
     }
-  }, [viewMode, token, API_BASE_URL, recents.length]);
+  };
+
+  useEffect(() => {
+    if (viewMode === 'recents') {
+      fetchRecents(recents.length === 0);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode, token, API_BASE_URL]);
+
+  const handleSync = async () => {
+    setIsSyncing(true);
+    try {
+      const savedPwd = typeof window !== 'undefined' ? sessionStorage.getItem(`master_pwd_${token}`) || '' : '';
+      await Promise.all([
+        fetchRecents(true),
+        fetchContainers(savedPwd).then((data) => {
+          const sorted = sortContainersByRecentBlast(data);
+          setContainers(sorted);
+        }).catch(console.error),
+        selectedBlastToken ? refreshAnalytics() : Promise.resolve(),
+      ]);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   // Filter containers + blasts by search query
   const filteredContainers = useMemo(() => {
@@ -569,10 +596,49 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
 
       {/* ── Right Pane ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Tabs */}
-        <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-0 flex items-center gap-6">
-           <button onClick={() => setViewMode('analytics')} className={`py-3 font-semibold text-sm transition-colors border-b-2 ${viewMode === 'analytics' ? 'text-gray-900 border-gray-900' : 'text-gray-500 border-transparent hover:text-gray-700'}`}>Analytics Viewer</button>
-           <button onClick={() => setViewMode('recents')} className={`py-3 font-semibold text-sm transition-colors border-b-2 ${viewMode === 'recents' ? 'text-gray-900 border-gray-900' : 'text-gray-500 border-transparent hover:text-gray-700'}`}>Recent Clicks</button>
+        {/* Tabs & Actions Header */}
+        <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-0 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-6">
+            <button
+              type="button"
+              onClick={() => setViewMode('analytics')}
+              className={`py-3.5 font-semibold text-sm transition-colors border-b-2 cursor-pointer ${
+                viewMode === 'analytics'
+                  ? 'text-gray-900 border-gray-900'
+                  : 'text-gray-500 border-transparent hover:text-gray-700'
+              }`}
+            >
+              Analytics Viewer
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('recents')}
+              className={`py-3.5 font-semibold text-sm transition-colors border-b-2 cursor-pointer flex items-center gap-2 ${
+                viewMode === 'recents'
+                  ? 'text-gray-900 border-gray-900'
+                  : 'text-gray-500 border-transparent hover:text-gray-700'
+              }`}
+            >
+              Recent Clicks
+              {recents.length > 0 && (
+                <span className="text-[11px] bg-blue-50 text-blue-700 border border-blue-200/60 font-semibold px-2 py-0.5 rounded-full">
+                  {recents.length}
+                </span>
+              )}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 py-2">
+            <button
+              type="button"
+              onClick={handleSync}
+              disabled={isSyncing}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-xs cursor-pointer disabled:opacity-60"
+            >
+              <RefreshCw size={13} className={isSyncing ? 'animate-spin' : ''} />
+              {isSyncing ? 'Syncing...' : 'Sync Data'}
+            </button>
+          </div>
         </div>
 
         {viewMode === 'recents' ? (

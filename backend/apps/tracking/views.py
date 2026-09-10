@@ -959,8 +959,13 @@ class PublicMasterLinkRecentsView(views.APIView):
             if not matches:
                 return Response({'detail': 'password_required', 'has_password': True}, status=status.HTTP_401_UNAUTHORIZED)
 
-        # Get top 25 recent clicks
-        # We need to query CampaignRecipientStatus where clicked_at is not null
+        # Get recent clicks (support limit query param, default 100, up to 250)
+        limit_param = request.query_params.get('limit')
+        try:
+            limit = min(int(limit_param), 250) if limit_param else 100
+        except (ValueError, TypeError):
+            limit = 100
+
         recent_clicks = CampaignRecipientStatus.objects.filter(
             clicked_at__isnull=False
         ).select_related(
@@ -970,7 +975,7 @@ class PublicMasterLinkRecentsView(views.APIView):
             'campaign__target_list'
         ).prefetch_related(
             'campaign__target_batches'
-        ).order_by('-clicked_at')[:25]
+        ).order_by('-clicked_at')[:limit]
 
         data = []
         for item in recent_clicks:
