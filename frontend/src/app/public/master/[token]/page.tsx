@@ -54,7 +54,6 @@ const statusColors: Record<string, string> = {
   delivered: 'text-emerald-600',
   opened: 'text-blue-600',
   clicked: 'text-violet-600',
-  bot_scanned: 'text-amber-700',
   failed: 'text-red-600',
   unsubscribed: 'text-orange-600',
   complaint: 'text-red-800',
@@ -72,7 +71,6 @@ const statusBg: Record<string, string> = {
   delivered: 'bg-emerald-50',
   opened: 'bg-blue-50',
   clicked: 'bg-violet-50',
-  bot_scanned: 'bg-amber-100',
   failed: 'bg-red-50',
   unsubscribed: 'bg-orange-50',
   complaint: 'bg-red-100',
@@ -676,8 +674,8 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                       <td className="px-5 py-3 text-gray-900">{row.campaign_name || '—'}</td>
                       <td className="px-5 py-3 text-gray-500">{row.blast_name || '—'}</td>
                       <td className="px-5 py-3">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${row.delivery_status === 'bot_scanned' ? '' : 'capitalize'} ${statusColors[row.delivery_status] || 'text-gray-500'} ${statusBg[row.delivery_status] || 'bg-gray-100'}`}>
-                          {row.delivery_status === 'bot_scanned' ? 'Bot Scanned' : row.delivery_status}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${statusColors[row.delivery_status] || 'text-gray-500'} ${statusBg[row.delivery_status] || 'bg-gray-100'}`}>
+                          {row.delivery_status}
                         </span>
                       </td>
                       <td className="px-5 py-3 text-gray-500 text-xs">
@@ -770,7 +768,7 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
               </div>
               <div className="flex items-center gap-2 flex-shrink-0 self-start xl:self-center">
                 <div className="flex gap-1 flex-wrap">
-                  {['all', 'delivered', 'opened', 'clicked', 'bot_scanned', 'sent', 'pending', 'failed'].map(s => (
+                  {['all', 'delivered', 'opened', 'clicked', 'sent', 'pending', 'failed'].map(s => (
                     <button
                       key={s}
                       onClick={() => setStatusFilter(s)}
@@ -778,7 +776,7 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                         statusFilter === s ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
-                      {s === 'all' ? 'All' : s === 'bot_scanned' ? 'Bot Scanned' : s.charAt(0).toUpperCase() + s.slice(1)}
+                      {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
                     </button>
                   ))}
                 </div>
@@ -824,8 +822,8 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                         <td className="px-5 py-3 font-medium text-gray-900">{row.speaker_name || '—'}</td>
                         <td className="px-5 py-3 text-gray-500">{row.email}</td>
                         <td className="px-5 py-3">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${row.delivery_status === 'bot_scanned' ? '' : 'capitalize'} ${statusColors[row.delivery_status] || 'text-gray-500'} ${statusBg[row.delivery_status] || 'bg-gray-100'}`}>
-                            {row.delivery_status === 'bot_scanned' ? 'Bot Scanned' : row.delivery_status}
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${statusColors[row.delivery_status] || 'text-gray-500'} ${statusBg[row.delivery_status] || 'bg-gray-100'}`}>
+                            {row.delivery_status}
                           </span>
                         </td>
                         {showOpenedAt && (

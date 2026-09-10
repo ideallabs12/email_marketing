@@ -255,10 +255,9 @@ class PublicAdvanceCampaignView(views.APIView):
             rows.sort(key=row_sort_key, reverse=True)
 
             counts = recipient_statuses.aggregate(
-                delivered=Count('id', filter=Q(delivered_at__isnull=False) | Q(status__in=['delivered', 'opened', 'clicked', 'bot_scanned'])),
+                delivered=Count('id', filter=Q(delivered_at__isnull=False) | Q(status__in=['delivered', 'opened', 'clicked'])),
                 opened=Count('id', filter=Q(opened_at__isnull=False) | Q(status__in=['opened', 'clicked'])),
                 clicked=Count('id', filter=Q(status='clicked')),
-                bot_scanned=Count('id', filter=Q(status='bot_scanned')),
             )
 
             sel_template = None
@@ -286,7 +285,6 @@ class PublicAdvanceCampaignView(views.APIView):
                     "total_delivered": counts['delivered'],
                     "total_opens": counts['opened'],
                     "total_clicks": counts['clicked'],
-                    "total_bot_scanned": counts['bot_scanned'],
                 },
                 "data": rows
             }
@@ -384,10 +382,9 @@ class PublicCampaignAnalyticsView(views.APIView):
         rows.sort(key=row_sort_key, reverse=True)
 
         counts = recipient_statuses.aggregate(
-            delivered=Count('id', filter=Q(delivered_at__isnull=False) | Q(status__in=['delivered', 'opened', 'clicked', 'bot_scanned'])),
+            delivered=Count('id', filter=Q(delivered_at__isnull=False) | Q(status__in=['delivered', 'opened', 'clicked'])),
             opened=Count('id', filter=Q(opened_at__isnull=False) | Q(status__in=['opened', 'clicked'])),
             clicked=Count('id', filter=Q(status='clicked')),
-            bot_scanned=Count('id', filter=Q(status='bot_scanned')),
         )
 
         list_name, batch_name, display = format_campaign_target(campaign)
@@ -415,7 +412,6 @@ class PublicCampaignAnalyticsView(views.APIView):
                 "total_delivered": counts['delivered'] or 0,
                 "total_opens": counts['opened'] or 0,
                 "total_clicks": counts['clicked'] or 0,
-                "total_bot_scanned": counts['bot_scanned'] or 0,
             },
             "data": rows
         })
@@ -444,7 +440,7 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
     def analytics(self, request, pk=None):
         campaign = self.get_object()
         status_filter = request.query_params.get('status', 'all')
-        allowed_filters = {'all', 'delivered', 'failed', 'opened', 'clicked', 'bot_scanned', 'sent', 'pending', 'unsubscribed', 'complaint', 'deferred', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error'}
+        allowed_filters = {'all', 'delivered', 'failed', 'opened', 'clicked', 'sent', 'pending', 'unsubscribed', 'complaint', 'deferred', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error'}
         if status_filter not in allowed_filters:
             return Response({'detail': 'Invalid status filter.'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -470,15 +466,13 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
                     })
         else:
             if status_filter == 'sent':
-                filtered_statuses = recipient_statuses.filter(Q(sent_at__isnull=False) | Q(status__in=['sent', 'delivered', 'opened', 'clicked', 'bot_scanned']))
+                filtered_statuses = recipient_statuses.filter(Q(sent_at__isnull=False) | Q(status__in=['sent', 'delivered', 'opened', 'clicked']))
             elif status_filter == 'delivered':
-                filtered_statuses = recipient_statuses.filter(Q(delivered_at__isnull=False) | Q(status__in=['delivered', 'opened', 'clicked', 'bot_scanned']))
+                filtered_statuses = recipient_statuses.filter(Q(delivered_at__isnull=False) | Q(status__in=['delivered', 'opened', 'clicked']))
             elif status_filter == 'opened':
                 filtered_statuses = recipient_statuses.filter(Q(opened_at__isnull=False) | Q(status__in=['opened', 'clicked']))
             elif status_filter == 'clicked':
                 filtered_statuses = recipient_statuses.filter(Q(clicked_at__isnull=False) | Q(status='clicked'))
-            elif status_filter == 'bot_scanned':
-                filtered_statuses = recipient_statuses.filter(status='bot_scanned')
             elif status_filter == 'failed':
                 filtered_statuses = recipient_statuses.filter(status__in=['failed', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error'])
             else:
@@ -498,12 +492,11 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
         recipients.sort(key=get_rec_action, reverse=True)
 
         counts = recipient_statuses.aggregate(
-            sent=Count('id', filter=Q(sent_at__isnull=False) | Q(status__in=['sent', 'delivered', 'opened', 'clicked', 'bot_scanned'])),
-            delivered=Count('id', filter=Q(delivered_at__isnull=False) | Q(status__in=['delivered', 'opened', 'clicked', 'bot_scanned'])),
+            sent=Count('id', filter=Q(sent_at__isnull=False) | Q(status__in=['sent', 'delivered', 'opened', 'clicked'])),
+            delivered=Count('id', filter=Q(delivered_at__isnull=False) | Q(status__in=['delivered', 'opened', 'clicked'])),
             failed=Count('id', filter=Q(status__in=['failed', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error'])),
             opened=Count('id', filter=Q(opened_at__isnull=False) | Q(status__in=['opened', 'clicked'])),
             clicked=Count('id', filter=Q(status='clicked')),
-            bot_scanned=Count('id', filter=Q(status='bot_scanned')),
             unsubscribed=Count('id', filter=Q(status='unsubscribed')),
             complaints=Count('id', filter=Q(status='complaint')),
             deferred=Count('id', filter=Q(status='deferred')),
@@ -641,12 +634,12 @@ class BrevoWebhookView(views.APIView):
                 performance.total_delivered += 1
                 if recipient:
                     recipient.delivered_at = recipient.delivered_at or now
-                    if recipient.status not in ('opened', 'clicked', 'bot_scanned', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error', 'failed'):
+                    if recipient.status not in ('opened', 'clicked', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error', 'failed'):
                         recipient.status = 'delivered'
             elif event_type in ('opened', 'unique_opened', 'first_opening', 'proxy_open'):
                 performance.total_opens += 1
                 if recipient:
-                    if recipient.status not in ('clicked', 'bot_scanned', 'unsubscribed', 'complaint', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error', 'failed'):
+                    if recipient.status not in ('clicked', 'unsubscribed', 'complaint', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error', 'failed'):
                         recipient.status = 'opened'
                     recipient.opened_at = recipient.opened_at or now
                     if not isinstance(recipient.metadata, dict):
@@ -656,111 +649,17 @@ class BrevoWebhookView(views.APIView):
                     if 'user_agent' in data:
                         recipient.metadata['user_agent'] = data['user_agent']
             elif event_type == 'click':
-                is_bot = False
-                is_human_reengagement = False
+                performance.total_clicks += 1
                 link = data.get('link')
-
                 if recipient:
+                    recipient.status = 'clicked'
+                    recipient.clicked_at = recipient.clicked_at or now
                     if not isinstance(recipient.clicked_links, list):
                         recipient.clicked_links = []
+                    if link and link not in recipient.clicked_links:
+                        recipient.clicked_links.append(link)
                     if not isinstance(recipient.metadata, dict):
                         recipient.metadata = {}
-
-                    # Calculate time elapsed since previous click activity
-                    prev_click_dt = None
-                    prev_click_str = recipient.metadata.get('last_click_at')
-                    if prev_click_str:
-                        try:
-                            from datetime import datetime
-                            prev_click_dt = datetime.fromisoformat(prev_click_str)
-                        except Exception:
-                            pass
-                    if not prev_click_dt and recipient.clicked_at:
-                        prev_click_dt = recipient.clicked_at
-
-                    sec_since_last_click = (now - prev_click_dt).total_seconds() if prev_click_dt else None
-
-                    # ── SUBSEQUENT HUMAN ENGAGEMENT CHECK ──
-                    # If this recipient was flagged as bot_scanned earlier, but a new click
-                    # occurs > 2 minutes (120s) later, this is 100% the real human reading
-                    # the email and clicking a link (e.g. Calendly).
-                    if recipient.status == 'bot_scanned' or recipient.metadata.get('bot_scan_detected'):
-                        if sec_since_last_click is not None and sec_since_last_click >= 120:
-                            is_human_reengagement = True
-                        elif recipient.delivered_at and (now - recipient.delivered_at).total_seconds() >= 180 and (sec_since_last_click is None or sec_since_last_click >= 60):
-                            is_human_reengagement = True
-
-                    # Also if already verified as human re-engaged, maintain human status
-                    if recipient.metadata.get('human_reengaged'):
-                        is_human_reengagement = True
-
-                    if is_human_reengagement:
-                        is_bot = False
-                    else:
-                        current_links = set(recipient.clicked_links)
-                        if link:
-                            current_links.add(link)
-                        total_links_count = len(current_links)
-
-                        # Bot Rule 1: Multi-link crawling sweep (>= 3 distinct links like YouTube, Calendly, Socials)
-                        # No human clicks 3+ different links simultaneously in an outreach email
-                        if total_links_count >= 3:
-                            is_bot = True
-
-                        # Bot Rule 2: Multi-link rapid burst (2 distinct links within 90 seconds of each other or delivery)
-                        elif total_links_count >= 2:
-                            if sec_since_last_click is not None and sec_since_last_click < 90:
-                                is_bot = True
-                            elif recipient.delivered_at and (now - recipient.delivered_at).total_seconds() < 120:
-                                is_bot = True
-                            else:
-                                is_bot = True
-
-                        # Bot Rule 3: Single link click - Only bot if within impossible human speed (< 5s from delivery)
-                        elif total_links_count == 1:
-                            if recipient.delivered_at and 0 <= (now - recipient.delivered_at).total_seconds() < 5:
-                                is_bot = True
-
-                        # Bot Rule 4: Already flagged in metadata during initial scan
-                        if not is_bot and recipient.metadata.get('bot_scan_detected'):
-                            is_bot = True
-
-                    recipient.metadata['last_click_at'] = now.isoformat()
-
-                if is_bot:
-                    if recipient:
-                        if recipient.status == 'clicked':
-                            # Revert from clicked to bot_scanned and adjust click count
-                            recipient.status = 'bot_scanned'
-                            performance.total_clicks = max(0, performance.total_clicks - 1)
-                        elif recipient.status != 'bot_scanned':
-                            recipient.status = 'bot_scanned'
-                        recipient.metadata['bot_scan_detected'] = True
-                        recipient.clicked_at = recipient.clicked_at or now
-                        if link and link not in recipient.clicked_links:
-                            recipient.clicked_links.append(link)
-                else:
-                    # Genuine human click
-                    if recipient and recipient.status == 'bot_scanned':
-                        # Upgrading from bot_scanned to clicked (subsequent human engagement)
-                        performance.total_clicks += 1
-                        recipient.status = 'clicked'
-                        if 'bot_scan_detected' in recipient.metadata:
-                            del recipient.metadata['bot_scan_detected']
-                        recipient.metadata['human_reengaged'] = True
-                        recipient.clicked_at = now
-                    elif recipient and recipient.status != 'clicked':
-                        performance.total_clicks += 1
-                        recipient.status = 'clicked'
-                        recipient.clicked_at = recipient.clicked_at or now
-                    elif not recipient:
-                        performance.total_clicks += 1
-                        
-                    if recipient:
-                        if link and link not in recipient.clicked_links:
-                            recipient.clicked_links.append(link)
-
-                if recipient:
                     if 'ip' in data:
                         recipient.metadata['ip'] = data['ip']
                     if 'user_agent' in data:
