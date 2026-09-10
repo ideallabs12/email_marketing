@@ -122,24 +122,8 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
   const [refreshKey, setRefreshKey] = useState(0);
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [activeViewTab, setActiveViewTab] = useState<'analytics' | 'template'>('analytics');
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
-  const [copiedSubject, setCopiedSubject] = useState(false);
-
-  // Close modal on Escape key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsTemplateModalOpen(false);
-      }
-    };
-    if (isTemplateModalOpen) {
-      window.addEventListener('keydown', handleKeyDown);
-    }
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isTemplateModalOpen]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -318,12 +302,11 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
   const activeTemplate = analytics?.template;
   const activeTargetDisplay = currentBlast?.target_display || data?.analytics?.target_display || data?.target_display;
 
-  const handleCopySubject = (text: string) => {
-    if (!text) return;
-    navigator.clipboard.writeText(text);
-    setCopiedSubject(true);
-    setTimeout(() => setCopiedSubject(false), 2000);
-  };
+  const sample = analytics?.data?.[0];
+  const sampleFirst = sample?.speaker_name ? sample.speaker_name.split(' ')[0] : 'Valued';
+  const sampleLast = sample?.speaker_name ? sample.speaker_name.split(' ').slice(1).join(' ') : 'Speaker';
+  const sampleEmail = sample?.email || 'speaker@example.com';
+  const sampleName = sample?.speaker_name || `${sampleFirst} ${sampleLast}`.trim();
 
   const getRenderedHtml = () => {
     if (!activeTemplate?.html_content) {
@@ -334,13 +317,6 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
     }
 
     let html = activeTemplate.html_content;
-
-    // Substitute sample tags with first recipient or realistic default
-    const sample = analytics?.data?.[0];
-    const sampleFirst = sample?.speaker_name ? sample.speaker_name.split(' ')[0] : 'Valued';
-    const sampleLast = sample?.speaker_name ? sample.speaker_name.split(' ').slice(1).join(' ') : 'Speaker';
-    const sampleEmail = sample?.email || 'speaker@example.com';
-    const sampleName = sample?.speaker_name || `${sampleFirst} ${sampleLast}`.trim();
 
     const replacements: Record<string, string> = {
       '{{first_name}}': sampleFirst,
@@ -454,51 +430,43 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
           </div>
         )}
 
-        {/* ── Template Context Bar ── */}
-        {activeTemplate && (
-          <div className="bg-white rounded-xl border border-blue-200/80 bg-gradient-to-r from-blue-50/60 via-indigo-50/20 to-white p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
-            <div className="flex items-start sm:items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-blue-600/10 text-blue-600 flex items-center justify-center flex-shrink-0 border border-blue-200/60 shadow-xs">
-                <Mail size={18} />
-              </div>
-              <div className="min-w-0 space-y-0.5">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-100/90 px-2 py-0.5 rounded border border-blue-200/50">
-                    Email Template
-                  </span>
-                  <span className="font-bold text-gray-900 text-sm truncate" title={activeTemplate.name}>
-                    {activeTemplate.name}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-gray-600 flex-wrap">
-                  <p className="truncate max-w-lg" title={activeTemplate.subject}>
-                    <span className="font-semibold text-gray-700">Subject:</span>{' '}
-                    <span className="text-gray-800 font-medium">{activeTemplate.subject || '(No subject specified)'}</span>
-                  </p>
-                  {activeTemplate.from_email && (
-                    <span className="hidden md:inline-block text-gray-300">•</span>
-                  )}
-                  {activeTemplate.from_email && (
-                    <p className="text-[11px] text-gray-500 truncate" title={activeTemplate.from_email}>
-                      <span className="font-medium text-gray-600">From:</span> {activeTemplate.from_email}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
+        {/* ── Main View Filter Bar Tabs ── */}
+        <div className="flex items-center gap-2 border-b border-gray-200 pb-2">
+          <button
+            type="button"
+            onClick={() => setActiveViewTab('analytics')}
+            className={`inline-flex items-center gap-2 px-4 py-2 text-xs rounded-xl font-semibold transition-all whitespace-nowrap shadow-xs cursor-pointer ${
+              activeViewTab === 'analytics'
+                ? 'bg-gray-900 text-white shadow'
+                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+            }`}
+          >
+            <Layers size={14} />
+            Campaign Analytics
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveViewTab('template')}
+            className={`inline-flex items-center gap-2 px-4 py-2 text-xs rounded-xl font-semibold transition-all whitespace-nowrap shadow-xs cursor-pointer ${
+              activeViewTab === 'template'
+                ? 'bg-gray-900 text-white shadow'
+                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+            }`}
+          >
+            <Mail size={14} />
+            Email Template
+            {activeTemplate?.name && (
+              <span className={`text-[10px] px-2 py-0.5 rounded-md font-medium ${
+                activeViewTab === 'template' ? 'bg-gray-800 text-blue-300' : 'bg-blue-50 text-blue-700 border border-blue-200'
+              }`}>
+                {activeTemplate.name}
+              </span>
+            )}
+          </button>
+        </div>
 
-            <div className="flex items-center gap-2 flex-shrink-0 self-start sm:self-auto pt-1 sm:pt-0">
-              <button
-                type="button"
-                onClick={() => setIsTemplateModalOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 active:scale-[0.98] text-white text-xs font-semibold shadow-sm hover:shadow transition-all cursor-pointer"
-              >
-                <Eye size={14} />
-                Preview Email Template
-              </button>
-            </div>
-          </div>
-        )}
+        {activeViewTab === 'analytics' ? (
+          <>
 
         {/* ── KPI Summary Cards ── */}
         {totals && (
@@ -681,146 +649,169 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
             </table>
           </div>
         </div>
-      </main>
-
-      {/* ── Email Template Preview Modal ── */}
-      {isTemplateModalOpen && activeTemplate && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-xs p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
-          onClick={() => setIsTemplateModalOpen(false)}
-        >
-          <div 
-            className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="px-5 py-4 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between gap-4">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded border border-blue-200/60">
-                    Template Preview
-                  </span>
-                  <span className="text-xs font-semibold text-gray-500 truncate">
-                    {currentBlast?.name || data?.campaign_name}
-                  </span>
-                </div>
-                <h2 className="text-base sm:text-lg font-bold text-gray-900 truncate mt-0.5" title={activeTemplate.name}>
-                  {activeTemplate.name}
-                </h2>
-              </div>
-
-              {/* Device Switcher & Close Button */}
-              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                <div className="inline-flex bg-gray-200/80 p-0.5 rounded-lg text-xs font-medium text-gray-600">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewDevice('desktop')}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all cursor-pointer ${
-                      previewDevice === 'desktop'
-                        ? 'bg-white text-gray-900 shadow-xs font-semibold'
-                        : 'hover:text-gray-900'
-                    }`}
-                  >
-                    <Monitor size={13} />
-                    <span className="hidden sm:inline">Desktop</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPreviewDevice('mobile')}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all cursor-pointer ${
-                      previewDevice === 'mobile'
-                        ? 'bg-white text-gray-900 shadow-xs font-semibold'
-                        : 'hover:text-gray-900'
-                    }`}
-                  >
-                    <Smartphone size={13} />
-                    <span className="hidden sm:inline">Mobile</span>
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsTemplateModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-200/60 transition-colors cursor-pointer"
-                  title="Close (Esc)"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-            </div>
-
-            {/* Email Meta Bar (Subject & From) */}
-            <div className="px-5 py-2.5 bg-gray-100/70 border-b border-gray-200 text-xs text-gray-600 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-2 truncate min-w-0">
-                <span className="font-semibold text-gray-700 flex-shrink-0">Subject:</span>
-                <span className="text-gray-900 font-medium truncate" title={activeTemplate.subject}>
-                  {activeTemplate.subject || '(No subject specified)'}
-                </span>
-                {activeTemplate.subject && (
-                  <button
-                    type="button"
-                    onClick={() => handleCopySubject(activeTemplate.subject)}
-                    className="text-gray-400 hover:text-gray-600 p-0.5 rounded transition-colors flex-shrink-0"
-                    title="Copy subject line"
-                  >
-                    {copiedSubject ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
-                  </button>
-                )}
-              </div>
-              {activeTemplate.from_email && (
-                <div className="truncate text-gray-500 flex-shrink-0">
-                  <span className="font-semibold text-gray-700">From:</span> {activeTemplate.from_email}
-                </div>
-              )}
-            </div>
-
-            {/* Modal Body / Preview Canvas */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-100/70 flex justify-center items-start">
-              {previewDevice === 'desktop' ? (
-                <div className="w-full bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden min-h-[560px]">
-                  <iframe
-                    title="Template Preview Desktop"
-                    srcDoc={getRenderedHtml()}
-                    className="w-full h-[620px] border-0"
-                    sandbox="allow-same-origin allow-popups"
-                  />
-                </div>
-              ) : (
-                /* Mobile Phone Frame Simulation */
-                <div className="w-[380px] max-w-full bg-slate-900 rounded-[38px] p-3 shadow-2xl border-4 border-slate-700 mx-auto my-2">
-                  <div className="w-24 h-3.5 bg-slate-800 rounded-full mx-auto mb-2.5 flex items-center justify-center">
-                    <div className="w-2.5 h-2.5 rounded-full bg-slate-900 mr-2" />
-                    <div className="w-7 h-1 rounded-full bg-slate-700" />
+          </>
+        ) : (
+          /* ── Email Template In-Page View (Exactly as in main account) ── */
+          <div className="space-y-4">
+            {activeTemplate ? (
+              <>
+                {/* Top Bar for preview */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
+                        Template
+                      </span>
+                      <h2 className="text-base font-bold text-gray-900 truncate" title={activeTemplate.name}>
+                        {activeTemplate.name}
+                      </h2>
+                    </div>
+                    <div className="text-xs text-gray-600 mt-1 flex items-center gap-2 flex-wrap">
+                      <span className="truncate max-w-xl">
+                        <span className="font-semibold text-gray-700">Subject:</span> {activeTemplate.subject || '(No Subject)'}
+                      </span>
+                      {activeTemplate.from_email && <span className="text-gray-300">•</span>}
+                      {activeTemplate.from_email && (
+                        <span className="truncate text-gray-500">
+                          <span className="font-semibold text-gray-700">From:</span> {activeTemplate.from_email}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="bg-white rounded-[26px] overflow-hidden shadow-inner">
+
+                  {/* Device Switcher */}
+                  <div className="flex items-center space-x-2 flex-shrink-0 self-start sm:self-auto">
+                    {(['desktop', 'mobile'] as const).map((device) => (
+                      <button
+                        key={device}
+                        type="button"
+                        onClick={() => setPreviewDevice(device)}
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold capitalize transition-colors cursor-pointer ${
+                          previewDevice === device
+                            ? 'bg-gray-900 text-white shadow-xs'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {device === 'desktop' ? '💻 Desktop' : '📱 Mobile'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Template Container identical to main account without any inner scrollbars or sliders */}
+                <div className="bg-[#e8eaed] flex justify-center items-start rounded-xl border border-gray-200 p-4 sm:p-8">
+                  <div
+                    style={{
+                      width: previewDevice === 'desktop' ? 640 : 390,
+                      maxWidth: '100%',
+                      minWidth: previewDevice === 'desktop' ? 340 : 320,
+                      boxShadow: '0 8px 40px rgba(0,0,0,0.22)',
+                      borderRadius: previewDevice === 'desktop' ? 8 : 36,
+                      overflow: 'hidden',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      background: '#fff',
+                      border: previewDevice === 'mobile' ? '8px solid #1a1a2e' : '1px solid #ccc',
+                      transition: 'all 0.3s ease',
+                    }}
+                  >
+                    {previewDevice === 'mobile' && (
+                      <div
+                        style={{
+                          height: 24,
+                          background: '#1a1a2e',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <div style={{ width: 60, height: 8, background: '#333', borderRadius: 4 }} />
+                      </div>
+                    )}
+
+                    <div
+                      style={{
+                        background: '#f8f9fa',
+                        borderBottom: '1px solid #e2e4e7',
+                        padding: '10px 16px',
+                        fontSize: previewDevice === 'mobile' ? 11 : 12,
+                      }}
+                    >
+                      <div style={{ fontWeight: 700, color: '#111', marginBottom: 2 }}>
+                        {activeTemplate.subject || '(No Subject)'}
+                      </div>
+                      <div style={{ color: '#666' }}>
+                        To: {sampleName} &lt;{sampleEmail}&gt;
+                      </div>
+                    </div>
+
                     <iframe
-                      title="Template Preview Mobile"
+                      title="Template Preview"
                       srcDoc={getRenderedHtml()}
-                      className="w-full h-[580px] border-0"
-                      sandbox="allow-same-origin allow-popups"
+                      scrolling="no"
+                      onLoad={(e) => {
+                        const iframe = e.target as HTMLIFrameElement;
+                        if (iframe.contentWindow) {
+                          const doc = iframe.contentWindow.document;
+                          const updateHeight = () => {
+                            try {
+                              if (doc.body) {
+                                doc.body.style.overflow = 'hidden';
+                                doc.body.style.margin = '0';
+                              }
+                              if (doc.documentElement) {
+                                doc.documentElement.style.overflow = 'hidden';
+                              }
+                              const bodyH = doc.body ? doc.body.scrollHeight : 0;
+                              const docH = doc.documentElement ? doc.documentElement.scrollHeight : 0;
+                              const h = Math.max(bodyH, docH);
+                              if (h > 0) {
+                                iframe.style.height = `${h + 10}px`;
+                              }
+                            } catch {}
+                          };
+                          updateHeight();
+                          if (typeof ResizeObserver !== 'undefined' && doc.body) {
+                            const observer = new ResizeObserver(updateHeight);
+                            observer.observe(doc.body);
+                          }
+                        }
+                      }}
+                      style={{
+                        width: '100%',
+                        minHeight: previewDevice === 'desktop' ? 680 : 600,
+                        border: 'none',
+                        display: 'block',
+                        background: '#fff',
+                        overflow: 'hidden',
+                      }}
                     />
-                  </div>
-                  <div className="w-24 h-1 bg-slate-700 rounded-full mx-auto mt-2.5" />
-                </div>
-              )}
-            </div>
 
-            {/* Modal Footer */}
-            <div className="px-5 py-3 border-t border-gray-200 bg-white flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
-              <span className="text-[11px] text-gray-400 text-center sm:text-left">
-                Showing rendered template used for this blast with sample preview tags.
-              </span>
-              <button
-                type="button"
-                onClick={() => setIsTemplateModalOpen(false)}
-                className="w-full sm:w-auto px-4 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium transition-colors cursor-pointer text-center"
-              >
-                Close Preview
-              </button>
-            </div>
+                    {previewDevice === 'mobile' && (
+                      <div
+                        style={{
+                          height: 24,
+                          background: '#1a1a2e',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <div style={{ width: 80, height: 4, background: '#555', borderRadius: 2 }} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-400 shadow-sm">
+                <Mail size={36} className="mx-auto mb-2 text-gray-300" />
+                <p className="font-semibold text-gray-700">No email template attached to this blast.</p>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </main>
     </div>
   );
 }
