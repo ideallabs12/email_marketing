@@ -646,7 +646,7 @@ class BrevoWebhookView(views.APIView):
             elif event_type in ('opened', 'unique_opened', 'first_opening', 'proxy_open'):
                 performance.total_opens += 1
                 if recipient:
-                    if recipient.status not in ('clicked', 'unsubscribed', 'complaint', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error', 'failed'):
+                    if recipient.status not in ('clicked', 'bot_scanned', 'unsubscribed', 'complaint', 'hard_bounce', 'soft_bounce', 'invalid_email', 'blocked', 'error', 'failed'):
                         recipient.status = 'opened'
                     recipient.opened_at = recipient.opened_at or now
                     if not isinstance(recipient.metadata, dict):
@@ -665,33 +665,42 @@ class BrevoWebhookView(views.APIView):
                     if not isinstance(recipient.metadata, dict):
                         recipient.metadata = {}
 
-                # Bot Rule 1: Time from delivery/send
-                # Corporate security scanners often scan within 45 seconds of delivery
-                if recipient and recipient.delivered_at:
-                    if 0 <= (now - recipient.delivered_at).total_seconds() < 45:
-                        is_bot = True
-                elif recipient and recipient.sent_at:
-                    if 0 <= (now - recipient.sent_at).total_seconds() < 60:
+                    current_links = set(recipient.clicked_links)
+                    if link:
+                        current_links.add(link)
+                    total_links_count = len(current_links)
+
+                    # Bot Rule 1: Multi-link crawling sweep (>= 3 distinct links like YouTube, Calendly, Socials)
+                    # No human clicks 3+ different links in an outreach email; this is 100% automated security crawlers.
+                    if total_links_count >= 3:
                         is_bot = True
 
-                # Bot Rule 2: Multi-Link Burst (Sandboxes queued for 1-3 minutes)
-                # Security crawlers hit another URL within 30 seconds of previous click
-                if not is_bot and recipient and recipient.clicked_at:
-                    sec_since_last_click = (now - recipient.clicked_at).total_seconds()
-                    if 0 <= sec_since_last_click < 30:
+                    # Bot Rule 2: Multi-link rapid burst (2 distinct links within 90 seconds of each other or delivery)
+                    elif total_links_count >= 2:
+                        prev_click_str = recipient.metadata.get('last_click_at')
+                        if prev_click_str:
+                            try:
+                                from datetime import datetime
+                                prev_click = datetime.fromisoformat(prev_click_str)
+                                if (now - prev_click).total_seconds() < 90:
+                                    is_bot = True
+                            except Exception:
+                                is_bot = True
+                        elif recipient.delivered_at and (now - recipient.delivered_at).total_seconds() < 120:
+                            is_bot = True
+                        else:
+                            is_bot = True
+
+                    # Bot Rule 3: Single link click - Only bot if within impossible human speed (< 5s from delivery)
+                    elif total_links_count == 1:
+                        if recipient.delivered_at and 0 <= (now - recipient.delivered_at).total_seconds() < 5:
+                            is_bot = True
+
+                    # Bot Rule 4: Already flagged in metadata
+                    if not is_bot and recipient.metadata.get('bot_scan_detected'):
                         is_bot = True
 
-                # Bot Rule 3: Multiple distinct links clicked
-                # Scanners crawl all links in the email body/footer (socials + calendly + web)
-                if not is_bot and recipient:
-                    if link and link not in recipient.clicked_links and len(recipient.clicked_links) >= 1:
-                        is_bot = True
-                    elif len(recipient.clicked_links) >= 2:
-                        is_bot = True
-
-                # Bot Rule 4: Already flagged in metadata
-                if not is_bot and recipient and recipient.metadata.get('bot_scan_detected'):
-                    is_bot = True
+                    recipient.metadata['last_click_at'] = now.isoformat()
 
                 if is_bot:
                     if recipient:
@@ -711,6 +720,8 @@ class BrevoWebhookView(views.APIView):
                         # Upgrading from bot_scanned to clicked (subsequent human engagement)
                         performance.total_clicks += 1
                         recipient.status = 'clicked'
+                        if 'bot_scan_detected' in recipient.metadata:
+                            del recipient.metadata['bot_scan_detected']
                     elif recipient and recipient.status != 'clicked':
                         performance.total_clicks += 1
                         recipient.status = 'clicked'
