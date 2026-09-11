@@ -19,6 +19,14 @@ class ContactListViewSet(viewsets.ModelViewSet):
             contacts_count=Count('contacts', distinct=True)
         ).order_by('-created_at')
 
+    def perform_create(self, serializer):
+        """Create the list, then auto-create a default batch_1 for it."""
+        contact_list = serializer.save()
+        ContactBatch.objects.create(
+            name='batch_1',
+            contact_list=contact_list,
+        )
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         if instance.is_default:

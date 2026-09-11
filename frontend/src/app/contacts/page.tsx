@@ -29,8 +29,8 @@ export default function ContactsPage() {
   const [newFirstName, setNewFirstName] = useState('');
   const [newLastName, setNewLastName] = useState('');
   const [newSubscribed, setNewSubscribed] = useState(true);
-  const [newSelectedLists, setNewSelectedLists] = useState<number[]>([]);
-  const [newSelectedBatches, setNewSelectedBatches] = useState<number[]>([]);
+  const [newSelectedListId, setNewSelectedListId] = useState<number | null>(null);
+  const [newSelectedBatchId, setNewSelectedBatchId] = useState<number | null>(null);
   const [addError, setAddError] = useState('');
 
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -79,6 +79,14 @@ export default function ContactsPage() {
       setAddError('Please enter a valid email address.');
       return;
     }
+    if (!newSelectedListId) {
+      setAddError('Please select a list for this contact.');
+      return;
+    }
+    if (!newSelectedBatchId) {
+      setAddError('Please select a batch for this contact.');
+      return;
+    }
 
     try {
       await apiClient.post('/api/v1/contacts/', {
@@ -86,16 +94,16 @@ export default function ContactsPage() {
         first_name: newFirstName,
         last_name: newLastName,
         is_subscribed: newSubscribed,
-        lists: newSelectedLists,
-        batches: newSelectedBatches,
+        lists: [newSelectedListId],
+        batches: [newSelectedBatchId],
       });
       setShowAddModal(false);
       setNewEmail('');
       setNewFirstName('');
       setNewLastName('');
       setNewSubscribed(true);
-      setNewSelectedLists([]);
-      setNewSelectedBatches([]);
+      setNewSelectedListId(null);
+      setNewSelectedBatchId(null);
       loadData();
     } catch (err: any) {
       setAddError(err.message || 'Failed to add contact.');
@@ -426,12 +434,16 @@ export default function ContactsPage() {
       {showAddModal && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card className="w-full max-w-md p-6 border border-border bg-background shadow-lg relative">
-            <button className="absolute top-4 right-4 text-foreground/50 hover:text-foreground" onClick={() => setShowAddModal(false)}>
+            <button className="absolute top-4 right-4 text-foreground/50 hover:text-foreground" onClick={() => {
+              setShowAddModal(false);
+              setNewEmail(''); setNewFirstName(''); setNewLastName('');
+              setNewSelectedListId(null); setNewSelectedBatchId(null); setAddError('');
+            }}>
               <X size={20} />
             </button>
             <h2 className="text-xl font-bold mb-4">Add Contact Manually</h2>
             <form onSubmit={handleAddContact} className="space-y-4">
-              {addError && <div className="text-xs text-red-500">{addError}</div>}
+              {addError && <div className="text-xs text-red-500 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 px-3 py-2 rounded-md">{addError}</div>}
               <div className="space-y-1">
                 <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Email Address</label>
                 <input
@@ -467,44 +479,45 @@ export default function ContactsPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Add to List</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Select List <span className="text-red-500">*</span></label>
                 <select
-                  multiple
-                  value={newSelectedLists.map(String)}
+                  value={newSelectedListId ?? ''}
                   onChange={e => {
-                    const vals = Array.from(e.target.selectedOptions, option => Number(option.value));
-                    setNewSelectedLists(vals);
+                    const val = e.target.value ? Number(e.target.value) : null;
+                    setNewSelectedListId(val);
+                    setNewSelectedBatchId(null); // reset batch when list changes
                   }}
-                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background min-h-[80px]"
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                  required
                 >
+                  <option value="">-- Select a list --</option>
                   {lists.filter(l => !l.is_default).map(list => (
                     <option key={list.id} value={list.id}>{list.name}</option>
                   ))}
                 </select>
-                <p className="text-[10px] text-foreground/40 mt-1">Hold Ctrl (Cmd) to select multiple lists.</p>
               </div>
 
-              {newSelectedLists.length > 0 && allBatches.filter(b => newSelectedLists.includes(b.contact_list)).length > 0 && (
+              {newSelectedListId && (
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Add to Batch (Optional)</label>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Select Batch <span className="text-red-500">*</span></label>
                   <select
-                    multiple
-                    value={newSelectedBatches.map(String)}
-                    onChange={e => {
-                      const vals = Array.from(e.target.selectedOptions, option => Number(option.value));
-                      setNewSelectedBatches(vals);
-                    }}
-                    className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background min-h-[80px]"
+                    value={newSelectedBatchId ?? ''}
+                    onChange={e => setNewSelectedBatchId(e.target.value ? Number(e.target.value) : null)}
+                    className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                    required
                   >
-                    {allBatches.filter(b => newSelectedLists.includes(b.contact_list)).map(batch => (
-                      <option key={batch.id} value={batch.id}>{batch.name} (from {lists.find(l => l.id === batch.contact_list)?.name})</option>
+                    <option value="">-- Select a batch --</option>
+                    {allBatches.filter(b => b.contact_list === newSelectedListId).map(batch => (
+                      <option key={batch.id} value={batch.id}>{batch.name}</option>
                     ))}
                   </select>
-                  <p className="text-[10px] text-foreground/40 mt-1">Hold Ctrl (Cmd) to select multiple batches.</p>
+                  {allBatches.filter(b => b.contact_list === newSelectedListId).length === 0 && (
+                    <p className="text-[10px] text-amber-500 mt-1">No batches found for this list. Create a batch from the list page first.</p>
+                  )}
                 </div>
               )}
 
-              <div className="flex items-center space-x-2 pt-2">
+              <div className="flex items-center space-x-2 pt-1">
                 <input
                   type="checkbox"
                   id="subscribed"
