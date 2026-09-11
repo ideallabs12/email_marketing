@@ -169,6 +169,7 @@ export default function NewCampaignPage() {
               <option value="">All Templates</option>
               <option value="INVITE">Invite Templates</option>
               <option value="FOLLOWUP">Follow-up Templates</option>
+              <option value="PODCAST">Podcast Templates</option>
             </select>
           </div>
 
