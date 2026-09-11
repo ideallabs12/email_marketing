@@ -4,14 +4,16 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
-import { FileText, Edit, Folder, ArrowLeft } from 'lucide-react';
+import { FileText, Edit, Folder, ArrowLeft, Mic } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 import { EmailTemplate } from '../../types';
+
+type Category = 'INVITE' | 'FOLLOWUP' | 'PODCAST' | null;
 
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<'INVITE' | 'FOLLOWUP' | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category>(null);
 
   useEffect(() => {
     async function loadTemplates() {
@@ -27,8 +29,9 @@ export default function TemplatesPage() {
     loadTemplates();
   }, []);
 
-  const inviteTemplates = templates.filter(t => t.name.toLowerCase().includes('invite'));
+  const inviteTemplates  = templates.filter(t => t.name.toLowerCase().includes('invite') && !t.name.toLowerCase().includes('podcast'));
   const followupTemplates = templates.filter(t => t.name.toLowerCase().includes('followup'));
+  const podcastTemplates  = templates.filter(t => t.name.toLowerCase().includes('podcast'));
 
   const renderContent = () => {
     if (loading) {
@@ -49,7 +52,7 @@ export default function TemplatesPage() {
 
     if (!selectedCategory) {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           <Card 
             className="flex flex-col items-center justify-center py-16 cursor-pointer hover:border-primary/50 transition-colors"
             onClick={() => setSelectedCategory('INVITE')}
@@ -67,12 +70,28 @@ export default function TemplatesPage() {
             <h3 className="font-bold text-xl">Follow-up Templates</h3>
             <p className="text-sm text-foreground/50 mt-2">{followupTemplates.length} templates</p>
           </Card>
+
+          <Card 
+            className="flex flex-col items-center justify-center py-16 cursor-pointer hover:border-primary/50 transition-colors"
+            onClick={() => setSelectedCategory('PODCAST')}
+          >
+            <Mic size={48} className="text-primary mb-4" />
+            <h3 className="font-bold text-xl">Podcast Templates</h3>
+            <p className="text-sm text-foreground/50 mt-2">{podcastTemplates.length} templates</p>
+          </Card>
         </div>
       );
     }
 
-    const currentTemplates = selectedCategory === 'INVITE' ? inviteTemplates : followupTemplates;
-    const categoryTitle = selectedCategory === 'INVITE' ? 'Invite Templates' : 'Follow-up Templates';
+    const currentTemplates =
+      selectedCategory === 'INVITE'   ? inviteTemplates  :
+      selectedCategory === 'FOLLOWUP' ? followupTemplates :
+                                        podcastTemplates;
+
+    const categoryTitle =
+      selectedCategory === 'INVITE'   ? 'Invite Templates'   :
+      selectedCategory === 'FOLLOWUP' ? 'Follow-up Templates' :
+                                        'Podcast Templates';
 
     return (
       <>
@@ -88,12 +107,17 @@ export default function TemplatesPage() {
           <Card>
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <p className="text-sm text-foreground/40">No templates found in this category.</p>
+              {selectedCategory === 'PODCAST' && (
+                <p className="text-xs text-foreground/30 mt-2">
+                  Run <code className="bg-foreground/5 px-1 py-0.5 rounded">load_templates</code> to seed the podcast template.
+                </p>
+              )}
             </div>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {currentTemplates.map((template) => (
-              <Link key={template.id} href={`/templates/${template.id}/edit`} className="block group">
+              <Link key={template.id} href={`/templates/${template.id}`} className="block group">
                 <Card className="flex flex-col justify-between min-h-[160px] cursor-pointer transition-colors group-hover:border-primary/50 group-hover:shadow-sm">
                   <div>
                     <h3 className="font-semibold text-lg line-clamp-1">{template.name}</h3>
@@ -105,7 +129,7 @@ export default function TemplatesPage() {
                       Last updated {new Date(template.updated_at).toLocaleDateString()}
                     </span>
                     <span className="text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                      Edit Template &rarr;
+                      View Template &rarr;
                     </span>
                   </div>
                 </Card>
