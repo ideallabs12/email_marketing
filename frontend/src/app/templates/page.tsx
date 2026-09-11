@@ -117,7 +117,7 @@ export default function TemplatesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {currentTemplates.map((template) => (
-              <Link key={template.id} href={`/templates/${template.id}`} className="block group">
+              <Link key={template.id} href={`/templates/${template.id}/edit`} className="block group">
                 <Card className="flex flex-col justify-between min-h-[160px] cursor-pointer transition-colors group-hover:border-primary/50 group-hover:shadow-sm">
                   <div>
                     <h3 className="font-semibold text-lg line-clamp-1">{template.name}</h3>
@@ -129,7 +129,7 @@ export default function TemplatesPage() {
                       Last updated {new Date(template.updated_at).toLocaleDateString()}
                     </span>
                     <span className="text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                      View Template &rarr;
+                      Edit Template &rarr;
                     </span>
                   </div>
                 </Card>
