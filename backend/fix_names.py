@@ -1,9 +1,9 @@
 from apps.campaigns.models import Campaign
 from django.utils import timezone
-import pytz
+import zoneinfo
 
 # Target timezone
-ist = pytz.timezone('Asia/Kolkata')
+ist = zoneinfo.ZoneInfo('Asia/Kolkata')
 
 blasts = Campaign.objects.all()
 for blast in blasts:
