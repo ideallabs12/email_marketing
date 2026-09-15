@@ -64,8 +64,25 @@ def send_campaign_emails(self, campaign_id: int):
                 'subject': subject_template,
             })
             
-            if campaign.podcast_sender:
-                sender = campaign.podcast_sender
+            sender = campaign.podcast_sender
+            if not sender:
+                from apps.campaigns.models import PodcastSender
+                email_lower = campaign.from_email.lower()
+                mapping = {
+                    'signature': 'SIGNATURE',
+                    'wynxtalks': 'WYNXTALKS',
+                    'voicetalks': 'VOICETALKS',
+                    'icon': 'ICON',
+                    'idias': 'IDiAS',
+                    'next': 'NEXT',
+                    'wyn': 'WYN'
+                }
+                for key, val in mapping.items():
+                    if key in email_lower:
+                        sender = PodcastSender.objects.filter(name__iexact=val).first()
+                        break
+
+            if sender:
                 context.update({
                     'brand_name': sender.name,
                     'website_url': sender.website_url,
