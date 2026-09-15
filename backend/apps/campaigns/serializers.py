@@ -19,13 +19,17 @@ class CampaignSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AdvanceCampaignSerializer(serializers.ModelSerializer):
-    campaigns = CampaignSerializer(many=True, read_only=True)
+    campaigns = serializers.SerializerMethodField()
     share_token = serializers.SerializerMethodField()
     slug = serializers.SerializerMethodField()
 
     class Meta:
         model = AdvanceCampaign
         fields = '__all__'
+
+    def get_campaigns(self, obj):
+        ordered = obj.campaigns.all().order_by('created_at')
+        return CampaignSerializer(ordered, many=True).data
 
     def get_share_token(self, obj):
         try:
