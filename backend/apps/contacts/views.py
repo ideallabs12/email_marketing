@@ -20,10 +20,10 @@ class ContactListViewSet(viewsets.ModelViewSet):
         ).order_by('-created_at')
 
     def perform_create(self, serializer):
-        """Create the list, then auto-create a default batch_1 for it."""
+        """Create the list, then auto-create a default batch_01 for it."""
         contact_list = serializer.save()
         ContactBatch.objects.create(
-            name='batch_1',
+            name='batch_01',
             contact_list=contact_list,
         )
 
