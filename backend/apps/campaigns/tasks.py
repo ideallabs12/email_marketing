@@ -23,7 +23,7 @@ def send_campaign_emails(self, campaign_id: int):
     from apps.tracking.models import CampaignPerformance, CampaignRecipientStatus
 
     try:
-        campaign = Campaign.objects.select_related('template', 'target_list').get(id=campaign_id)
+        campaign = Campaign.objects.select_related('template', 'target_list', 'podcast_sender').get(id=campaign_id)
     except Campaign.DoesNotExist:
         logger.error("Campaign %s not found.", campaign_id)
         return
@@ -63,6 +63,17 @@ def send_campaign_emails(self, campaign_id: int):
                 'email': contact.email,
                 'subject': subject_template,
             })
+            
+            if campaign.podcast_sender:
+                sender = campaign.podcast_sender
+                context.update({
+                    'brand_name': sender.name,
+                    'website_url': sender.website_url,
+                    'linkedin_url': sender.linkedin_url,
+                    'scheduling_link': sender.scheduling_link,
+                    'physical_address': sender.physical_address,
+                    'current_year': str(timezone.now().year),
+                })
             
             html_content = render_template(layout_template, context)
             text_content = strip_tags(html_content)
