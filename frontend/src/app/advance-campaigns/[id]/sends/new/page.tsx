@@ -87,15 +87,30 @@ export default function NewSendPage() {
     e.preventDefault();
     setCreateError('');
 
-    if (!name.trim() || !selectedTemplate || !advCampaign) {
+    if (!selectedTemplate || !advCampaign) {
       setCreateError('Please fill in all required fields.');
       return;
     }
 
     setIsSubmitting(true);
     try {
+      // Auto-generate name based on Option 3
+      const catName = templateCategory 
+        ? templateCategory.charAt(0) + templateCategory.slice(1).toLowerCase() 
+        : 'Blast';
+      
+      const compName = selectedCompany 
+        ? companies.find(c => c.id === Number(selectedCompany))?.name 
+        : fromEmail.split(' ')[0] || 'UnknownBrand';
+
+      const dateStr = new Date().toLocaleDateString('en-US', { 
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+      });
+
+      const autoName = `${catName} - ${compName} - ${dateStr}`;
+
       await apiClient.post('/api/v1/campaigns/', {
-        name,
+        name: autoName,
         subject: subject.trim() || undefined,
         from_email: fromEmail,
         target_list: advCampaign.target_list,
@@ -135,31 +150,6 @@ export default function NewSendPage() {
               {createError}
             </div>
           )}
-          
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Blast Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-              placeholder="e.g. Follow-up 1"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">
-              Email Subject Override <span className="text-[10px] lowercase text-foreground/30">(Optional)</span>
-            </label>
-            <input
-              type="text"
-              value={subject}
-              onChange={e => setSubject(e.target.value)}
-              className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-              placeholder="Defaults to template subject"
-            />
-          </div>
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Sender Email</label>
