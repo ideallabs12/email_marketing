@@ -106,7 +106,7 @@ def send_campaign_emails(self, campaign_id: int):
             if campaign.event:
                 context.update({
                     'event_name': campaign.event.name,
-                    'event_date': campaign.event.date_string,
+                    'event_date': campaign.event.event_date,
                     'event_venue': campaign.event.venue,
                 })
             
