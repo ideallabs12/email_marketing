@@ -48,7 +48,7 @@ export default function EventsPage() {
     setIsSubmitting(true);
     try {
       if (currentEvent.id) {
-        await apiClient.put(`/api/v1/events/${currentEvent.id}/`, currentEvent);
+        await apiClient.patch(`/api/v1/events/${currentEvent.id}/`, currentEvent);
       } else {
         await apiClient.post('/api/v1/events/', currentEvent);
       }
