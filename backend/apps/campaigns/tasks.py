@@ -11,9 +11,20 @@ logger = logging.getLogger(__name__)
 def render_template(template_str, context):
     result = template_str
     for key, value in context.items():
-        pattern = re.compile(r'{{\s*' + re.escape(key) + r'\s*}}', re.IGNORECASE)
-        result = pattern.sub(str(value), result)
-    return re.sub(r'{{\s*.*?\s*}}', '', result)
+        # Replace normal {{ key }} and {{ key|default:"..." }} with the actual value
+        pattern1 = re.compile(r'{{\s*' + re.escape(key) + r'\s*}}', re.IGNORECASE)
+        pattern2 = re.compile(r'{{\s*' + re.escape(key) + r'\s*\|\s*default:\s*(?:"[^"]*"|\'[^\']*\')\s*}}', re.IGNORECASE)
+        result = pattern1.sub(str(value), result)
+        result = pattern2.sub(str(value), result)
+
+    # For any variables NOT in context but with a default, replace with the default value
+    def default_replacer(match):
+        return match.group(1)
+    result = re.sub(r'{{\s*[\w_]+\s*\|\s*default:\s*"([^"]+)"\s*}}', default_replacer, result)
+    result = re.sub(r"{{\s*[\w_]+\s*\|\s*default:\s*'([^']+)'\s*}}", default_replacer, result)
+
+    # Strip any remaining unreplaced simple tags
+    return re.sub(r'{{\s*[\w_]+\s*}}', '', result)
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
@@ -90,6 +101,13 @@ def send_campaign_emails(self, campaign_id: int):
                     'scheduling_link': 'https://calendly.com/drppodcasts/30min',
                     'physical_address': sender.physical_address,
                     'current_year': str(timezone.now().year),
+                })
+            
+            if campaign.event:
+                context.update({
+                    'event_name': campaign.event.name,
+                    'event_date': campaign.event.date_string,
+                    'event_venue': campaign.event.venue,
                 })
             
             html_content = render_template(layout_template, context)

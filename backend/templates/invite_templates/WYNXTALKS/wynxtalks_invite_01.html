@@ -201,10 +201,7 @@
                                 </tr>
                                 <tr>
                                     <td class="hero-title"
-                                        style="color:#000000; font-size:28px; line-height:36px; font-weight:normal; padding-top:12px;">
-                                        International Women's Day<br>Conclave&nbsp;<span class="hero-highlight"
-                                            style="color:#000000;">2027</span>
-                                    </td>
+                                        style="color:#000000; font-size:28px; line-height:36px; font-weight:normal; padding-top:12px;">\n                                        {{ event_name|default:"International Women's Day Conclave&nbsp; 2027" }}\n                                    </td>
                                 </tr>
                                 <tr>
                                     <td style="padding-top:8px;">
@@ -283,13 +280,13 @@
                                                         <tr>
                                                             <td class="sans card-text"
                                                                 style="color:#2B0F22; font-size:13px; line-height:20px; padding-bottom:4px;">
-                                                                <strong>Date</strong><br>March 08–12, 2027
+                                                                <strong>Date</strong><br>{{ event_date|default:"March 08–12, 2027" }}
                                                             </td>
                                                         </tr>
                                                         <tr>
                                                             <td class="sans card-text"
                                                                 style="color:#2B0F22; font-size:13px; line-height:20px; padding-top:6px;">
-                                                                <strong>Venue</strong><br>Paris, France
+                                                                <strong>Venue</strong><br>{{ event_venue|default:"Paris, France" }}
                                                             </td>
                                                         </tr>
                                                     </table>

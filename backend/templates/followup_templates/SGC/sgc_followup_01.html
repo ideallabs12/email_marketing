@@ -86,9 +86,7 @@
                 </td>
               </tr>
               <tr>
-                <td class="hero-title force-white" style="color:#FEFEFE; font-size:28px; line-height:36px; font-weight:normal; padding-top:12px;">
-                  Women in Tech Leadership<br>Summit&nbsp;<span style="color:#D4AF6A;">2027</span>
-                </td>
+                <td class="hero-title force-white" style="color:#FEFEFE; font-size:28px; line-height:36px; font-weight:normal; padding-top:12px;">\n                                        {{ event_name|default:"Women in Tech Leadership Summit&nbsp; 2027" }}\n                                    </td>
               </tr>
               <tr>
                 <td style="padding-top:8px;">
@@ -147,8 +145,8 @@
                                     <td class="sans"
                                         style="color:#3B3752; font-size:14px; line-height:22px; padding-bottom:16px;">
                                         <strong>Women in Tech Leadership Summit 2027</strong><br>
-                                        📅 March 08–09, 2027<br>
-                                        📍 Hyderabad, India<br>
+                                        📅 {{ event_date|default:"March 08–09, 2027" }}<br>
+                                        📍 {{ event_venue|default:"Hyderabad, India" }}<br>
                                         🌐 Conference Details: <a href="https://signaturetalks.org" style="color:#D4AF6A;">https://signaturetalks.org</a>
                                     </td>
                                 </tr>

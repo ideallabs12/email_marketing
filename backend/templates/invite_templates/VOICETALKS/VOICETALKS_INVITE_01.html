@@ -145,7 +145,7 @@
 
     <div style="display:none; max-height:0; overflow:hidden; mso-hide:all;">
         You're invited as a Global Speaker for the VOICE Global Summit on Women Empowerment and Social Transformation —
-        Paris, March 08–10, 2027.
+        Paris, {{ event_date|default:"March 08–10, 2027" }}.
     </div>
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF;">
@@ -202,11 +202,7 @@
                                 </tr>
                                 <tr>
                                     <td class="hero-title"
-                                        style="color:#000000; font-size:28px; line-height:36px; font-weight:normal; padding-top:12px;">
-                                        VOICE Global Summit on<br>Women Empowerment &amp;<br>Social
-                                        Transformation&nbsp;<span class="hero-highlight"
-                                            style="color:#000000;">2027</span>
-                                    </td>
+                                        style="color:#000000; font-size:28px; line-height:36px; font-weight:normal; padding-top:12px;">\n                                        {{ event_name|default:"VOICE Global Summit on Women Empowerment &amp; Social Transformation&nbsp; 2027" }}\n                                    </td>
                                 </tr>
                                 <tr>
                                     <td style="padding-top:8px;">
@@ -286,13 +282,13 @@
                                                         <tr>
                                                             <td class="sans card-text"
                                                                 style="color:#2B0F22; font-size:14px; line-height:20px; padding-bottom:4px;">
-                                                                <strong>Date</strong><br>March 08–10, 2027
+                                                                <strong>Date</strong><br>{{ event_date|default:"March 08–10, 2027" }}
                                                             </td>
                                                         </tr>
                                                         <tr>
                                                             <td class="sans card-text"
                                                                 style="color:#2B0F22; font-size:14px; line-height:20px; padding-top:6px;">
-                                                                <strong>Venue</strong><br>Paris, France (Hybrid)
+                                                                <strong>Venue</strong><br>{{ event_venue|default:"Paris, France (Hybrid)" }}
                                                             </td>
                                                         </tr>
                                                     </table>

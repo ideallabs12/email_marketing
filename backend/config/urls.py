@@ -21,7 +21,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 from apps.contacts.views import ContactViewSet, ContactListViewSet, IgnoredContactViewSet, ContactBatchViewSet, MutualContactViewSet
 from apps.templates.views import EmailTemplateViewSet
-from apps.campaigns.views import CampaignViewSet, SenderListView, AdvanceCampaignViewSet
+from apps.campaigns.views import CampaignViewSet, SenderListView, AdvanceCampaignViewSet, EventViewSet, PodcastSenderViewSet
 from apps.tracking.views import CampaignPerformanceViewSet, CampaignAnalyticsViewSet, BrevoWebhookView, BouncedEmailViewSet, PublicCampaignAnalyticsView, MasterLinkSettingsView, PublicMasterLinkCampaignsView, PublicAdvanceCampaignView, PublicMasterLinkRecentsView
 
 def ensure_db_schema():
@@ -87,6 +87,8 @@ router.register(r'contact-batches', ContactBatchViewSet, basename='contactbatch'
 router.register(r'templates', EmailTemplateViewSet, basename='emailtemplate')
 router.register(r'campaigns', CampaignViewSet, basename='campaign')
 router.register(r'advance-campaigns', AdvanceCampaignViewSet, basename='advancecampaign')
+router.register(r'events', EventViewSet, basename='event')
+router.register(r'podcast-senders', PodcastSenderViewSet, basename='podcastsender')
 router.register(r'tracking', CampaignPerformanceViewSet, basename='campaignperformance')
 router.register(r'campaign-analytics', CampaignAnalyticsViewSet, basename='campaignanalytics')
 router.register(r'bounces', BouncedEmailViewSet, basename='bouncedemail')

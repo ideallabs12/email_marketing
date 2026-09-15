@@ -15,6 +15,17 @@ class PodcastSender(models.Model):
     def __str__(self):
         return self.name
 
+class Event(models.Model):
+    podcast_sender = models.ForeignKey(PodcastSender, on_delete=models.CASCADE, related_name='events')
+    name = models.CharField(max_length=255)
+    date_string = models.CharField(max_length=100)
+    venue = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.podcast_sender.name})"
+
 class AdvanceCampaign(models.Model):
     name = models.CharField(max_length=255)
     target_list = models.ForeignKey(ContactList, on_delete=models.PROTECT)
@@ -42,6 +53,7 @@ class Campaign(models.Model):
     target_batches = models.ManyToManyField('contacts.ContactBatch', blank=True, help_text="If selected, only send to these batches. Otherwise send to entire list.")
     advance_campaign = models.ForeignKey(AdvanceCampaign, on_delete=models.CASCADE, related_name='campaigns', null=True, blank=True)
     podcast_sender = models.ForeignKey(PodcastSender, on_delete=models.SET_NULL, null=True, blank=True, help_text="Sender details injected into Universal Podcast Template")
+    event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True, blank=True, help_text="Event details to inject into templates")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     scheduled_at = models.DateTimeField(null=True, blank=True)
     sent_at = models.DateTimeField(null=True, blank=True)

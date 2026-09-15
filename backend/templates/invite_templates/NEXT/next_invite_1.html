@@ -8,7 +8,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="color-scheme" content="light dark">
     <meta name="supported-color-schemes" content="light dark">
-    <title>Speaker Invitation NEXT Premier League Conferences</title>
+    <title>Speaker Invitation — NEXT Premier League Conferences</title>
     <!--[if mso]>
 <noscript>
 <xml>
@@ -35,6 +35,8 @@
 
         table {
             border-collapse: collapse;
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
         }
 
         img {
@@ -53,48 +55,67 @@
             font-family: Arial, Helvetica, sans-serif;
         }
 
+        /* Hero switching — mobile hero hidden by default, shown only under 600px */
+        .mobile-hero {
+            display: none !important;
+            max-height: 0px !important;
+            overflow: hidden !important;
+            mso-hide: all !important;
+        }
+
         @media only screen and (max-width:600px) {
+            .desktop-hero {
+                display: none !important;
+                max-height: 0px !important;
+                overflow: hidden !important;
+            }
+
+            .mobile-hero {
+                display: table-row !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+
             .email-container {
                 width: 100% !important;
             }
 
+            .header-pad {
+                padding: 12px 20px !important;
+            }
+
             .fluid-pad {
-                padding-left: 24px !important;
-                padding-right: 24px !important;
+                padding-left: 20px !important;
+                padding-right: 20px !important;
             }
 
-            .hero-pad {
-                padding-top: 24px !important;
-                padding-bottom: 28px !important;
-                padding-right: 100px !important;
-                background-position: right 15% !important;
-            }
-
-            .stack {
-                display: block !important;
-                width: 100% !important;
+            .hero-title {
+                font-size: 24px !important;
+                line-height: 30px !important;
             }
 
             .card-col {
-                padding: 10px !important;
+                padding: 12px !important;
             }
 
             .card-col .card-label {
-                font-size: 9px !important;
+                font-size: 10px !important;
                 letter-spacing: 1px !important;
             }
 
             .card-col .card-text {
-                font-size: 11px !important;
-                line-height: 16px !important;
+                font-size: 12px !important;
+                line-height: 17px !important;
             }
 
-            .hero-title {
-                font-size: 26px !important;
-                line-height: 32px !important;
+            .accept-btn,
+            .accept-btn a {
+                width: 100% !important;
+                box-sizing: border-box;
             }
 
-            .accept-btn {
+            .stack {
+                display: block !important;
                 width: 100% !important;
             }
         }
@@ -111,23 +132,16 @@
                 color: #e7e7ea !important;
             }
 
-            /* Hero text must stay dark because the background image is light */
+            /* Hero text stays dark — background photo is light */
             .hero-title,
             .hero-subtitle,
-            .hero-label,
-            .hero-highlight {
-
+            .hero-label {
                 color: #000000 !important;
             }
 
-            /* Adjust specific dark mode backgrounds */
             .follow-bar {
                 background-color: #1f2025 !important;
                 border-top: 1px solid #2a2b30 !important;
-            }
-
-            .follow-bar a {
-                color: #e7e7ea !important;
             }
 
             .card-col {
@@ -143,8 +157,9 @@
 
 <body style="margin:0; padding:0; background-color:#FFFFFF;">
 
-    <div style="display:none; max-height:0; overflow:hidden; mso-hide:all;">
-        You're invited as a Speaker at the Women Sustainability & Leadership Congress — Paris, France, March 08–10, 2027.
+    <!-- PREHEADER -->
+    <div style="display:none; max-height:0; max-width:0; opacity:0; overflow:hidden; mso-hide:all;">
+        You're invited as a Speaker — Women Sustainability & Leadership Congress, Paris, {{ event_date|default:"March 08–10, 2027" }}.
     </div>
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF;">
@@ -152,11 +167,11 @@
             <td align="center" style="padding:0;">
 
                 <table role="presentation" class="email-container" width="100%" cellpadding="0" cellspacing="0"
-                    style="width:100%; background-color:#FFFFFF;">
+                    style="width:100%; max-width:600px; background-color:#FFFFFF;">
 
                     <!-- LOGO / TOP BAR -->
                     <tr>
-                        <td style="background-color:#2B0F22; padding:10px 40px;">
+                        <td class="header-pad" style="background-color:#2B0F22; padding:14px 40px;">
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
                                     <td class="sans"
@@ -164,66 +179,101 @@
                                         NEXT Premier League Conferences
                                     </td>
                                     <td align="right" class="sans"
-                                        style="color:#D98FB6; font-size:11px; letter-spacing:1px;">
-                                        Global Congress &nbsp;•&nbsp; Women Leadership
+                                        style="color:#D98FB6; font-size:12px; letter-spacing:1px;">
+                                        Speaker Invitation
                                     </td>
                                 </tr>
                             </table>
                         </td>
                     </tr>
 
-                    <!-- HERO -->
-                    <tr>
+                    <!-- DESKTOP & TABLET HERO (overlaid text on background image) -->
+                    <tr class="desktop-hero">
                         <td class="fluid-pad hero-pad"
                             background="https://pzalalbpxlwtcnmkaegb.supabase.co/storage/v1/object/public/wynxtaks_email_template/nextbanners/nextbanner.png"
-                            style="background-color:#2B0F22; background-image:url('https://pzalalbpxlwtcnmkaegb.supabase.co/storage/v1/object/public/wynxtaks_email_template/nextbanners/nextbanner.png'); background-repeat:no-repeat; background-position:right 90%; background-size:cover; -webkit-background-size:cover; padding:130px 40px 58px 40px;">
+                            style="background-color:#2B0F22; background-image:url('https://pzalalbpxlwtcnmkaegb.supabase.co/storage/v1/object/public/wynxtaks_email_template/nextbanners/nextbanner.png'); background-repeat:no-repeat; background-position:right center; background-size:cover; -webkit-background-size:cover; padding:28px 24px 28px 36px;">
                             <!--[if gte mso 9]>
-            <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:600px;height:250px;">
-              <v:fill type="tile" src="https://pzalalbpxlwtcnmkaegb.supabase.co/storage/v1/object/public/wynxtaks_email_template/nextbanners/nextbanner.png" />
+            <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:600px;height:245px;">
+              <v:fill type="frame" src="https://pzalalbpxlwtcnmkaegb.supabase.co/storage/v1/object/public/wynxtaks_email_template/nextbanners/nextbanner.png" />
               <v:textbox inset="0,0,0,0">
             <![endif]-->
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
-                                    <td>
-                                        <table role="presentation" cellpadding="0" cellspacing="0">
+                                    <td class="hero-col-left" width="56%" valign="middle">
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                                             <tr>
-                                                <td
-                                                    style="width:4px; background-color:#D61F69; line-height:1px; font-size:0;">
-                                                    &nbsp;</td>
-                                                <td style="width:10px;">&nbsp;</td>
-                                                <td class="hero-label"
-                                                    style="color:#000000; font-family:Arial,Helvetica,sans-serif; font-size:12px; letter-spacing:3px; text-transform:uppercase; font-weight:bold;">
-                                                    Speaker Invitation
+                                                <td>
+                                                    <table role="presentation" cellpadding="0" cellspacing="0">
+                                                        <tr>
+                                                            <td width="4" bgcolor="#D61F69"
+                                                                style="width:4px; background-color:#D61F69;"></td>
+                                                            <td style="width:8px;">&nbsp;</td>
+                                                            <td class="hero-label"
+                                                                style="color:#000000; font-family:Arial,Helvetica,sans-serif; font-size:12px; letter-spacing:2px; text-transform:uppercase; font-weight:bold;">
+                                                                Speaker Invitation
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="hero-title"
+                                                    style="color:#000000; font-family:Georgia,'Times New Roman',serif; font-size:26px; line-height:32px; font-weight:normal; padding-top:10px;">\n                                        {{ event_name|default:"Women Sustainability &amp; Leadership Congress 2027" }}\n                                    </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding-top:8px;">
+                                                    <div style="width:48px; height:2px; background-color:#D61F69;">
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="hero-subtitle"
+                                                    style="color:#000000; font-family:Arial,Helvetica,sans-serif; font-size:13px; letter-spacing:1px; padding-top:10px;">
+                                                    NEXT PLC&nbsp;|&nbsp;{{ event_venue|default:"Paris, France" }}&nbsp;|&nbsp;{{ event_date|default:"March 08–10, 2027" }}
                                                 </td>
                                             </tr>
                                         </table>
                                     </td>
-                                </tr>
-                                <tr>
-                                    <td class="hero-title"
-                                        style="color:#000000; font-size:28px; line-height:36px; font-weight:normal; padding-top:12px;">
-                                        Women Sustainability<br>&amp; Leadership Congress&nbsp;<span
-                                            class="hero-highlight" style="color:#000000;">2027</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding-top:8px;">
-                                        <div
-                                            style="width:56px; height:2px; background-color:#D61F69; line-height:2px; font-size:0;">
-                                            &nbsp;</div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="hero-subtitle"
-                                        style="color:#000000; font-family:Arial,Helvetica,sans-serif; font-size:13px; letter-spacing:1px; padding-top:10px;">
-                                        NEXT PLC &nbsp;|&nbsp; Paris, France
-                                    </td>
+                                    <td class="hero-col-right" width="44%">&nbsp;</td>
                                 </tr>
                             </table>
                             <!--[if gte mso 9]>
               </v:textbox>
             </v:rect>
             <![endif]-->
+                        </td>
+                    </tr>
+
+                    <!-- MOBILE-ONLY HERO (real <img> + overlaid text) -->
+                    <tr class="mobile-hero" style="display:none; max-height:0; mso-hide:all; overflow:hidden;">
+                        <td style="padding:0; background-color:#2B0F22; position:relative;">
+                            <img src="https://pzalalbpxlwtcnmkaegb.supabase.co/storage/v1/object/public/wynxtaks_email_template/nextbanners/nextbanner.png"
+                                alt="Women Sustainability & Leadership Congress 2027 — {{ event_venue|default:"Paris, France" }}" width="100%"
+                                style="display:block; width:100%; height:auto; border:0; outline:none; margin-bottom:-150px;">
+                            <div
+                                style="position:relative; padding:20px 22px 22px 22px; background:linear-gradient(to bottom, transparent 0%, transparent 20%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.85) 68%, rgba(255,255,255,0.92) 100%); box-sizing:border-box;">
+                                <table role="presentation" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td width="4" bgcolor="#D61F69" style="width:4px; background-color:#D61F69;">
+                                        </td>
+                                        <td style="width:8px;">&nbsp;</td>
+                                        <td
+                                            style="color:#000000; font-family:Arial,Helvetica,sans-serif; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; font-weight:bold;">
+                                            Speaker Invitation
+                                        </td>
+                                    </tr>
+                                </table>
+                                <div
+                                    style="color:#000000; font-size:20px; line-height:26px; font-family:Georgia,'Times New Roman',serif; font-weight:normal; padding-top:8px;">
+                                    Women Sustainability &amp; Leadership Congress 2027
+                                </div>
+                                <div style="width:48px; height:2px; background-color:#D61F69; margin:10px 0 8px 0;">
+                                </div>
+                                <div
+                                    style="color:#000000; font-family:Arial,Helvetica,sans-serif; font-size:13px; line-height:19px;">
+                                    NEXT PLC&nbsp;|&nbsp;{{ event_venue|default:"Paris, France" }}&nbsp;|&nbsp;{{ event_date|default:"March 08–10, 2027" }}
+                                </div>
+                            </div>
                         </td>
                     </tr>
 
@@ -245,12 +295,12 @@
                                 <tr>
                                     <td class="sans"
                                         style="color:#3B3752; font-size:14px; line-height:22px; padding-bottom:12px;">
-                                        <strong>NEXT Premier League Conferences</strong> is delighted to invite you as a
-                                        <strong>Global Speaker</strong> for the <strong>Women Sustainability & Leadership Congress</strong> — an
-                                        international platform bringing together inspiring leaders, innovators,
-                                        entrepreneurs, wellness experts, psychologists, coaches, executives, and
-                                        changemakers from around the world to share powerful ideas and meaningful
-                                        impact.
+                                        <strong>NEXT Premier League Conferences</strong> is delighted to invite you
+                                        as a <strong>Global Speaker</strong> for the <strong>Women Sustainability
+                                            &amp; Leadership Congress</strong> — an international platform bringing
+                                        together inspiring leaders, innovators, entrepreneurs, wellness experts,
+                                        psychologists, coaches, executives, and changemakers from around the world to
+                                        share powerful ideas and meaningful impact.
                                     </td>
                                 </tr>
                                 <tr>
@@ -284,13 +334,13 @@
                                                         <tr>
                                                             <td class="sans card-text"
                                                                 style="color:#2B0F22; font-size:13px; line-height:20px; padding-bottom:4px;">
-                                                                <strong>Date</strong><br>March 08–10, 2027
+                                                                <strong>Date</strong><br>{{ event_date|default:"March 08–10, 2027" }}
                                                             </td>
                                                         </tr>
                                                         <tr>
                                                             <td class="sans card-text"
                                                                 style="color:#2B0F22; font-size:13px; line-height:20px; padding-top:6px;">
-                                                                <strong>Venue</strong><br>Paris, France
+                                                                <strong>Venue</strong><br>{{ event_venue|default:"Paris, France" }}
                                                             </td>
                                                         </tr>
                                                     </table>
@@ -316,8 +366,8 @@
                                                         <tr>
                                                             <td class="sans card-text"
                                                                 style="color:#3B3752; font-size:12px; line-height:16px; padding-bottom:6px;">
-                                                                <span style="color:#D61F69;">&#10003;</span>&nbsp; Short
-                                                                bio
+                                                                <span style="color:#D61F69;">&#10003;</span>&nbsp;
+                                                                Short bio
                                                             </td>
                                                         </tr>
                                                         <tr>
@@ -330,8 +380,8 @@
                                                         <tr>
                                                             <td class="sans card-text"
                                                                 style="color:#3B3752; font-size:12px; line-height:16px;">
-                                                                <span style="color:#D61F69;">&#10003;</span>&nbsp; Talk
-                                                                title for your presentation
+                                                                <span style="color:#D61F69;">&#10003;</span>&nbsp;
+                                                                Talk title for your presentation
                                                             </td>
                                                         </tr>
                                                     </table>
@@ -344,7 +394,7 @@
                         </td>
                     </tr>
 
-                    <!-- QUOTE BLOCK WITH BACKGROUND -->
+                    <!-- QUOTE BLOCK -->
                     <tr>
                         <td class="fluid-pad" style="padding:16px 48px 8px 48px;">
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
@@ -379,21 +429,20 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                     <td align="center">
-                                         <table role="presentation" cellpadding="0" cellspacing="0" class="accept-btn">
-                                             <tr>
-                                                 <td align="center" bgcolor="#D61F69" style="border-radius:2px;">
-                                                     <a href="https://calendly.com/nextpremierconferences/30min" target="_blank"
-                                                         class="sans"
-                                                         style="display:inline-block; padding:12px 28px; color:#FFFFFF; font-size:13px; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">
-                                                         Schedule a Call
-                                                     </a>
-                                                 </td>
-                                             </tr>
-                                         </table>
-                                     </td>
-                                 </tr>
-
+                                    <td align="center">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" class="accept-btn">
+                                            <tr>
+                                                <td align="center" bgcolor="#D61F69" style="border-radius:2px;">
+                                                    <a href="https://calendly.com/nextpremierconferences/30min"
+                                                        target="_blank" class="sans"
+                                                        style="display:inline-block; padding:12px 28px; color:#FFFFFF; font-size:13px; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">
+                                                        Schedule a Call
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
                             </table>
                         </td>
                     </tr>
@@ -404,11 +453,12 @@
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
                                     <td class="sans" style="color:#3B3752; font-size:14px; line-height:22px;">
-                                        Thank you for considering our invitation. We would be honored to welcome you to
-                                        the NEXT Premier League Conferences stage in Paris.
+                                        Thank you for considering our invitation. We would be honored to welcome you
+                                        to the NEXT Premier League Conferences stage in Paris.
                                         <br><br>
                                         Thanks &amp; Regards,<br>
-                                        <strong style="color:#2B0F22;">NEXT Premier League Conferences</strong><br>
+                                        <strong class="signature-name" style="color:#2B0F22;">NEXT Premier League
+                                            Conferences</strong><br>
                                         info@nextconferences.org
                                     </td>
                                 </tr>
@@ -420,19 +470,22 @@
                     <tr>
                         <td align="center" style="background-color:#2B0F22; padding:16px 40px;">
                             <table role="presentation" cellpadding="0" cellspacing="0">
-                                 <tr>
-                                     <td align="center" style="padding-bottom: 20px;">
-                                         <table role="presentation" cellpadding="0" cellspacing="0">
-                                             <tr>
-                                                 <td class="stack sans" style="color:#D98FB6; font-size:12px; font-weight:bold;">
-                                                     <a href="https://www.linkedin.com/company/next-premier-conferences/" target="_blank" style="color:#F3EFE6;">LinkedIn</a>
-                                                     &nbsp;•&nbsp;
-                                                     <a href="https://www.nextconferences.org/conference/nplc_wplc" target="_blank" style="color:#F3EFE6;">Visit Us</a>
-                                                 </td>
-                                             </tr>
-                                         </table>
-                                     </td>
-                                 </tr>
+                                <tr>
+                                    <td align="center" style="padding-bottom: 20px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td class="stack sans"
+                                                    style="color:#D98FB6; font-size:12px; font-weight:bold;">
+                                                    <a href="https://www.linkedin.com/company/next-premier-conferences/"
+                                                        target="_blank" style="color:#F3EFE6;">LinkedIn</a>
+                                                    &nbsp;•&nbsp;
+                                                    <a href="https://www.nextconferences.org/conference/nplc_wplc"
+                                                        target="_blank" style="color:#F3EFE6;">Visit Us</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
 
                                 <tr>
                                     <td align="center" class="sans"

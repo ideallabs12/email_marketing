@@ -201,10 +201,7 @@
                                 </tr>
                                 <tr>
                                     <td class="hero-title"
-                                        style="color:#000000; font-size:28px; line-height:36px; font-weight:normal; padding-top:12px;">
-                                        Women Sustainability<br>&amp; Leadership Congress&nbsp;<span
-                                            class="hero-highlight" style="color:#000000;">2027</span>
-                                    </td>
+                                        style="color:#000000; font-size:28px; line-height:36px; font-weight:normal; padding-top:12px;">\n                                        {{ event_name|default:"Women Sustainability &amp; Leadership Congress&nbsp; 2027" }}\n                                    </td>
                                 </tr>
                                 <tr>
                                     <td style="padding-top:8px;">
@@ -216,7 +213,7 @@
                                 <tr>
                                     <td class="hero-subtitle"
                                         style="color:#000000; font-family:Arial,Helvetica,sans-serif; font-size:13px; letter-spacing:1px; padding-top:10px;">
-                                        NEXT PLC &nbsp;|&nbsp; Paris, France
+                                        NEXT PLC &nbsp;|&nbsp; {{ event_venue|default:"Paris, France" }}
                                     </td>
                                 </tr>
                             </table>
@@ -266,8 +263,8 @@
                                     <td class="sans"
                                         style="color:#2B2D42; font-size:14px; line-height:22px; padding-bottom:16px;">
                                         <strong>NEXT Premier Conferences</strong><br>
-                                        📅 March 08–10, 2027<br>
-                                        📍 Paris, France<br>
+                                        📅 {{ event_date|default:"March 08–10, 2027" }}<br>
+                                        📍 {{ event_venue|default:"Paris, France" }}<br>
                                         🌐 Conference Details: <a href="https://nextpremier.org" style="color:#EF233C;">https://nextpremier.org</a>
                                     </td>
                                 </tr>

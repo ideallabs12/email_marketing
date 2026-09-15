@@ -5,8 +5,16 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from .models import Campaign, AdvanceCampaign
-from .serializers import CampaignSerializer, AdvanceCampaignSerializer
+from .models import Campaign, AdvanceCampaign, Event, PodcastSender
+from .serializers import CampaignSerializer, AdvanceCampaignSerializer, EventSerializer, PodcastSenderSerializer
+
+class PodcastSenderViewSet(viewsets.ModelViewSet):
+    serializer_class = PodcastSenderSerializer
+    queryset = PodcastSender.objects.all().order_by('name')
+
+class EventViewSet(viewsets.ModelViewSet):
+    serializer_class = EventSerializer
+    queryset = Event.objects.all().order_by('-created_at')
 
 class SenderListView(APIView):
     permission_classes = [IsAuthenticated]

@@ -145,7 +145,7 @@
 
     <div style="display:none; max-height:0; overflow:hidden; mso-hide:all;">
         You're invited as a Global Speaker for the 13th International L.E.A.D Summit for Women —
-        Dubai, UAE, November 25–27, 2026.
+        {{ event_venue|default:"Dubai, UAE" }}, {{ event_date|default:"November 25–27, 2026" }}.
     </div>
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF;">
@@ -202,11 +202,7 @@
                                 </tr>
                                 <tr>
                                     <td class="hero-title"
-                                        style="color:#000000; font-size:28px; line-height:36px; font-weight:normal; padding-top:12px;">
-                                        13th International L.E.A.D<br>Summit for Women:<br>Leadership, Empowerment
-                                        &amp; Development&nbsp;<span class="hero-highlight"
-                                            style="color:#000000;">2026</span>
-                                    </td>
+                                        style="color:#000000; font-size:28px; line-height:36px; font-weight:normal; padding-top:12px;">\n                                        {{ event_name|default:"13th International L.E.A.D Summit for Women: Leadership, Empowerment &amp; Development&nbsp; 2026" }}\n                                    </td>
                                 </tr>
                                 <tr>
                                     <td style="padding-top:8px;">
@@ -258,7 +254,7 @@
                                 <tr>
                                     <td class="sans"
                                         style="color:#3B3752; font-size:14px; line-height:22px; padding-bottom:8px;">
-                                        The conference will be conducted in <strong>Dubai, UAE</strong>, and we
+                                        The conference will be conducted in <strong>{{ event_venue|default:"Dubai, UAE" }}</strong>, and we
                                         would be honored to have you share your story on our stage.
                                     </td>
                                 </tr>
@@ -286,13 +282,13 @@
                                                         <tr>
                                                             <td class="sans card-text"
                                                                 style="color:#2B0F22; font-size:13px; line-height:20px; padding-bottom:4px;">
-                                                                <strong>Date</strong><br>November 25–27, 2026
+                                                                <strong>Date</strong><br>{{ event_date|default:"November 25–27, 2026" }}
                                                             </td>
                                                         </tr>
                                                         <tr>
                                                             <td class="sans card-text"
                                                                 style="color:#2B0F22; font-size:13px; line-height:20px; padding-top:6px;">
-                                                                <strong>Venue</strong><br>Dubai, UAE
+                                                                <strong>Venue</strong><br>{{ event_venue|default:"Dubai, UAE" }}
                                                             </td>
                                                         </tr>
                                                     </table>

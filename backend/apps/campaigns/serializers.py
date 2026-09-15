@@ -1,5 +1,17 @@
 from rest_framework import serializers
-from .models import Campaign, AdvanceCampaign
+from .models import Campaign, AdvanceCampaign, Event, PodcastSender
+
+class PodcastSenderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PodcastSender
+        fields = '__all__'
+
+class EventSerializer(serializers.ModelSerializer):
+    podcast_sender_name = serializers.CharField(source='podcast_sender.name', read_only=True)
+
+    class Meta:
+        model = Event
+        fields = '__all__'
 
 class CampaignSerializer(serializers.ModelSerializer):
     class Meta:

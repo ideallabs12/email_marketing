@@ -16,6 +16,7 @@ export default function NewCampaignPage() {
   const [batches, setBatches] = useState<ContactBatch[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [senders, setSenders] = useState<{name: string, email: string}[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [name, setName] = useState('');
@@ -25,6 +26,7 @@ export default function NewCampaignPage() {
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [templateCategory, setTemplateCategory] = useState('');
   const [fromEmail, setFromEmail] = useState('');
+  const [selectedEvent, setSelectedEvent] = useState('');
   const [createError, setCreateError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -32,15 +34,17 @@ export default function NewCampaignPage() {
     async function loadData() {
       setLoading(true);
       try {
-        const [listsRes, batchesRes, templatesRes, sendersRes] = await Promise.all([
+        const [listsRes, batchesRes, templatesRes, sendersRes, eventsRes] = await Promise.all([
           apiClient.get('/api/v1/contact-lists/?limit=10000'),
           apiClient.get('/api/v1/contact-batches/?limit=10000'),
           apiClient.get('/api/v1/templates/?limit=10000'),
           apiClient.get('/api/v1/senders/'),
+          apiClient.get('/api/v1/events/'),
         ]);
         setLists(listsRes.results || []);
         setBatches(batchesRes.results || []);
         setTemplates(templatesRes.results || []);
+        setEvents(eventsRes.results || []);
         
         const sendersData = sendersRes || [];
         setSenders(sendersData);
@@ -85,6 +89,7 @@ export default function NewCampaignPage() {
         target_list: Number(targetList),
         target_batches: selectedBatches,
         template: Number(selectedTemplate),
+        event: selectedEvent ? Number(selectedEvent) : null,
         status: 'draft',
       });
       router.push('/campaigns');
@@ -201,6 +206,23 @@ export default function NewCampaignPage() {
                 <option key={l.id} value={l.id}>{l.name}</option>
               ))}
             </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">
+              Event <span className="text-[10px] lowercase text-foreground/30">(Optional)</span>
+            </label>
+            <select
+              value={selectedEvent}
+              onChange={e => setSelectedEvent(e.target.value)}
+              className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+            >
+              <option value="">-- No Specific Event --</option>
+              {events.map(e => (
+                <option key={e.id} value={e.id}>{e.name} ({e.podcast_sender_name})</option>
+              ))}
+            </select>
+            <p className="text-[10px] text-foreground/40 mt-1">If selected, event details will be injected into the email template.</p>
           </div>
 
           {targetList && batches.filter(b => b.contact_list === Number(targetList)).length > 0 && (
