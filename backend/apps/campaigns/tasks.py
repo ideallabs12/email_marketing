@@ -87,7 +87,7 @@ def send_campaign_emails(self, campaign_id: int):
                     'brand_name': sender.name,
                     'website_url': sender.website_url,
                     'linkedin_url': sender.linkedin_url,
-                    'scheduling_link': sender.scheduling_link,
+                    'scheduling_link': 'https://calendly.com/drppodcasts/30min',
                     'physical_address': sender.physical_address,
                     'current_year': str(timezone.now().year),
                 })
