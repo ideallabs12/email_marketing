@@ -103,12 +103,7 @@ def send_campaign_emails(self, campaign_id: int):
                     'current_year': str(timezone.now().year),
                 })
             
-            if campaign.event:
-                context.update({
-                    'event_name': campaign.event.name,
-                    'event_date': campaign.event.date_string,
-                    'event_venue': campaign.event.venue,
-                })
+
             
             html_content = render_template(layout_template, context)
             text_content = strip_tags(html_content)

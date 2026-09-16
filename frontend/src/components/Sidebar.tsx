@@ -70,10 +70,7 @@ export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: { mobileM
           <FileText size={18} />
           {!isCollapsed && <span>Templates</span>}
         </Link>
-        <Link href="/events" title="Events" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
-          <Library size={18} />
-          {!isCollapsed && <span>Events</span>}
-        </Link>
+
         <Link href="/directory" title="User Directory" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
           <Users size={18} />
           {!isCollapsed && <span>User Directory</span>}
