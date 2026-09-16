@@ -19,7 +19,7 @@ export default function NewSendPage() {
   const [senders, setSenders] = useState<{name: string, email: string}[]>([]);
   const [batches, setBatches] = useState<ContactBatch[]>([]);
   const [companies, setCompanies] = useState<any[]>([]);
-  const [events, setEvents] = useState<any[]>([]);
+
   const [loading, setLoading] = useState(true);
 
   const [name, setName] = useState('');
@@ -28,7 +28,7 @@ export default function NewSendPage() {
   const [templateCategory, setTemplateCategory] = useState('');
   const [fromEmail, setFromEmail] = useState('');
   const [selectedCompany, setSelectedCompany] = useState('');
-  const [selectedEvent, setSelectedEvent] = useState('');
+
   const [selectedBatches, setSelectedBatches] = useState<number[]>([]);
   const [createError, setCreateError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,17 +37,17 @@ export default function NewSendPage() {
     async function loadData() {
       setLoading(true);
       try {
-        const [campaignRes, templatesRes, sendersRes, companiesRes, eventsRes] = await Promise.all([
+        const [campaignRes, templatesRes, sendersRes, companiesRes] = await Promise.all([
           apiClient.get(`/api/v1/advance-campaigns/${id}/`),
           apiClient.get('/api/v1/templates/?limit=10000'),
           apiClient.get('/api/v1/senders/'),
           apiClient.get('/api/v1/podcast-senders/'),
-          apiClient.get('/api/v1/events/'),
+
         ]);
         setAdvCampaign(campaignRes);
         setTemplates(templatesRes.results || []);
         setCompanies(companiesRes.results || companiesRes || []);
-        setEvents(eventsRes.results || []);
+
         
         const sendersData = sendersRes || [];
         setSenders(sendersData);
@@ -117,7 +117,7 @@ export default function NewSendPage() {
         target_batches: selectedBatches,
         template: Number(selectedTemplate),
         advance_campaign: advCampaign.id,
-        event: selectedEvent ? Number(selectedEvent) : null,
+
         status: 'draft',
       });
       router.push(`/advance-campaigns/${advCampaign.id}`);
@@ -204,7 +204,7 @@ export default function NewSendPage() {
               value={selectedCompany}
               onChange={e => {
                 setSelectedCompany(e.target.value);
-                setSelectedEvent(''); // Reset event when company changes
+
               }}
               className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
             >
@@ -215,27 +215,7 @@ export default function NewSendPage() {
             </select>
           </div>
 
-          {selectedCompany && (
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">
-                Event <span className="text-[10px] lowercase text-foreground/30">(Optional)</span>
-              </label>
-              <select
-                value={selectedEvent}
-                onChange={e => setSelectedEvent(e.target.value)}
-                className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-              >
-                <option value="">-- No Specific Event --</option>
-                {events
-                  .filter(e => e.podcast_sender === Number(selectedCompany))
-                  .map(e => (
-                    <option key={e.id} value={e.id}>{e.name}</option>
-                  ))
-                }
-              </select>
-              <p className="text-[10px] text-foreground/40 mt-1">If selected, event details will be injected into the email template.</p>
-            </div>
-          )}
+
 
           <div className="space-y-3">
             <div>
