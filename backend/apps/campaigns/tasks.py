@@ -110,8 +110,11 @@ def send_campaign_emails(self, campaign_id: int):
 
             from_email = campaign.from_email
 
+            rendered_subject = render_template(subject_template, context)
+            rendered_subject = "".join(rendered_subject.splitlines())
+
             email = EmailMultiAlternatives(
-                subject=render_template(subject_template, context),
+                subject=rendered_subject,
                 body=text_content,
                 from_email=from_email,
                 to=[contact.email],

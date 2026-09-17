@@ -18,3 +18,10 @@ Thumbs.db
 
 # Database backups
 *.sql
+backend/check_contacts.py
+backend/check_db.py
+backend/pg_errors.txt
+backend/query_pg.py
+backend/test_django_smtp.py
+backend/test_query.py
+backend/test_smtp.py
