@@ -23,8 +23,15 @@ def render_template(template_str, context):
     result = re.sub(r'{{\s*[\w_]+\s*\|\s*default:\s*"([^"]+)"\s*}}', default_replacer, result)
     result = re.sub(r"{{\s*[\w_]+\s*\|\s*default:\s*'([^']+)'\s*}}", default_replacer, result)
 
-    # Strip any remaining unreplaced simple tags
-    return re.sub(r'{{\s*[\w_]+\s*}}', '', result)
+    # Strip any remaining unreplaced simple single-word tags
+    result = re.sub(r'{{\s*[\w_]+\s*}}', '', result)
+
+    # IMPORTANT: Also strip multi-word variables like {{Unsubscribe Link}} that have spaces.
+    # These are NOT valid template variables in our system and must never be sent raw to
+    # Brevo (which has its own template parser and will throw a syntax error on them).
+    result = re.sub(r'{{\s*[^}]+\s*}}', '', result)
+
+    return result
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)

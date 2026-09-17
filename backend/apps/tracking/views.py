@@ -683,7 +683,10 @@ class BrevoWebhookView(views.APIView):
                 if recipient:
                     recipient.status = 'hard_bounce'
                     recipient.failed_at = now
-                    recipient.error_message = 'Hard Bounce'
+                    reason = data.get('reason') or data.get('description') or data.get('error') or ''
+                    smtp_code = data.get('smtp-code') or data.get('error_code') or ''
+                    parts = [p for p in ['Hard Bounce', reason, f'SMTP {smtp_code}' if smtp_code else ''] if p]
+                    recipient.error_message = ' — '.join(parts)
             elif event_type == 'soft_bounce':
                 performance.total_soft_bounces += 1
                 performance.total_bounces += 1
@@ -691,28 +694,37 @@ class BrevoWebhookView(views.APIView):
                 if recipient:
                     recipient.status = 'soft_bounce'
                     recipient.failed_at = now
-                    recipient.error_message = 'Soft Bounce'
+                    reason = data.get('reason') or data.get('description') or data.get('error') or ''
+                    smtp_code = data.get('smtp-code') or data.get('error_code') or ''
+                    parts = [p for p in ['Soft Bounce', reason, f'SMTP {smtp_code}' if smtp_code else ''] if p]
+                    recipient.error_message = ' — '.join(parts)
             elif event_type == 'invalid_email':
                 performance.total_invalid += 1
                 performance.total_failed += 1
                 if recipient:
                     recipient.status = 'invalid_email'
                     recipient.failed_at = now
-                    recipient.error_message = 'Invalid Email'
+                    reason = data.get('reason') or data.get('description') or data.get('error') or ''
+                    recipient.error_message = f'Invalid Email — {reason}' if reason else 'Invalid Email'
             elif event_type == 'blocked':
                 performance.total_blocked += 1
                 performance.total_failed += 1
                 if recipient:
                     recipient.status = 'blocked'
                     recipient.failed_at = now
-                    recipient.error_message = 'Blocked'
+                    reason = data.get('reason') or data.get('description') or data.get('error') or ''
+                    recipient.error_message = f'Blocked — {reason}' if reason else 'Blocked'
             elif event_type == 'error':
                 performance.total_errors += 1
                 performance.total_failed += 1
                 if recipient:
                     recipient.status = 'error'
                     recipient.failed_at = now
-                    recipient.error_message = 'Error'
+                    # Capture the actual reason Brevo provides instead of a generic 'Error'
+                    reason = data.get('reason') or data.get('description') or data.get('error') or ''
+                    smtp_code = data.get('smtp-code') or data.get('error_code') or ''
+                    parts = [p for p in [reason, f'SMTP {smtp_code}' if smtp_code else ''] if p]
+                    recipient.error_message = ' — '.join(parts) if parts else 'Error (no detail from Brevo)'
 
             performance.save()
             if recipient:
