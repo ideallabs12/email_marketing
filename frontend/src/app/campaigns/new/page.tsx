@@ -16,7 +16,7 @@ export default function NewCampaignPage() {
   const [batches, setBatches] = useState<ContactBatch[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [senders, setSenders] = useState<{name: string, email: string}[]>([]);
-  const [companies, setCompanies] = useState<any[]>([]);
+
 
   const [loading, setLoading] = useState(true);
 
@@ -27,7 +27,7 @@ export default function NewCampaignPage() {
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [templateCategory, setTemplateCategory] = useState('');
   const [fromEmail, setFromEmail] = useState('');
-  const [selectedCompany, setSelectedCompany] = useState('');
+
 
   const [createError, setCreateError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,18 +36,18 @@ export default function NewCampaignPage() {
     async function loadData() {
       setLoading(true);
       try {
-        const [listsRes, batchesRes, templatesRes, sendersRes, companiesRes] = await Promise.all([
+        const [listsRes, batchesRes, templatesRes, sendersRes] = await Promise.all([
           apiClient.get('/api/v1/contact-lists/?limit=10000'),
           apiClient.get('/api/v1/contact-batches/?limit=10000'),
           apiClient.get('/api/v1/templates/?limit=10000'),
           apiClient.get('/api/v1/senders/'),
-          apiClient.get('/api/v1/podcast-senders/'),
+
 
         ]);
         setLists(listsRes.results || []);
         setBatches(batchesRes.results || []);
         setTemplates(templatesRes.results || []);
-        setCompanies(companiesRes.results || companiesRes || []);
+
 
         
         const sendersData = sendersRes || [];
@@ -91,9 +91,7 @@ export default function NewCampaignPage() {
         ? templateCategory.charAt(0) + templateCategory.slice(1).toLowerCase() 
         : 'Blast';
       
-      const compName = selectedCompany 
-        ? companies.find(c => c.id === Number(selectedCompany))?.name 
-        : fromEmail.split(' ')[0] || 'UnknownBrand';
+      const compName = fromEmail.split(' ')[0] || 'UnknownBrand';
 
       const dateStr = new Date().toLocaleDateString('en-US', { 
         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
@@ -202,24 +200,7 @@ export default function NewCampaignPage() {
             </select>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">
-              Company <span className="text-[10px] lowercase text-foreground/30">(Optional)</span>
-            </label>
-            <select
-              value={selectedCompany}
-              onChange={e => {
-                setSelectedCompany(e.target.value);
 
-              }}
-              className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-            >
-              <option value="">-- Select Company --</option>
-              {companies.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
 
 
 

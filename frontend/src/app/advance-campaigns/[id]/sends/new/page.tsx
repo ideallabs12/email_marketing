@@ -18,7 +18,7 @@ export default function NewSendPage() {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [senders, setSenders] = useState<{name: string, email: string}[]>([]);
   const [batches, setBatches] = useState<ContactBatch[]>([]);
-  const [companies, setCompanies] = useState<any[]>([]);
+
 
   const [loading, setLoading] = useState(true);
 
@@ -27,7 +27,7 @@ export default function NewSendPage() {
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [templateCategory, setTemplateCategory] = useState('');
   const [fromEmail, setFromEmail] = useState('');
-  const [selectedCompany, setSelectedCompany] = useState('');
+
 
   const [selectedBatches, setSelectedBatches] = useState<number[]>([]);
   const [createError, setCreateError] = useState('');
@@ -37,16 +37,16 @@ export default function NewSendPage() {
     async function loadData() {
       setLoading(true);
       try {
-        const [campaignRes, templatesRes, sendersRes, companiesRes] = await Promise.all([
+        const [campaignRes, templatesRes, sendersRes] = await Promise.all([
           apiClient.get(`/api/v1/advance-campaigns/${id}/`),
           apiClient.get('/api/v1/templates/?limit=10000'),
           apiClient.get('/api/v1/senders/'),
-          apiClient.get('/api/v1/podcast-senders/'),
+
 
         ]);
         setAdvCampaign(campaignRes);
         setTemplates(templatesRes.results || []);
-        setCompanies(companiesRes.results || companiesRes || []);
+
 
         
         const sendersData = sendersRes || [];
@@ -99,9 +99,7 @@ export default function NewSendPage() {
         ? templateCategory.charAt(0) + templateCategory.slice(1).toLowerCase() 
         : 'Blast';
       
-      const compName = selectedCompany 
-        ? companies.find(c => c.id === Number(selectedCompany))?.name 
-        : fromEmail.split(' ')[0] || 'UnknownBrand';
+      const compName = fromEmail.split(' ')[0] || 'UnknownBrand';
 
       const dateStr = new Date().toLocaleDateString('en-US', { 
         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
@@ -196,24 +194,7 @@ export default function NewSendPage() {
             </select>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">
-              Company <span className="text-[10px] lowercase text-foreground/30">(Optional)</span>
-            </label>
-            <select
-              value={selectedCompany}
-              onChange={e => {
-                setSelectedCompany(e.target.value);
 
-              }}
-              className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-            >
-              <option value="">-- Select Company --</option>
-              {companies.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
 
 
 
