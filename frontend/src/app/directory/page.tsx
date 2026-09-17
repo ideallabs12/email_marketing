@@ -5,7 +5,7 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { Plus, Upload, Search, X, Check, AlertCircle, Trash2, Users, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
-import { Contact, ContactList } from '../../types';
+import { Contact, ContactList, ContactBatch } from '../../types';
 import Link from 'next/link';
 
 export default function DirectoryPage() {
@@ -27,6 +27,9 @@ export default function DirectoryPage() {
   const [newLastName, setNewLastName] = useState('');
   const [newSubscribed, setNewSubscribed] = useState(true);
   const [newSelectedLists, setNewSelectedLists] = useState<number[]>([]);
+  const [newSelectedBatches, setNewSelectedBatches] = useState<number[]>([]);
+  const [availableBatches, setAvailableBatches] = useState<ContactBatch[]>([]);
+  const [loadingBatches, setLoadingBatches] = useState(false);
   const [addError, setAddError] = useState('');
 
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -103,6 +106,7 @@ export default function DirectoryPage() {
         last_name: newLastName,
         is_subscribed: newSubscribed,
         lists: newSelectedLists,
+        batches: newSelectedBatches,
       });
       setShowAddModal(false);
       setNewEmail('');
@@ -110,6 +114,8 @@ export default function DirectoryPage() {
       setNewLastName('');
       setNewSubscribed(true);
       setNewSelectedLists([]);
+      setNewSelectedBatches([]);
+      setAvailableBatches([]);
       loadContacts();
       loadLists();
     } catch (err: any) {
@@ -449,20 +455,64 @@ export default function DirectoryPage() {
               <div className="space-y-1">
                 <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Add to List</label>
                 <select
-                  multiple
-                  value={newSelectedLists.map(String)}
-                  onChange={e => {
-                    const vals = Array.from(e.target.selectedOptions, option => Number(option.value));
-                    setNewSelectedLists(vals);
+                  value={newSelectedLists[0]?.toString() ?? ''}
+                  onChange={async e => {
+                    const listId = e.target.value ? Number(e.target.value) : null;
+                    setNewSelectedLists(listId ? [listId] : []);
+                    setNewSelectedBatches([]);
+                    setAvailableBatches([]);
+                    if (listId) {
+                      setLoadingBatches(true);
+                      try {
+                        const res = await apiClient.get(`/api/v1/contact-batches/?contact_list=${listId}&limit=500`);
+                        setAvailableBatches(res.results || []);
+                      } catch (err) {
+                        console.error('Failed to load batches:', err);
+                      } finally {
+                        setLoadingBatches(false);
+                      }
+                    }
                   }}
-                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background min-h-[80px]"
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
                 >
+                  <option value="">-- Select a list --</option>
                   {lists.filter(l => !l.is_default).map(list => (
                     <option key={list.id} value={list.id}>{list.name}</option>
                   ))}
                 </select>
-                <p className="text-[10px] text-foreground/40 mt-1">Hold Ctrl (Cmd) to select multiple lists.</p>
               </div>
+
+              {newSelectedLists.length > 0 && (
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">
+                    Assign to Batch
+                    {loadingBatches && <span className="ml-2 text-foreground/30 normal-case font-normal">(loading…)</span>}
+                  </label>
+                  {availableBatches.length === 0 && !loadingBatches ? (
+                    <p className="text-[11px] text-foreground/40 border border-border rounded-md px-3 py-2">
+                      No batches in this list yet.
+                    </p>
+                  ) : (
+                    <>
+                      <select
+                        multiple
+                        value={newSelectedBatches.map(String)}
+                        onChange={e => {
+                          const vals = Array.from(e.target.selectedOptions, opt => Number(opt.value));
+                          setNewSelectedBatches(vals);
+                        }}
+                        className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background min-h-[80px]"
+                        disabled={loadingBatches}
+                      >
+                        {availableBatches.map(batch => (
+                          <option key={batch.id} value={batch.id}>{batch.name}</option>
+                        ))}
+                      </select>
+                      <p className="text-[10px] text-foreground/40 mt-1">Hold Ctrl (Cmd) to select multiple batches.</p>
+                    </>
+                  )}
+                </div>
+              )}
 
               <div className="flex items-center space-x-2 pt-2">
                 <input

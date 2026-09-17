@@ -70,8 +70,9 @@ export default function NewCampaignPage() {
   };
 
   const filteredTemplates = templates.filter(t => {
-    if (templateCategory === 'INVITE') return t.name.toLowerCase().includes('invite');
+    if (templateCategory === 'INVITE') return t.name.toLowerCase().includes('invite') && !t.name.toLowerCase().includes('podcast');
     if (templateCategory === 'FOLLOWUP') return t.name.toLowerCase().includes('followup');
+    if (templateCategory === 'PODCAST') return t.name.toLowerCase().includes('podcast');
     return true;
   });
 
