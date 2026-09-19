@@ -46,8 +46,8 @@ brands = [
     },
     {
         'name': 'WYNXTALKS',
-        'website_url': 'https://www.prosummits.org',
-        'linkedin_url': 'https://www.linkedin.com/company/prosummits-hybrid-conferences/posts/?feedView=all',
+        'website_url': 'https://www.wynxtalks.com',
+        'linkedin_url': 'https://www.linkedin.com/company/wynxtalks/',
         'scheduling_link': 'https://calendly.com/wynxtalks/15min',
         'physical_address': 'BLVD Heights, Dubai Opera District, Dubai, United Arab Emirates'
     },
