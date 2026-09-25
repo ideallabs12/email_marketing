@@ -252,9 +252,40 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const [viewMode, setViewMode] = useState<'analytics' | 'recents'>('analytics');
+  const [viewMode, setViewMode] = useState<'analytics' | 'recents' | 'contacts'>('analytics');
   const [recents, setRecents] = useState<any[]>([]);
   const [recentsLoading, setRecentsLoading] = useState(false);
+
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [contactsLoading, setContactsLoading] = useState(false);
+  const [contactsSearchQuery, setContactsSearchQuery] = useState('');
+
+  const fetchContacts = async (search = '', showLoading = true) => {
+    if (!search.trim()) {
+      setContacts([]);
+      return;
+    }
+    if (showLoading) setContactsLoading(true);
+    const savedPwd = typeof window !== 'undefined' ? sessionStorage.getItem(`master_pwd_${token}`) || '' : '';
+    const trimmedPwd = savedPwd.trim();
+    let url = `${API_BASE_URL}/api/v1/public/master-link/${token}/contacts/?search=${encodeURIComponent(search)}`;
+    if (trimmedPwd) {
+      url += `&password=${encodeURIComponent(trimmedPwd)}`;
+    }
+    const headers: Record<string, string> = {};
+    if (trimmedPwd) headers['X-Master-Password'] = trimmedPwd;
+    try {
+      const res = await fetch(url, { headers, cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        setContacts(data.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to load contacts:', err);
+    } finally {
+      if (showLoading) setContactsLoading(false);
+    }
+  };
 
   const fetchContainers = async (password = '') => {
     const trimmed = password.trim();
@@ -377,6 +408,8 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
   useEffect(() => {
     if (viewMode === 'recents') {
       fetchRecents(recents.length === 0);
+    } else if (viewMode === 'contacts') {
+      // Do not fetch on mount, wait for search
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode, token, API_BASE_URL]);
@@ -635,6 +668,17 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                   </span>
                 )}
               </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('contacts')}
+                className={`py-3.5 font-semibold text-sm transition-colors border-b-2 cursor-pointer ${
+                  viewMode === 'contacts'
+                    ? 'text-gray-900 border-gray-900'
+                    : 'text-gray-500 border-transparent hover:text-gray-700'
+                }`}
+              >
+                Contact Directory
+              </button>
             </div>
           </div>
 
@@ -651,7 +695,73 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
           </div>
         </div>
 
-        {viewMode === 'recents' ? (
+        {viewMode === 'contacts' ? (
+          <div className="flex-1 flex flex-col min-h-0 bg-white">
+            <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center gap-3">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                <input
+                  type="text"
+                  placeholder="Search by name or email..."
+                  value={contactsSearchQuery}
+                  onChange={(e) => setContactsSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && fetchContacts(contactsSearchQuery)}
+                  className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-500"
+                />
+              </div>
+              <button
+                onClick={() => fetchContacts(contactsSearchQuery)}
+                className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm cursor-pointer"
+              >
+                Search
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto">
+              {contactsLoading ? (
+                <div className="flex items-center justify-center py-20 text-gray-400">
+                  <Loader2 className="animate-spin mr-2" size={20} /> Searching contacts...
+                </div>
+              ) : contacts.length === 0 ? (
+                <div className="py-20 text-center text-gray-400 text-sm">
+                  {contactsSearchQuery ? 'No contacts found.' : 'Enter a search term to find contacts.'}
+                </div>
+              ) : (
+                <table className="w-full text-sm text-left border-collapse">
+                  <thead className="bg-gray-50 sticky top-0 z-10">
+                    <tr className="text-xs text-gray-500 uppercase tracking-wider font-semibold border-b border-gray-200">
+                      <th className="px-5 py-3">Name</th>
+                      <th className="px-5 py-3">Email</th>
+                      <th className="px-5 py-3">Status</th>
+                      <th className="px-5 py-3">Lists</th>
+                      <th className="px-5 py-3">Batches</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {contacts.map((c, i) => (
+                      <tr key={i} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td className="px-5 py-3 font-medium text-gray-900">{[c.first_name, c.last_name].filter(Boolean).join(' ') || '—'}</td>
+                        <td className="px-5 py-3 text-gray-500">{c.email}</td>
+                        <td className="px-5 py-3">
+                          {c.is_subscribed === false ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-red-50 text-red-700 border border-red-100">Unsubscribed</span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">Subscribed</span>
+                          )}
+                        </td>
+                        <td className="px-5 py-3 text-gray-500 text-xs">
+                          {c.lists && c.lists.length > 0 ? c.lists.join(', ') : '—'}
+                        </td>
+                        <td className="px-5 py-3 text-gray-500 text-xs">
+                          {c.batches && c.batches.length > 0 ? c.batches.join(', ') : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        ) : viewMode === 'recents' ? (
           <div className="flex-1 overflow-auto">
             {recentsLoading ? (
               <div className="flex items-center justify-center py-20 text-gray-400">

@@ -959,3 +959,61 @@ class PublicMasterLinkRecentsView(views.APIView):
             })
 
         return Response({'data': data})
+
+class PublicMasterLinkContactsView(views.APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        try:
+            settings = MasterLinkSettings.objects.get(token=token, is_active=True)
+        except MasterLinkSettings.DoesNotExist:
+            return Response({'detail': 'This link is disabled or invalid.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if settings.password:
+            import urllib.parse
+            header_pwd = request.headers.get('X-Master-Password', '')
+            param_pwd = request.query_params.get('password', '')
+            unquoted_param = urllib.parse.unquote(param_pwd)
+            expected = str(settings.password).strip()
+
+            matches = any(
+                str(p).strip() == expected
+                for p in [header_pwd, param_pwd, unquoted_param]
+                if p
+            )
+            if not matches:
+                return Response({'detail': 'password_required', 'has_password': True}, status=status.HTTP_401_UNAUTHORIZED)
+
+        from apps.contacts.models import Contact
+        search = request.query_params.get('search', '').strip()
+        limit = 100
+        
+        if not search:
+            return Response({'data': []})
+
+        qs = Contact.objects.prefetch_related('lists', 'batches')
+        tokens = search.split()
+        search_query = Q()
+        for t in tokens:
+            search_query &= (
+                Q(email__icontains=t) |
+                Q(first_name__icontains=t) |
+                Q(last_name__icontains=t)
+            )
+        qs = qs.filter(search_query)[:limit]
+
+        data = []
+        for c in qs:
+            list_names = [lst.name for lst in c.lists.all()]
+            batch_names = [b.name for b in c.batches.all()]
+            data.append({
+                'id': c.id,
+                'email': c.email,
+                'first_name': c.first_name,
+                'last_name': c.last_name,
+                'lists': list_names,
+                'batches': batch_names,
+                'is_subscribed': c.is_subscribed,
+            })
+
+        return Response({'data': data})

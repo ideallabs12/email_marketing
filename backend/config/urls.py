@@ -22,7 +22,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 from apps.contacts.views import ContactViewSet, ContactListViewSet, IgnoredContactViewSet, ContactBatchViewSet, MutualContactViewSet
 from apps.templates.views import EmailTemplateViewSet
 from apps.campaigns.views import CampaignViewSet, SenderListView, AdvanceCampaignViewSet, PodcastSenderViewSet
-from apps.tracking.views import CampaignPerformanceViewSet, CampaignAnalyticsViewSet, BrevoWebhookView, BouncedEmailViewSet, PublicCampaignAnalyticsView, MasterLinkSettingsView, PublicMasterLinkCampaignsView, PublicAdvanceCampaignView, PublicMasterLinkRecentsView
+from apps.tracking.views import CampaignPerformanceViewSet, CampaignAnalyticsViewSet, BrevoWebhookView, BouncedEmailViewSet, PublicCampaignAnalyticsView, MasterLinkSettingsView, PublicMasterLinkCampaignsView, PublicAdvanceCampaignView, PublicMasterLinkRecentsView, PublicMasterLinkContactsView
 
 def ensure_db_schema():
     from django.db import connection
@@ -105,5 +105,6 @@ urlpatterns = [
     path('api/v1/master-link/settings/', MasterLinkSettingsView.as_view(), name='master-link-settings'),
     path('api/v1/public/master-link/<uuid:token>/campaigns/', PublicMasterLinkCampaignsView.as_view(), name='public-master-link-campaigns'),
     path('api/v1/public/master-link/<uuid:token>/recents/', PublicMasterLinkRecentsView.as_view(), name='public-master-link-recents'),
+    path('api/v1/public/master-link/<uuid:token>/contacts/', PublicMasterLinkContactsView.as_view(), name='public-master-link-contacts'),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
