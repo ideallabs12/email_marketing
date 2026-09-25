@@ -39,8 +39,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md p-8 border border-border">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold tracking-tight">EmailPlatform.</h1>
+        <div className="text-center mb-8 flex flex-col items-center">
+          <img src="/mass-mailing-logo.svg" alt="Logo" className="h-12 w-auto mb-4 object-contain" />
           <p className="text-sm text-foreground/50 mt-1">Please sign in to continue</p>
         </div>
 

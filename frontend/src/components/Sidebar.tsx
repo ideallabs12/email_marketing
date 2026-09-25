@@ -47,7 +47,11 @@ export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: { mobileM
         </button>
 
       <div className={`text-xl font-bold mb-10 tracking-tight flex items-center h-8 ${isCollapsed ? 'justify-center text-sm' : ''}`}>
-        {isCollapsed ? 'EP.' : 'EmailPlatform.'}
+        {isCollapsed ? (
+          <img src="/mass-mailing-logo.svg" alt="Logo" className="w-8 h-8 object-contain" />
+        ) : (
+          <img src="/mass-mailing-logo.svg" alt="Logo" className="h-8 w-auto object-contain" />
+        )}
       </div>
       <nav className={`flex-1 space-y-2 ${isCollapsed ? 'w-full' : ''}`}>
         <Link href="/" title="Dashboard" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
