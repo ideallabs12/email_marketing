@@ -32,6 +32,7 @@ export default function NewSendPage() {
   const [selectedBatches, setSelectedBatches] = useState<number[]>([]);
   const [createError, setCreateError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDuplicate, setIsDuplicate] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -71,6 +72,27 @@ export default function NewSendPage() {
     }
     loadData();
   }, [id]);
+
+  useEffect(() => {
+    async function checkDuplicate() {
+      if (advCampaign?.target_list && selectedTemplate && fromEmail) {
+        try {
+          const res = await apiClient.post('/api/v1/campaigns/check-duplicate/', {
+            target_list: advCampaign.target_list,
+            template: Number(selectedTemplate),
+            from_email: fromEmail,
+            target_batches: selectedBatches
+          });
+          setIsDuplicate(res.duplicate);
+        } catch (e) {
+          console.error('Failed to check duplicate', e);
+        }
+      } else {
+        setIsDuplicate(false);
+      }
+    }
+    checkDuplicate();
+  }, [advCampaign, selectedTemplate, fromEmail, selectedBatches]);
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setTemplateCategory(e.target.value);
@@ -236,12 +258,22 @@ export default function NewSendPage() {
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="text-sm font-semibold text-foreground truncate">{b.name}</span>
+                      {b.contacts_count !== undefined && (
+                        <span className="text-xs text-foreground/50">{b.contacts_count} contacts</span>
+                      )}
                     </div>
                   </label>
                 ))}
               </div>
             )}
           </div>
+
+          {isDuplicate && (
+            <div className="p-3 bg-amber-950/20 text-amber-500 text-sm rounded-md font-medium border border-amber-900/30 flex items-start gap-2">
+              <span className="text-lg leading-none">⚠️</span>
+              <p>A blast using this exact Contact List, Template, and Sender has already been created before. You can still proceed, but please double check if this is intentional.</p>
+            </div>
+          )}
 
           <Button type="submit" className="w-full py-2.5 mt-2" disabled={isSubmitting}>
             {isSubmitting ? 'Creating...' : 'Create Blast'}

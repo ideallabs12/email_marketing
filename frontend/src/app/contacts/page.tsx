@@ -40,6 +40,7 @@ export default function ContactsPage() {
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState('');
   const [importing, setImporting] = useState(false);
+  const [isCreatingNewBatch, setIsCreatingNewBatch] = useState(false);
 
   const [showListModal, setShowListModal] = useState(false);
   const [listName, setListName] = useState('');
@@ -573,14 +574,49 @@ export default function ContactsPage() {
 
               {targetListId && (
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Batch Name (Optional)</label>
-                  <input
-                    type="text"
-                    value={batchName}
-                    onChange={e => setBatchName(e.target.value)}
-                    className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-                    placeholder="e.g. Batch 1"
-                  />
+                  <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Batch (Optional)</label>
+                  {isCreatingNewBatch ? (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={batchName}
+                        onChange={e => setBatchName(e.target.value)}
+                        className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                        placeholder="e.g. Batch 1"
+                        autoFocus
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="shrink-0"
+                        onClick={() => {
+                          setIsCreatingNewBatch(false);
+                          setBatchName('');
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <select
+                      value={batchName}
+                      onChange={e => {
+                        if (e.target.value === '___new___') {
+                          setIsCreatingNewBatch(true);
+                          setBatchName('');
+                        } else {
+                          setBatchName(e.target.value);
+                        }
+                      }}
+                      className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                    >
+                      <option value="">-- None --</option>
+                      {allBatches.filter(b => b.contact_list === Number(targetListId)).map(b => (
+                        <option key={b.id} value={b.name}>{b.name}</option>
+                      ))}
+                      <option value="___new___">+ Create New Batch</option>
+                    </select>
+                  )}
                 </div>
               )}
 

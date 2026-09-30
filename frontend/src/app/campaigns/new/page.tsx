@@ -31,6 +31,7 @@ export default function NewCampaignPage() {
 
   const [createError, setCreateError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDuplicate, setIsDuplicate] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -63,6 +64,27 @@ export default function NewCampaignPage() {
     }
     loadData();
   }, []);
+
+  useEffect(() => {
+    async function checkDuplicate() {
+      if (targetList && selectedTemplate && fromEmail) {
+        try {
+          const res = await apiClient.post('/api/v1/campaigns/check-duplicate/', {
+            target_list: Number(targetList),
+            template: Number(selectedTemplate),
+            from_email: fromEmail,
+            target_batches: selectedBatches
+          });
+          setIsDuplicate(res.duplicate);
+        } catch (e) {
+          console.error('Failed to check duplicate', e);
+        }
+      } else {
+        setIsDuplicate(false);
+      }
+    }
+    checkDuplicate();
+  }, [targetList, selectedTemplate, fromEmail, selectedBatches]);
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setTemplateCategory(e.target.value);
@@ -218,10 +240,19 @@ export default function NewCampaignPage() {
                 className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background min-h-[80px]"
               >
                 {batches.filter(b => b.contact_list === Number(targetList)).map(b => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
+                  <option key={b.id} value={b.id}>
+                    {b.name}{b.contacts_count !== undefined ? ` (${b.contacts_count} contacts)` : ''}
+                  </option>
                 ))}
               </select>
               <p className="text-[10px] text-foreground/40 mt-1">Leave empty to send to the entire list. Hold Ctrl (Cmd) to select multiple batches.</p>
+            </div>
+          )}
+
+          {isDuplicate && (
+            <div className="p-3 bg-amber-950/20 text-amber-500 text-sm rounded-md font-medium border border-amber-900/30 flex items-start gap-2">
+              <span className="text-lg leading-none">⚠️</span>
+              <p>A blast using this exact Contact List, Template, and Sender has already been created before. You can still proceed, but please double check if this is intentional.</p>
             </div>
           )}
 

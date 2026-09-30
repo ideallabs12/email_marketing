@@ -75,9 +75,22 @@ def send_campaign_emails(self, campaign_id: int):
             if isinstance(campaign.template.variables, dict):
                 context.update(campaign.template.variables)
             
+            f_name = (contact.first_name or context.get('first_name', '')).strip()
+            l_name = (contact.last_name or context.get('last_name', '')).strip()
+            
+            if f_name and l_name:
+                full_name = f"{f_name} {l_name}"
+            elif f_name:
+                full_name = f_name
+            elif l_name:
+                full_name = l_name
+            else:
+                full_name = "Speaker"
+
             context.update({
-                'first_name': contact.first_name or context.get('first_name', 'Speaker'),
-                'last_name': contact.last_name or context.get('last_name', ''),
+                'first_name': f_name or 'Speaker',
+                'last_name': l_name,
+                'full_name': full_name,
                 'email': contact.email,
                 'subject': subject_template,
             })

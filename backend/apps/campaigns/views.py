@@ -68,6 +68,29 @@ class CampaignViewSet(viewsets.ModelViewSet):
             )
         return super().destroy(request, *args, **kwargs)
 
+    @action(detail=False, methods=['post'], url_path='check-duplicate')
+    def check_duplicate(self, request):
+        target_list = request.data.get('target_list')
+        template = request.data.get('template')
+        from_email = request.data.get('from_email')
+
+        if not all([target_list, template, from_email]):
+            return Response({'duplicate': False})
+
+        qs = Campaign.objects.filter(
+            target_list_id=target_list,
+            template_id=template,
+            from_email__iexact=from_email
+        )
+        
+        target_batches = request.data.get('target_batches', [])
+        if target_batches:
+            qs = qs.filter(target_batches__in=target_batches).distinct()
+
+        if qs.exists():
+            return Response({'duplicate': True})
+        return Response({'duplicate': False})
+
     @action(detail=True, methods=['post'])
     def send(self, request, pk=None):
         campaign = self.get_object()
