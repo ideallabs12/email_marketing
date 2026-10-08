@@ -57,6 +57,13 @@ brands = [
         'linkedin_url': 'https://www.linkedin.com/company/wyn-global-conferences/posts/?feedView=all',
         'scheduling_link': 'https://calendly.com/wynconferences',
         'physical_address': '7522 Campbell Rd, Suite 113 #431, Dallas, Texas 75248, US'
+    },
+    {
+        'name': 'PROSUMMITS',
+        'website_url': 'https://www.prosummits.org',
+        'linkedin_url': '',
+        'scheduling_link': '',
+        'physical_address': ''
     }
 ]
 

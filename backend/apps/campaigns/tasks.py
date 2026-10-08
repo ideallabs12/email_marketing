@@ -80,14 +80,19 @@ def send_campaign_emails(self, campaign_id: int):
             
             if f_name and l_name:
                 full_name = f"{f_name} {l_name}"
+                greeting = f"Dear {full_name},"
             elif f_name:
                 full_name = f_name
+                greeting = f"Dear {full_name},"
             elif l_name:
                 full_name = l_name
+                greeting = f"Dear {full_name},"
             else:
                 full_name = "Speaker"
+                greeting = "Hi there,"
 
             context.update({
+                'greeting': greeting,
                 'first_name': f_name or 'Speaker',
                 'last_name': l_name,
                 'full_name': full_name,
@@ -106,7 +111,8 @@ def send_campaign_emails(self, campaign_id: int):
                     'icon': 'ICON',
                     'idias': 'IDiAS',
                     'next': 'NEXT',
-                    'wyn': 'WYN'
+                    'wyn': 'WYN',
+                    'prosummits': 'PROSUMMITS'
                 }
                 for key, val in mapping.items():
                     if key in email_lower:
