@@ -1,0 +1,8 @@
+Team Name,Submitter Name,Batch File Name,Campaign Name,Speaker / Lead Name,Email Address,Company / Organization,Date Emailed,Email Status,Reply Status,Call Booked?,Call Date & Time,Call Status,Lead Status,Next Steps / Notes
+ICON,Alice,alice/ICON_091026_1_(50),Tech Conference 2026,John Doe,john@example.com,TechCorp,2026-10-09,Opened,Positive,Yes,2026-10-12 10:00 AM,Scheduled,In Discussion,Send calendar invite
+IDiAS,Bob,bob/IDiAS_101026_1_(75),Marketing Campaign,Jane Smith,jane@startup.io,Startup Inc,2026-10-10,Sent,No Reply,No,,,Contacted,Follow up in 3 days
+NEXT,Charlie,charlie/NEXT_111026_1_(60),Webinar Invite,Michael Scott,michael@dundermifflin.com,Dunder Mifflin,2026-10-11,Clicked,Neutral,No,,,Contacted,Check if they attended webinar
+PROSUMMITS_VIZAG,Diana,diana/PROSUMMITS_VIZAG_121026_1_(115),Vizag Summit,Bruce Wayne,bruce@wayne.com,Wayne Ent,2026-10-12,Bounced,-,No,,,Dead,Find updated email
+VOICE,Eve,eve/VOICE_131026_1_(50),Voice AI Outreach,Clark Kent,clark@dailyplanet.com,Daily Planet,2026-10-13,Sent,Not Interested,No,,,Closed Lost,Remove from mailing list
+WYN,Frank,frank/WYN_141026_1_(150),WYN Weekly,Diana Prince,diana@themyscira.gov,Themyscira,2026-10-14,Opened,Positive,Yes,2026-10-18 02:00 PM,Completed,Closed Won,Onboarded successfully
+WYNx TALKS,Grace,grace/WYNx_TALKS_151026_1_(100),Speaker Outreach,Peter Parker,peter@dailybugle.com,Daily Bugle,2026-10-15,Sent,Positive,Yes,2026-10-20 11:00 AM,Rescheduled,In Discussion,Waiting for available slots

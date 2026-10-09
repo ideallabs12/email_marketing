@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Contact, ContactList, IgnoredContact, ContactBatch, MutualContact
+from .models import Contact, ContactList, IgnoredContact, ContactBatch, MutualContact, Lead
 
 class ContactListSerializer(serializers.ModelSerializer):
     contacts_count = serializers.SerializerMethodField()
@@ -40,3 +40,7 @@ class MutualContactSerializer(serializers.ModelSerializer):
         model = MutualContact
         fields = '__all__'
 
+class LeadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lead
+        fields = '__all__'

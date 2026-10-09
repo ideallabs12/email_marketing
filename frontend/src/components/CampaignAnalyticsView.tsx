@@ -114,6 +114,21 @@ export default function CampaignAnalyticsView({ campaignId }: { campaignId: stri
     }
   };
 
+  const handleAddLead = async (recipient: any) => {
+    try {
+      await apiClient.post('/api/v1/leads/', {
+        speaker_name: [recipient.first_name, recipient.last_name].filter(Boolean).join(' '),
+        email: recipient.email,
+        campaign_name: analytics?.campaign?.name || 'Unknown',
+        whose_speaker: 'Auto', 
+      });
+      alert('Added to Leads successfully!');
+    } catch (err: any) {
+      alert('Failed to add lead: ' + (err.message || 'Unknown error'));
+    }
+  };
+
+
   const copyShareLink = () => {
     const camp = analytics?.campaign as any;
     const advSlug = camp?.advance_campaign_slug || (camp?.advance_campaign_name ? slugify(camp.advance_campaign_name) : null);
@@ -294,10 +309,11 @@ export default function CampaignAnalyticsView({ campaignId }: { campaignId: stri
         </div>
 
         <div className="hidden md:grid grid-cols-12 gap-3 text-xs font-medium uppercase tracking-widest text-foreground/40 py-4 border-b border-border">
-          <span className="col-span-4">Contact</span>
+          <span className="col-span-3">Contact</span>
           <span className="col-span-2">Status</span>
-          <span className="col-span-3">Latest event</span>
+          <span className="col-span-2">Latest event</span>
           <span className="col-span-3">Details</span>
+          <span className="col-span-2 text-right">Actions</span>
         </div>
 
         {loading && analytics?.recipients.length === 0 ? (
@@ -310,7 +326,7 @@ export default function CampaignAnalyticsView({ campaignId }: { campaignId: stri
               <div key={recipient.contact_id} className="flex flex-col md:grid md:grid-cols-12 gap-1 md:gap-3 py-4 md:py-3 text-sm items-start md:items-center hover:bg-foreground/5 rounded-lg md:rounded-md border border-border md:border-transparent bg-foreground/[0.02] md:bg-transparent px-3 md:px-2 -mx-3 md:-mx-2 mb-3 md:mb-0 transition-colors shadow-sm md:shadow-none">
                 
                 <div className="flex justify-between items-start w-full md:contents mb-2 md:mb-0">
-                  <div className="md:col-span-4 flex flex-col min-w-0 pr-2">
+                  <div className="md:col-span-3 flex flex-col min-w-0 pr-2">
                     <span className="font-bold md:font-medium text-base md:text-sm truncate text-foreground">
                       {[recipient.first_name, recipient.last_name].filter(Boolean).join(' ') || '—'}
                     </span>
@@ -335,9 +351,17 @@ export default function CampaignAnalyticsView({ campaignId }: { campaignId: stri
                       )}
                     </span>
                   </div>
-                  <div className="md:col-span-3 flex flex-col md:block text-right md:text-left">
+                  <div className="md:col-span-2 flex flex-col md:block text-right md:text-left">
                     <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Latest Event</span>
                     <span className="text-[11px] md:text-xs text-foreground/70">{formatDate(recipient.last_event_at)}</span>
+                  </div>
+                  <div className="md:col-span-2 flex justify-end items-center mt-2 md:mt-0">
+                    <button 
+                      onClick={() => handleAddLead(recipient)} 
+                      className="px-2 py-1 text-[11px] font-bold bg-foreground text-background rounded shadow hover:bg-foreground/80 transition"
+                    >
+                      Add to Leads
+                    </button>
                   </div>
                 </div>
 

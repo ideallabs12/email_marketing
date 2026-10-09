@@ -65,4 +65,29 @@ class MutualContact(models.Model):
     def __str__(self):
         return f"{self.email} (in {self.already_exists_in})"
 
+class Lead(models.Model):
+    CALL_STATUS_CHOICES = [
+        ('Scheduled', 'Scheduled'),
+        ('Completed', 'Completed'),
+        ('Rescheduled', 'Rescheduled'),
+        ('No Show', 'No Show'),
+        ('Cancelled', 'Cancelled'),
+    ]
+
+    speaker_name = models.CharField(max_length=255)
+    email = models.EmailField()
+    campaign_name = models.CharField(max_length=255)
+    batch_name = models.CharField(max_length=255, blank=True)
+    whose_speaker = models.CharField(max_length=255)
+    call_booked_on = models.DateTimeField(null=True, blank=True)
+    call_status = models.CharField(max_length=50, choices=CALL_STATUS_CHOICES, blank=True, null=True)
+    followup = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.speaker_name} ({self.email})"
+
+
 

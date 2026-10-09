@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, Mail, Users, FileText, ChevronLeft, ChevronRight, MailWarning, LogOut, X, Library, LayoutTemplate, BarChart3 } from 'lucide-react';
+import { Home, Mail, Users, FileText, ChevronLeft, ChevronRight, MailWarning, LogOut, X, Library, LayoutTemplate, BarChart3, Target } from 'lucide-react';
 import { apiClient } from '@/services/apiClient';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
@@ -82,6 +82,10 @@ export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: { mobileM
         <Link href="/contacts" title="Contacts" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
           <Users size={18} />
           {!isCollapsed && <span>Contacts</span>}
+        </Link>
+        <Link href="/leads" title="Leads Tracker" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
+          <Target size={18} />
+          {!isCollapsed && <span>Leads Tracker</span>}
         </Link>
 
         <Link href="/bounces" title="Bounced Mails" className={`flex items-center p-2 hover:bg-red-600 hover:text-white text-red-500 rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>

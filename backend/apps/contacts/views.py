@@ -3,8 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 import csv
 import io
-from .models import Contact, ContactList, IgnoredContact, ContactBatch, MutualContact
-from .serializers import ContactSerializer, ContactListSerializer, IgnoredContactSerializer, ContactBatchSerializer, MutualContactSerializer
+from .models import Contact, ContactList, IgnoredContact, ContactBatch, MutualContact, Lead
+from .serializers import ContactSerializer, ContactListSerializer, IgnoredContactSerializer, ContactBatchSerializer, MutualContactSerializer, LeadSerializer
 from django.db.models import ProtectedError, Count, Q
 
 class ContactListViewSet(viewsets.ModelViewSet):
@@ -320,3 +320,10 @@ class ContactBatchViewSet(viewsets.ModelViewSet):
         if list_id:
             qs = qs.filter(contact_list_id=list_id)
         return qs
+
+class LeadViewSet(viewsets.ModelViewSet):
+    queryset = Lead.objects.all().order_by('-created_at')
+    serializer_class = LeadSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['speaker_name', 'email', 'campaign_name', 'whose_speaker', 'call_status']
+    ordering_fields = ['created_at', 'call_booked_on', 'speaker_name']

@@ -431,6 +431,32 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
     }
   };
 
+  const handleAddLead = async (row: any, campaignName: string, batchName: string = '') => {
+    try {
+      const savedPwd = typeof window !== 'undefined' ? sessionStorage.getItem(`master_pwd_${token}`) || '' : '';
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (savedPwd) headers['X-Master-Password'] = savedPwd;
+      const authToken = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      if (authToken) headers['Authorization'] = `Token ${authToken}`;
+      
+      const res = await fetch(`${API_BASE_URL}/api/v1/leads/`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          speaker_name: row.speaker_name || '',
+          email: row.email,
+          campaign_name: campaignName,
+          batch_name: batchName,
+          whose_speaker: 'Auto',
+        })
+      });
+      if (!res.ok) throw new Error('API Error');
+      alert('Added to Leads successfully!');
+    } catch (err: any) {
+      alert('Failed to add lead: ' + err.message);
+    }
+  };
+
   // Filter containers + blasts by search query
   const filteredContainers = useMemo(() => {
     if (!searchQuery.trim()) return containers;
@@ -779,6 +805,7 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                     <th className="px-5 py-3">Status</th>
                     <th className="px-5 py-3">Clicked At</th>
                     <th className="px-5 py-3">Links</th>
+                    <th className="px-5 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -822,6 +849,14 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                         ) : (
                           <span className="text-gray-300">—</span>
                         )}
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <button 
+                          onClick={() => handleAddLead(row, row.campaign_name || '', row.blast_name || '')}
+                          className="px-2 py-1 text-[11px] font-bold bg-gray-900 text-white rounded shadow hover:bg-gray-800 transition"
+                        >
+                          Add to Leads
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -908,6 +943,7 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                       {showOpenedAt && <th className="px-5 py-3">Opened At</th>}
                       {showClickedAt && <th className="px-5 py-3">Clicked At</th>}
                       {showLinksClicked && <th className="px-5 py-3">Links</th>}
+                      <th className="px-5 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -959,6 +995,14 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                             )}
                           </td>
                         )}
+                        <td className="px-5 py-3 text-right">
+                          <button 
+                            onClick={() => handleAddLead(row, analytics?.campaign_name || '', analytics?.targeted_batch_name || '')}
+                            className="px-2 py-1 text-[11px] font-bold bg-gray-900 text-white rounded shadow hover:bg-gray-800 transition"
+                          >
+                            Add to Leads
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
