@@ -11,6 +11,7 @@ export interface ContactList {
   description: string;
   is_default?: boolean;
   contacts_count?: number;
+  tracking_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -20,6 +21,7 @@ export interface ContactBatch {
   name: string;
   contact_list: number;
   contacts_count?: number;
+  tracking_id?: string;
   created_at: string;
 }
 
@@ -60,6 +62,7 @@ export interface Campaign {
   scheduled_at: string | null;
   sent_at: string | null;
   share_token?: string;
+  tracking_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -69,6 +72,7 @@ export interface AdvanceCampaign {
   name: string;
   target_list: number;
   share_token?: string;
+  tracking_id?: string;
   campaigns?: Campaign[];
   created_at: string;
   updated_at: string;

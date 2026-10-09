@@ -14,6 +14,7 @@ interface Lead {
   whose_speaker: string;
   call_booked_on: string | null;
   call_status: string | null;
+  source_tracking_id: string | null;
   followup: string | null;
   notes: string;
   created_at: string;
@@ -367,13 +368,18 @@ export default function LeadsPage() {
                           </div>
                         </td>
                         <td className="px-3 py-4 align-top">
-                          <div className="flex flex-col gap-1.5">
+                          <div className="flex flex-col gap-1.5 relative">
+                            {lead.source_tracking_id && (
+                              <div className="absolute right-2 top-2 px-1.5 py-0.5 rounded-md bg-foreground/10 text-foreground/50 text-[9px] font-mono border border-border pointer-events-none">
+                                #{lead.source_tracking_id}
+                              </div>
+                            )}
                             <input
                               type="text"
                               value={lead.campaign_name || ''}
                               onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, campaign_name: e.target.value } : l))}
                               onBlur={(e) => handleInlineUpdate(lead.id, 'campaign_name', e.target.value)}
-                              className="text-sm w-full px-2 py-1.5 bg-transparent border border-transparent hover:border-border hover:bg-background focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none font-medium text-foreground/80 transition-all text-ellipsis overflow-hidden whitespace-nowrap"
+                              className={`text-sm w-full py-1.5 bg-transparent border border-transparent hover:border-border hover:bg-background focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none font-medium text-foreground/80 transition-all text-ellipsis overflow-hidden whitespace-nowrap ${lead.source_tracking_id ? 'pl-2 pr-12' : 'px-2'}`}
                               placeholder="Campaign name"
                               title={lead.campaign_name}
                             />
@@ -601,8 +607,13 @@ export default function LeadsPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 bg-white/60 dark:bg-slate-800/60 rounded-2xl p-3 border border-slate-200/60 dark:border-slate-700/60">
-                      <div className="flex flex-col">
-                        <label className="text-[10px] uppercase font-bold text-foreground/40 px-2">Campaign</label>
+                      <div className="flex flex-col relative">
+                        <label className="text-[10px] uppercase font-bold text-foreground/40 px-2 flex justify-between">
+                          Campaign
+                          {lead.source_tracking_id && (
+                            <span className="text-[9px] font-mono text-foreground/50">#{lead.source_tracking_id}</span>
+                          )}
+                        </label>
                         <input
                           type="text"
                           value={lead.campaign_name || ''}

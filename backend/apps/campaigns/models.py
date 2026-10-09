@@ -1,7 +1,12 @@
 import uuid
+import random
+import string
 from django.db import models
 from apps.templates.models import EmailTemplate
 from apps.contacts.models import ContactList
+
+def generate_tracking_id():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
 
 class PodcastSender(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -19,8 +24,18 @@ class AdvanceCampaign(models.Model):
     name = models.CharField(max_length=255)
     target_list = models.ForeignKey(ContactList, on_delete=models.PROTECT)
     share_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    tracking_id = models.CharField(max_length=10, blank=True, null=True, unique=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.tracking_id:
+            while True:
+                new_id = generate_tracking_id()
+                if not AdvanceCampaign.objects.filter(tracking_id=new_id).exists():
+                    self.tracking_id = new_id
+                    break
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -46,8 +61,18 @@ class Campaign(models.Model):
     scheduled_at = models.DateTimeField(null=True, blank=True)
     sent_at = models.DateTimeField(null=True, blank=True)
     share_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    tracking_id = models.CharField(max_length=10, blank=True, null=True, unique=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.tracking_id:
+            while True:
+                new_id = generate_tracking_id()
+                if not Campaign.objects.filter(tracking_id=new_id).exists():
+                    self.tracking_id = new_id
+                    break
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

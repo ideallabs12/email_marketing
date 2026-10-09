@@ -1,11 +1,26 @@
+import random
+import string
 from django.db import models
+
+def generate_tracking_id():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
 
 class ContactList(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     is_default = models.BooleanField(default=False)
+    tracking_id = models.CharField(max_length=10, blank=True, null=True, unique=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.tracking_id:
+            while True:
+                new_id = generate_tracking_id()
+                if not ContactList.objects.filter(tracking_id=new_id).exists():
+                    self.tracking_id = new_id
+                    break
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -13,7 +28,17 @@ class ContactList(models.Model):
 class ContactBatch(models.Model):
     name = models.CharField(max_length=255)
     contact_list = models.ForeignKey(ContactList, related_name='batches', on_delete=models.CASCADE)
+    tracking_id = models.CharField(max_length=10, blank=True, null=True, unique=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.tracking_id:
+            while True:
+                new_id = generate_tracking_id()
+                if not ContactBatch.objects.filter(tracking_id=new_id).exists():
+                    self.tracking_id = new_id
+                    break
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name} ({self.contact_list.name})"
@@ -83,6 +108,7 @@ class Lead(models.Model):
     whose_speaker = models.CharField(max_length=255, blank=True)
     call_booked_on = models.DateTimeField(null=True, blank=True)
     call_status = models.CharField(max_length=50, choices=CALL_STATUS_CHOICES, blank=True, null=True)
+    source_tracking_id = models.CharField(max_length=10, blank=True, null=True, db_index=True)
     followup = models.DateTimeField(null=True, blank=True)
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

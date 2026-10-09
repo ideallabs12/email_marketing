@@ -171,7 +171,12 @@ export default function CampaignsPage() {
                 <div key={c.id} className="flex flex-col md:grid md:grid-cols-12 gap-1 md:gap-0 py-4 md:py-3 text-sm items-start md:items-center hover:bg-foreground/5 rounded-lg md:rounded-md border border-border md:border-transparent bg-foreground/[0.02] md:bg-transparent px-3 md:px-2 mb-4 md:mb-0 transition-colors shadow-sm md:shadow-none">
                   {/* Name and Basic Info */}
                   <div className="flex flex-col md:col-span-3 pr-2 min-w-0 w-full mb-3 md:mb-0">
-                    <span className="font-bold md:font-medium text-base md:text-sm truncate text-foreground">{c.name}</span>
+                    <span className="font-bold md:font-medium text-base md:text-sm truncate text-foreground flex items-center gap-2">
+                      {c.name}
+                      {c.tracking_id && (
+                        <span className="px-1.5 py-0.5 rounded-md bg-foreground/10 text-foreground/70 text-[10px] font-mono border border-border">#{c.tracking_id}</span>
+                      )}
+                    </span>
                     <span className="text-xs text-foreground/50 mt-1 truncate font-medium">Template: {getTemplateName(c.template)}</span>
                     <span className="text-xs text-foreground/50 mt-0.5 truncate">From: {c.from_email}</span>
                   </div>
