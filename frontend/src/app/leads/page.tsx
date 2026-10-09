@@ -467,14 +467,14 @@ export default function LeadsPage() {
                       type="text" 
                       value={newLeadForm.speaker_name || ''} 
                       onChange={e => setNewLeadForm({...newLeadForm, speaker_name: e.target.value})} 
-                      className="text-xl font-bold w-full px-3 py-2 bg-background/80 border border-emerald-200 dark:border-emerald-500/30 rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:font-normal" 
+                      className="text-lg font-bold w-full px-3 py-2 bg-background/80 border border-emerald-200 dark:border-emerald-500/30 rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:font-normal" 
                       placeholder="Speaker name"
                     />
                     <input 
                       type="email" 
                       value={newLeadForm.email || ''} 
                       onChange={e => setNewLeadForm({...newLeadForm, email: e.target.value})} 
-                      className="text-sm w-full px-3 py-2 bg-background/80 border border-emerald-200 dark:border-emerald-500/30 rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 transition-all text-foreground/70" 
+                      className="text-xs w-full px-3 py-2 bg-background/80 border border-emerald-200 dark:border-emerald-500/30 rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 transition-all text-foreground/70" 
                       placeholder="Email address"
                     />
                   </div>
@@ -491,6 +491,16 @@ export default function LeadsPage() {
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] uppercase font-bold text-emerald-700/60 dark:text-emerald-400/60 px-1">Batch</label>
+                      <input 
+                        type="text" 
+                        value={newLeadForm.batch_name || ''} 
+                        onChange={e => setNewLeadForm({...newLeadForm, batch_name: e.target.value})} 
+                        className="text-sm w-full px-3 py-2 bg-background/80 border border-emerald-200 dark:border-emerald-500/30 rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 transition-all" 
+                        placeholder="Batch name"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5 col-span-2">
                       <label className="text-[11px] uppercase font-bold text-emerald-700/60 dark:text-emerald-400/60 px-1">Owner</label>
                       <input 
                         type="text" 
@@ -562,21 +572,21 @@ export default function LeadsPage() {
                     </button>
                     
                     <div className="flex flex-col pr-10">
-                      <input
-                        type="text"
+                      <textarea
                         value={lead.speaker_name || ''}
                         onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, speaker_name: e.target.value } : l))}
                         onBlur={(e) => handleInlineUpdate(lead.id, 'speaker_name', e.target.value)}
-                        className="text-xl font-bold w-full px-2 py-1 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800 focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none text-foreground transition-all text-ellipsis overflow-hidden whitespace-nowrap"
+                        className="text-lg font-bold w-full px-2 py-1 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800 focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none text-foreground transition-all resize-none overflow-hidden h-[36px]"
                         placeholder="Speaker name"
+                        rows={1}
                       />
-                      <input
-                        type="text"
+                      <textarea
                         value={lead.email || ''}
                         onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, email: e.target.value } : l))}
                         onBlur={(e) => handleInlineUpdate(lead.id, 'email', e.target.value)}
-                        className="text-sm w-full px-2 py-1 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800 focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none text-foreground/60 transition-all text-ellipsis overflow-hidden whitespace-nowrap"
+                        className="text-xs w-full px-2 py-1 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800 focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none text-foreground/60 transition-all resize-none overflow-hidden h-[26px]"
                         placeholder="Email address"
+                        rows={1}
                       />
                     </div>
 
@@ -588,18 +598,29 @@ export default function LeadsPage() {
                           value={lead.campaign_name || ''}
                           onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, campaign_name: e.target.value } : l))}
                           onBlur={(e) => handleInlineUpdate(lead.id, 'campaign_name', e.target.value)}
-                          className="text-xs font-semibold w-full px-2 py-1.5 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800 focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none text-foreground/80 transition-all text-ellipsis overflow-hidden whitespace-nowrap"
+                          className="text-xs font-semibold w-full px-2 py-1.5 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800 focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none text-foreground/80 transition-all overflow-hidden"
                           placeholder="Campaign"
                         />
                       </div>
                       <div className="flex flex-col">
+                        <label className="text-[10px] uppercase font-bold text-foreground/40 px-2">Batch</label>
+                        <input
+                          type="text"
+                          value={lead.batch_name || ''}
+                          onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, batch_name: e.target.value } : l))}
+                          onBlur={(e) => handleInlineUpdate(lead.id, 'batch_name', e.target.value)}
+                          className="text-[11px] font-mono w-full px-2 py-1.5 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800 focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none text-foreground/50 transition-all overflow-hidden"
+                          placeholder="No batch"
+                        />
+                      </div>
+                      <div className="flex flex-col col-span-2">
                         <label className="text-[10px] uppercase font-bold text-foreground/40 px-2">Owner</label>
                         <input
                           type="text"
                           value={lead.whose_speaker || ''}
                           onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, whose_speaker: e.target.value } : l))}
                           onBlur={(e) => handleInlineUpdate(lead.id, 'whose_speaker', e.target.value)}
-                          className="text-xs font-bold text-emerald-600 dark:text-emerald-400 w-full px-2 py-1.5 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800 focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none transition-all text-ellipsis overflow-hidden whitespace-nowrap"
+                          className="text-xs font-bold text-emerald-600 dark:text-emerald-400 w-full px-2 py-1.5 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800 focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none transition-all overflow-hidden"
                           placeholder="Owner"
                         />
                       </div>

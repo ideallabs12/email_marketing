@@ -67,6 +67,7 @@ class MutualContact(models.Model):
 
 class Lead(models.Model):
     CALL_STATUS_CHOICES = [
+        ('Scheduled', 'Scheduled'),
         ('Completed', 'Completed'),
         ('Rescheduled', 'Rescheduled'),
         ('No Show', 'No Show'),
