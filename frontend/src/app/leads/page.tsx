@@ -34,6 +34,11 @@ export default function LeadsPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
 
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [newLeadForm, setNewLeadForm] = useState<Partial<Lead>>({
+    speaker_name: '', email: '', campaign_name: 'Manual Entry', batch_name: '', whose_speaker: '', call_status: '', call_booked_on: '', notes: ''
+  });
+
   useEffect(() => {
     fetchLeads();
   }, []);
@@ -87,6 +92,27 @@ export default function LeadsPage() {
     }
   };
 
+  const saveNewLead = async () => {
+    try {
+      const payload: any = { ...newLeadForm };
+      if (!payload.speaker_name) payload.speaker_name = payload.email || 'Unknown';
+      if (!payload.campaign_name) payload.campaign_name = 'Manual Entry';
+      if (!payload.whose_speaker) payload.whose_speaker = 'Manual';
+      if (!payload.email) payload.email = 'no-email@example.com';
+      if (!payload.call_booked_on) payload.call_booked_on = null;
+      if (!payload.call_status) payload.call_status = null;
+      
+      const created = await apiClient.post(`/api/v1/leads/`, payload);
+      setLeads([created, ...leads]);
+      setIsAddingNew(false);
+      setNewLeadForm({
+        speaker_name: '', email: '', campaign_name: 'Manual Entry', batch_name: '', whose_speaker: '', call_status: '', call_booked_on: '', notes: ''
+      });
+    } catch (err: any) {
+      alert('Failed to add lead: ' + (err.message || 'Unknown error'));
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -97,6 +123,12 @@ export default function LeadsPage() {
           </h1>
           <p className="text-foreground/50 mt-1 text-sm">Manage booked calls and follow-ups from your campaigns.</p>
         </div>
+        <button 
+          onClick={() => setIsAddingNew(true)}
+          className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition shadow-sm"
+        >
+          + Add Lead Manually
+        </button>
       </div>
 
       <Card className="overflow-hidden">
@@ -115,9 +147,92 @@ export default function LeadsPage() {
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr><td colSpan={6} className="text-center py-8">Loading leads...</td></tr>
-              ) : leads.length === 0 ? (
+              ) : leads.length === 0 && !isAddingNew ? (
                 <tr><td colSpan={6} className="text-center py-8 text-foreground/50">No leads added yet. Go to Analytics to add some!</td></tr>
-              ) : leads.map(lead => (
+              ) : (
+                <>
+                  {isAddingNew && (
+                    <tr className="bg-emerald-50/50 dark:bg-emerald-500/10 transition-colors">
+                      <td className="px-4 py-3 font-medium">
+                        <div className="space-y-1">
+                          <input 
+                            type="text" 
+                            value={newLeadForm.speaker_name || ''} 
+                            onChange={e => setNewLeadForm({...newLeadForm, speaker_name: e.target.value})} 
+                            className="text-sm w-full p-1.5 border border-emerald-200 dark:border-emerald-500/30 rounded bg-background" 
+                            placeholder="Speaker name"
+                          />
+                          <input 
+                            type="email" 
+                            value={newLeadForm.email || ''} 
+                            onChange={e => setNewLeadForm({...newLeadForm, email: e.target.value})} 
+                            className="text-xs w-full p-1.5 border border-emerald-200 dark:border-emerald-500/30 rounded bg-background" 
+                            placeholder="Email address"
+                          />
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="space-y-1">
+                          <input 
+                            type="text" 
+                            value={newLeadForm.campaign_name || ''} 
+                            onChange={e => setNewLeadForm({...newLeadForm, campaign_name: e.target.value})} 
+                            className="text-sm w-full p-1.5 border border-emerald-200 dark:border-emerald-500/30 rounded bg-background" 
+                            placeholder="Campaign name"
+                          />
+                          <input 
+                            type="text" 
+                            value={newLeadForm.batch_name || ''} 
+                            onChange={e => setNewLeadForm({...newLeadForm, batch_name: e.target.value})} 
+                            className="text-xs w-full p-1.5 border border-emerald-200 dark:border-emerald-500/30 rounded bg-background" 
+                            placeholder="Batch name"
+                          />
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <input 
+                          type="text" 
+                          value={newLeadForm.whose_speaker || ''} 
+                          onChange={e => setNewLeadForm({...newLeadForm, whose_speaker: e.target.value})} 
+                          className="w-full p-1.5 border border-emerald-200 dark:border-emerald-500/30 rounded bg-background text-sm" 
+                          placeholder="Owner name"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="space-y-2">
+                          <select 
+                            value={newLeadForm.call_status || ''} 
+                            onChange={e => setNewLeadForm({...newLeadForm, call_status: e.target.value})}
+                            className="w-full p-1.5 border border-emerald-200 dark:border-emerald-500/30 rounded bg-background text-sm"
+                          >
+                            <option value="">No Status</option>
+                            {CALL_STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                          <input 
+                            type="date" 
+                            value={newLeadForm.call_booked_on || ''} 
+                            onChange={e => setNewLeadForm({...newLeadForm, call_booked_on: e.target.value})}
+                            className="w-full p-1.5 border border-emerald-200 dark:border-emerald-500/30 rounded bg-background text-sm"
+                          />
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 min-w-[200px]">
+                        <textarea 
+                          value={newLeadForm.notes || ''} 
+                          onChange={e => setNewLeadForm({...newLeadForm, notes: e.target.value})}
+                          className="w-full p-1.5 border border-emerald-200 dark:border-emerald-500/30 rounded bg-background text-sm min-h-[60px]"
+                          placeholder="Add notes..."
+                        />
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex justify-end gap-1">
+                          <button onClick={saveNewLead} className="p-1.5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 rounded transition-colors"><Check size={16} /></button>
+                          <button onClick={() => setIsAddingNew(false)} className="p-1.5 text-foreground/50 hover:bg-foreground/10 rounded transition-colors"><X size={16} /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  {leads.map(lead => (
                 <tr key={lead.id} className="hover:bg-foreground/[0.02] transition-colors">
                   <td className="px-4 py-3 font-medium">
                     {editingId === lead.id ? (
@@ -240,7 +355,7 @@ export default function LeadsPage() {
                     )}
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>

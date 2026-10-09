@@ -181,6 +181,34 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
     setSearchQuery('');
   };
 
+  const handleAddLead = async (row: any) => {
+    try {
+      const savedPwd = typeof window !== 'undefined' ? sessionStorage.getItem(`master_pwd_${token}`) || '' : '';
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (savedPwd) headers['X-Master-Password'] = savedPwd;
+      const authToken = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      if (authToken) headers['Authorization'] = `Token ${authToken}`;
+      
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+      
+      const res = await fetch(`${API_BASE_URL}/api/v1/leads/`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          speaker_name: row.speaker_name || row.email || 'Unknown',
+          email: row.email,
+          campaign_name: data?.campaign_name || 'Unknown',
+          batch_name: analytics?.targeted_batch_name || '',
+          whose_speaker: 'Auto',
+        })
+      });
+      if (!res.ok) throw new Error('API Error');
+      alert('Added to Leads successfully!');
+    } catch (err: any) {
+      alert('Failed to add lead: ' + err.message);
+    }
+  };
+
   if (isRetiredLink) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50 p-4">
@@ -577,7 +605,8 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
                   <th className="px-5 py-3 border-r border-gray-100">Status</th>
                   {showOpenedAt && <th className="px-5 py-3 border-r border-gray-100">Opened At</th>}
                   {showClickedAt && <th className="px-5 py-3 border-r border-gray-100">Clicked At</th>}
-                  {showLinksClicked && <th className="px-5 py-3">Links Clicked</th>}
+                  {showLinksClicked && <th className="px-5 py-3 border-r border-gray-100">Links Clicked</th>}
+                  <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -634,6 +663,14 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
                           )}
                         </td>
                       )}
+                      <td className="px-5 py-3 text-right border-l border-gray-100/50">
+                        <button 
+                          onClick={() => handleAddLead(row)}
+                          className="px-2 py-1 text-[11px] font-bold bg-gray-900 text-white rounded shadow hover:bg-gray-800 transition"
+                        >
+                          Add to Leads
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}

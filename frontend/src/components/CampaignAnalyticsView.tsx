@@ -117,7 +117,7 @@ export default function CampaignAnalyticsView({ campaignId }: { campaignId: stri
   const handleAddLead = async (recipient: any) => {
     try {
       await apiClient.post('/api/v1/leads/', {
-        speaker_name: [recipient.first_name, recipient.last_name].filter(Boolean).join(' '),
+        speaker_name: [recipient.first_name, recipient.last_name].filter(Boolean).join(' ') || recipient.email || 'Unknown',
         email: recipient.email,
         campaign_name: analytics?.campaign?.name || 'Unknown',
         whose_speaker: 'Auto', 
