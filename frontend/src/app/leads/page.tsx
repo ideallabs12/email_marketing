@@ -288,14 +288,6 @@ export default function LeadsPage() {
                       </td>
                       <td className="px-5 py-4 align-top">
                         <div className="flex flex-col gap-2">
-                          <select 
-                            value={newLeadForm.call_status || ''} 
-                            onChange={e => setNewLeadForm({...newLeadForm, call_status: e.target.value})}
-                            className="w-full p-2 border border-emerald-200 dark:border-emerald-500/30 rounded-lg bg-background text-sm font-semibold shadow-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
-                          >
-                            <option value="">No Status</option>
-                            {CALL_STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
-                          </select>
                           <div className="flex gap-2">
                             <input 
                               type="date" 
@@ -312,6 +304,14 @@ export default function LeadsPage() {
                               {TIME_SLOTS.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
                           </div>
+                          <select 
+                            value={newLeadForm.call_status || ''} 
+                            onChange={e => setNewLeadForm({...newLeadForm, call_status: e.target.value})}
+                            className="w-full p-2 border border-emerald-200 dark:border-emerald-500/30 rounded-lg bg-background text-sm font-semibold shadow-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                          >
+                            <option value="">No Status</option>
+                            {CALL_STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
                         </div>
                       </td>
                       <td className="px-5 py-4 min-w-[250px] align-top relative">
@@ -390,19 +390,6 @@ export default function LeadsPage() {
                         </td>
                         <td className="px-3 py-4 align-top">
                           <div className="flex flex-col gap-2">
-                            <select
-                              value={lead.call_status || ''}
-                              onChange={(e) => handleInlineUpdate(lead.id, 'call_status', e.target.value)}
-                              className={`w-full px-2 py-1.5 border border-transparent hover:border-border hover:opacity-90 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-xs font-bold transition-all cursor-pointer ${
-                                lead.call_status === 'Completed' ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-400' :
-                                lead.call_status === 'Rescheduled' ? 'text-blue-700 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-400' :
-                                lead.call_status === 'No Show' || lead.call_status === 'Cancelled' || lead.call_status === 'Missed' || lead.call_status === 'Not Responding' ? 'text-rose-700 bg-rose-50 dark:bg-rose-500/10 dark:text-rose-400' : 'text-foreground/60 bg-foreground/5'
-                              }`}
-                            >
-                              <option value="">No Status</option>
-                              {CALL_STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
-                            </select>
-                            
                             <div className="flex items-center gap-1.5">
                               <div className="relative flex-1 group/date">
                                 <Calendar size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-foreground/40 pointer-events-none group-hover/date:text-foreground/60 transition-colors" />
@@ -425,6 +412,19 @@ export default function LeadsPage() {
                                 </select>
                               </div>
                             </div>
+
+                            <select
+                              value={lead.call_status || ''}
+                              onChange={(e) => handleInlineUpdate(lead.id, 'call_status', e.target.value)}
+                              className={`w-full px-2 py-1.5 border border-transparent hover:border-border hover:opacity-90 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-xs font-bold transition-all cursor-pointer ${
+                                lead.call_status === 'Completed' ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-400' :
+                                lead.call_status === 'Rescheduled' ? 'text-blue-700 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-400' :
+                                lead.call_status === 'No Show' || lead.call_status === 'Cancelled' || lead.call_status === 'Missed' || lead.call_status === 'Not Responding' ? 'text-rose-700 bg-rose-50 dark:bg-rose-500/10 dark:text-rose-400' : 'text-foreground/60 bg-foreground/5'
+                              }`}
+                            >
+                              <option value="">No Status</option>
+                              {CALL_STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
                           </div>
                         </td>
                         <td className="px-3 py-4 align-top relative group/notes">
@@ -513,15 +513,7 @@ export default function LeadsPage() {
                   </div>
 
                   <div className="flex flex-col gap-1.5 mt-2">
-                    <label className="text-[11px] uppercase font-bold text-emerald-700/60 dark:text-emerald-400/60 px-1">Status & Date</label>
-                    <select 
-                      value={newLeadForm.call_status || ''} 
-                      onChange={e => setNewLeadForm({...newLeadForm, call_status: e.target.value})}
-                      className="w-full px-3 py-2 bg-background/80 border border-emerald-200 dark:border-emerald-500/30 rounded-xl outline-none shadow-sm text-sm font-semibold focus:ring-2 focus:ring-emerald-500/20 transition-all"
-                    >
-                      <option value="">No Status</option>
-                      {CALL_STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
+                    <label className="text-[11px] uppercase font-bold text-emerald-700/60 dark:text-emerald-400/60 px-1">Date & Aftercall Status</label>
                     <div className="flex gap-3 mt-1">
                       <input 
                         type="date" 
@@ -538,6 +530,14 @@ export default function LeadsPage() {
                         {TIME_SLOTS.map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
                     </div>
+                    <select 
+                      value={newLeadForm.call_status || ''} 
+                      onChange={e => setNewLeadForm({...newLeadForm, call_status: e.target.value})}
+                      className="w-full px-3 py-2 mt-1 bg-background/80 border border-emerald-200 dark:border-emerald-500/30 rounded-xl outline-none shadow-sm text-sm font-semibold focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                    >
+                      <option value="">No Status</option>
+                      {CALL_STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
                   </div>
 
                   <div className="mt-2 flex flex-col h-full">
@@ -627,19 +627,6 @@ export default function LeadsPage() {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <select
-                        value={lead.call_status || ''}
-                        onChange={(e) => handleInlineUpdate(lead.id, 'call_status', e.target.value)}
-                        className={`w-full px-3 py-2.5 border border-transparent hover:border-slate-300 dark:hover:border-slate-700 hover:opacity-90 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none text-sm font-bold transition-all cursor-pointer ${
-                          lead.call_status === 'Completed' ? 'text-emerald-700 bg-emerald-100/50 dark:bg-emerald-500/10 dark:text-emerald-400' :
-                          lead.call_status === 'Rescheduled' ? 'text-blue-700 bg-blue-100/50 dark:bg-blue-500/10 dark:text-blue-400' :
-                          lead.call_status === 'No Show' || lead.call_status === 'Cancelled' || lead.call_status === 'Missed' || lead.call_status === 'Not Responding' ? 'text-rose-700 bg-rose-100/50 dark:bg-rose-500/10 dark:text-rose-400' : 'text-foreground/60 bg-white/60 dark:bg-slate-800/60'
-                        }`}
-                      >
-                        <option value="">No Status</option>
-                        {CALL_STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                      
                       <div className="flex items-center gap-2">
                         <div className="relative flex-1 group/date">
                           <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 pointer-events-none group-hover/date:text-foreground/60 transition-colors" />
@@ -662,6 +649,19 @@ export default function LeadsPage() {
                           </select>
                         </div>
                       </div>
+                      
+                      <select
+                        value={lead.call_status || ''}
+                        onChange={(e) => handleInlineUpdate(lead.id, 'call_status', e.target.value)}
+                        className={`w-full px-3 py-2.5 border border-transparent hover:border-slate-300 dark:hover:border-slate-700 hover:opacity-90 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none text-sm font-bold transition-all cursor-pointer ${
+                          lead.call_status === 'Completed' ? 'text-emerald-700 bg-emerald-100/50 dark:bg-emerald-500/10 dark:text-emerald-400' :
+                          lead.call_status === 'Rescheduled' ? 'text-blue-700 bg-blue-100/50 dark:bg-blue-500/10 dark:text-blue-400' :
+                          lead.call_status === 'No Show' || lead.call_status === 'Cancelled' || lead.call_status === 'Missed' || lead.call_status === 'Not Responding' ? 'text-rose-700 bg-rose-100/50 dark:bg-rose-500/10 dark:text-rose-400' : 'text-foreground/60 bg-white/60 dark:bg-slate-800/60'
+                        }`}
+                      >
+                        <option value="">No Status</option>
+                        {CALL_STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
                     </div>
 
                     <div className="flex flex-col flex-1 mt-2">
