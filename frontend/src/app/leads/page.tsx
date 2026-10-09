@@ -163,7 +163,7 @@ export default function LeadsPage() {
       const payload: any = { ...newLeadForm };
       if (!payload.speaker_name) payload.speaker_name = payload.email || 'Unknown';
       if (!payload.campaign_name) payload.campaign_name = 'Manual Entry';
-      if (!payload.whose_speaker) payload.whose_speaker = 'Manual';
+      if (!payload.whose_speaker) payload.whose_speaker = '';
       if (!payload.email) payload.email = 'no-email@example.com';
       if (!payload.call_status) payload.call_status = null;
       
@@ -207,11 +207,11 @@ export default function LeadsPage() {
           <table className="w-full text-sm text-left">
             <thead className="text-[11px] font-semibold text-foreground/50 uppercase tracking-wider bg-foreground/[0.02] border-b border-border">
               <tr>
-                <th className="px-5 py-4 min-w-[280px] w-1/4">Speaker / Email</th>
-                <th className="px-5 py-4 min-w-[240px] w-1/4">Campaign / Batch</th>
-                <th className="px-5 py-4 w-32">Owner</th>
-                <th className="px-5 py-4 min-w-[280px]">Call Status & Slot</th>
-                <th className="px-5 py-4 min-w-[280px] w-full">Notes</th>
+                <th className="px-3 py-4 min-w-[180px] w-[25%]">Speaker / Email</th>
+                <th className="px-3 py-4 min-w-[160px] w-[22%]">Campaign / Batch</th>
+                <th className="px-3 py-4 min-w-[100px] w-[13%]">Owner</th>
+                <th className="px-3 py-4 min-w-[200px] w-[20%]">Call Status & Slot</th>
+                <th className="px-3 py-4 min-w-[160px] w-[20%]">Notes</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
@@ -316,7 +316,7 @@ export default function LeadsPage() {
                     
                     return (
                       <tr key={lead.id} className={`hover:bg-foreground/[0.02] transition-colors group ${isSaving ? 'opacity-50 pointer-events-none' : ''}`}>
-                        <td className="px-5 py-4 align-top">
+                        <td className="px-3 py-4 align-top">
                           <div className="flex flex-col gap-1.5">
                             <input
                               type="text"
@@ -338,7 +338,7 @@ export default function LeadsPage() {
                             />
                           </div>
                         </td>
-                        <td className="px-5 py-4 align-top">
+                        <td className="px-3 py-4 align-top">
                           <div className="flex flex-col gap-1.5">
                             <input
                               type="text"
@@ -360,7 +360,7 @@ export default function LeadsPage() {
                             />
                           </div>
                         </td>
-                        <td className="px-5 py-4 align-top">
+                        <td className="px-3 py-4 align-top">
                           <input
                             type="text"
                             value={lead.whose_speaker || ''}
@@ -370,7 +370,7 @@ export default function LeadsPage() {
                             placeholder="Owner"
                           />
                         </td>
-                        <td className="px-5 py-4 align-top">
+                        <td className="px-3 py-4 align-top">
                           <div className="flex flex-col gap-2">
                             <select
                               value={lead.call_status || ''}
@@ -409,7 +409,7 @@ export default function LeadsPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-5 py-4 align-top relative group/notes">
+                        <td className="px-3 py-4 align-top relative group/notes">
                           <textarea
                             value={lead.notes || ''}
                             onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, notes: e.target.value } : l))}

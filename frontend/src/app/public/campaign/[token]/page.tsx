@@ -201,7 +201,7 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
           email: row.email,
           campaign_name: data?.campaign_name || 'Unknown',
           batch_name: analytics?.targeted_batch_name || '',
-          whose_speaker: 'Auto',
+          whose_speaker: '',
         })
       });
       if (!res.ok) {
