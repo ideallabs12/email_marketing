@@ -72,6 +72,7 @@ class Lead(models.Model):
         ('Rescheduled', 'Rescheduled'),
         ('No Show', 'No Show'),
         ('Cancelled', 'Cancelled'),
+        ('Missed', 'Missed'),
     ]
 
     speaker_name = models.CharField(max_length=255, blank=True)
