@@ -453,7 +453,7 @@ export default function LeadsPage() {
         </div>
       </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {loading ? (
             <div className="col-span-full text-center py-12 text-foreground/50">Loading leads...</div>
           ) : leads.length === 0 && !isAddingNew ? (
@@ -461,68 +461,68 @@ export default function LeadsPage() {
           ) : (
             <>
               {isAddingNew && (
-                <div className="bg-emerald-50/40 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-2xl p-4 flex flex-col gap-3 shadow-sm relative">
-                  <div className="flex flex-col gap-1.5">
+                <div className="bg-emerald-50/40 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-3xl p-6 flex flex-col gap-4 shadow-sm relative">
+                  <div className="flex flex-col gap-2">
                     <input 
                       type="text" 
                       value={newLeadForm.speaker_name || ''} 
                       onChange={e => setNewLeadForm({...newLeadForm, speaker_name: e.target.value})} 
-                      className="text-lg font-bold w-full px-2 py-1.5 bg-background border border-emerald-200 dark:border-emerald-500/30 rounded-lg outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:font-normal" 
+                      className="text-xl font-bold w-full px-3 py-2 bg-background/80 border border-emerald-200 dark:border-emerald-500/30 rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:font-normal" 
                       placeholder="Speaker name"
                     />
                     <input 
                       type="email" 
                       value={newLeadForm.email || ''} 
                       onChange={e => setNewLeadForm({...newLeadForm, email: e.target.value})} 
-                      className="text-xs w-full px-2 py-1.5 bg-background border border-emerald-200 dark:border-emerald-500/30 rounded-lg outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 transition-all text-foreground/70" 
+                      className="text-sm w-full px-3 py-2 bg-background/80 border border-emerald-200 dark:border-emerald-500/30 rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 transition-all text-foreground/70" 
                       placeholder="Email address"
                     />
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-2 mt-1">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[10px] uppercase font-bold text-foreground/40 px-1">Campaign</label>
+                  <div className="grid grid-cols-2 gap-4 mt-2">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] uppercase font-bold text-emerald-700/60 dark:text-emerald-400/60 px-1">Campaign</label>
                       <input 
                         type="text" 
                         value={newLeadForm.campaign_name || ''} 
                         onChange={e => setNewLeadForm({...newLeadForm, campaign_name: e.target.value})} 
-                        className="text-xs w-full px-2 py-1.5 bg-background border border-emerald-200 dark:border-emerald-500/30 rounded-lg outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 transition-all" 
+                        className="text-sm w-full px-3 py-2 bg-background/80 border border-emerald-200 dark:border-emerald-500/30 rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 transition-all" 
                         placeholder="Campaign name"
                       />
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[10px] uppercase font-bold text-foreground/40 px-1">Owner</label>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] uppercase font-bold text-emerald-700/60 dark:text-emerald-400/60 px-1">Owner</label>
                       <input 
                         type="text" 
                         value={newLeadForm.whose_speaker || ''} 
                         onChange={e => setNewLeadForm({...newLeadForm, whose_speaker: e.target.value})} 
-                        className="text-xs font-semibold text-emerald-600 w-full px-2 py-1.5 bg-background border border-emerald-200 dark:border-emerald-500/30 rounded-lg outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 transition-all" 
+                        className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 w-full px-3 py-2 bg-background/80 border border-emerald-200 dark:border-emerald-500/30 rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 transition-all" 
                         placeholder="Owner"
                       />
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-1 mt-1">
-                    <label className="text-[10px] uppercase font-bold text-foreground/40 px-1">Status & Date</label>
+                  <div className="flex flex-col gap-1.5 mt-2">
+                    <label className="text-[11px] uppercase font-bold text-emerald-700/60 dark:text-emerald-400/60 px-1">Status & Date</label>
                     <select 
                       value={newLeadForm.call_status || ''} 
                       onChange={e => setNewLeadForm({...newLeadForm, call_status: e.target.value})}
-                      className="w-full px-2 py-1.5 bg-background border border-emerald-200 dark:border-emerald-500/30 rounded-lg outline-none shadow-sm text-xs font-semibold focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                      className="w-full px-3 py-2 bg-background/80 border border-emerald-200 dark:border-emerald-500/30 rounded-xl outline-none shadow-sm text-sm font-semibold focus:ring-2 focus:ring-emerald-500/20 transition-all"
                     >
                       <option value="">No Status</option>
                       {CALL_STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
-                    <div className="flex gap-2">
+                    <div className="flex gap-3 mt-1">
                       <input 
                         type="date" 
                         value={newLeadDate} 
                         onChange={e => setNewLeadDate(e.target.value)}
-                        className="w-1/2 px-2 py-1.5 bg-background border border-emerald-200 dark:border-emerald-500/30 rounded-lg outline-none shadow-sm text-xs focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                        className="w-1/2 px-3 py-2 bg-background/80 border border-emerald-200 dark:border-emerald-500/30 rounded-xl outline-none shadow-sm text-xs focus:ring-2 focus:ring-emerald-500/20 transition-all"
                       />
                       <select 
                         value={newLeadTime} 
                         onChange={e => setNewLeadTime(e.target.value)}
-                        className="w-1/2 px-2 py-1.5 bg-background border border-emerald-200 dark:border-emerald-500/30 rounded-lg outline-none shadow-sm text-xs focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                        className="w-1/2 px-3 py-2 bg-background/80 border border-emerald-200 dark:border-emerald-500/30 rounded-xl outline-none shadow-sm text-xs focus:ring-2 focus:ring-emerald-500/20 transition-all"
                       >
                         <option value="">Time Slot</option>
                         {TIME_SLOTS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -530,19 +530,19 @@ export default function LeadsPage() {
                     </div>
                   </div>
 
-                  <div className="mt-1 flex flex-col h-full">
-                    <label className="text-[10px] uppercase font-bold text-foreground/40 px-1 mb-1">Notes</label>
+                  <div className="mt-2 flex flex-col h-full">
+                    <label className="text-[11px] uppercase font-bold text-emerald-700/60 dark:text-emerald-400/60 px-1 mb-1.5">Notes</label>
                     <textarea 
                       value={newLeadForm.notes || ''} 
                       onChange={e => setNewLeadForm({...newLeadForm, notes: e.target.value})}
-                      className="w-full px-2 py-1.5 bg-background border border-emerald-200 dark:border-emerald-500/30 rounded-lg outline-none shadow-sm text-xs h-full min-h-[60px] resize-y focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                      className="w-full px-3 py-2 bg-background/80 border border-emerald-200 dark:border-emerald-500/30 rounded-xl outline-none shadow-sm text-sm h-full min-h-[80px] resize-y focus:ring-2 focus:ring-emerald-500/20 transition-all"
                       placeholder="Add notes..."
                     />
                   </div>
 
-                  <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-emerald-200 dark:border-emerald-500/30">
-                    <button onClick={() => setIsAddingNew(false)} className="px-3 py-1.5 bg-white border border-border text-foreground/60 hover:bg-foreground/5 rounded-lg transition-colors shadow-sm text-xs font-semibold">Cancel</button>
-                    <button onClick={saveNewLead} className="px-3 py-1.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg transition-colors shadow-sm flex items-center gap-1 text-xs font-semibold"><Check size={14} /> Save Lead</button>
+                  <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-emerald-200 dark:border-emerald-500/30">
+                    <button onClick={() => setIsAddingNew(false)} className="px-4 py-2 bg-white border border-border text-foreground/60 hover:bg-foreground/5 rounded-xl transition-colors shadow-sm text-sm font-semibold">Cancel</button>
+                    <button onClick={saveNewLead} className="px-4 py-2 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl transition-colors shadow-sm flex items-center gap-2 text-sm font-semibold"><Check size={16} /> Save Lead</button>
                   </div>
                 </div>
               )}
@@ -552,22 +552,22 @@ export default function LeadsPage() {
                 const isSaving = savingId === lead.id;
                 
                 return (
-                  <div key={lead.id} className={`bg-background border border-border shadow-sm hover:shadow-md rounded-2xl p-4 flex flex-col gap-3 transition-all relative group/card ${isSaving ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <div key={lead.id} className={`bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 rounded-3xl p-6 flex flex-col gap-4 transition-all relative group/card ${isSaving ? 'opacity-50 pointer-events-none' : ''}`}>
                     <button
                       onClick={() => handleDeleteLead(lead.id)}
-                      className="absolute right-3 top-3 p-1.5 text-rose-400 hover:text-white hover:bg-rose-500 rounded-md opacity-0 group-hover/card:opacity-100 transition-all shadow-sm z-10 bg-background hover:border-transparent border border-border"
+                      className="absolute right-4 top-4 p-2 text-rose-400 hover:text-white hover:bg-rose-500 rounded-xl opacity-0 group-hover/card:opacity-100 transition-all shadow-sm z-10 bg-white dark:bg-slate-800 hover:border-transparent border border-border"
                       title="Delete Lead"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={16} />
                     </button>
                     
-                    <div className="flex flex-col pr-8">
+                    <div className="flex flex-col pr-10">
                       <input
                         type="text"
                         value={lead.speaker_name || ''}
                         onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, speaker_name: e.target.value } : l))}
                         onBlur={(e) => handleInlineUpdate(lead.id, 'speaker_name', e.target.value)}
-                        className="text-lg font-bold w-full px-1 py-0.5 bg-transparent border border-transparent hover:border-border hover:bg-foreground/5 focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-foreground transition-all text-ellipsis overflow-hidden whitespace-nowrap"
+                        className="text-xl font-bold w-full px-2 py-1 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800 focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none text-foreground transition-all text-ellipsis overflow-hidden whitespace-nowrap"
                         placeholder="Speaker name"
                       />
                       <input
@@ -575,66 +575,66 @@ export default function LeadsPage() {
                         value={lead.email || ''}
                         onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, email: e.target.value } : l))}
                         onBlur={(e) => handleInlineUpdate(lead.id, 'email', e.target.value)}
-                        className="text-xs w-full px-1 py-0.5 bg-transparent border border-transparent hover:border-border hover:bg-foreground/5 focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-foreground/60 transition-all text-ellipsis overflow-hidden whitespace-nowrap"
+                        className="text-sm w-full px-2 py-1 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800 focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none text-foreground/60 transition-all text-ellipsis overflow-hidden whitespace-nowrap"
                         placeholder="Email address"
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 bg-foreground/[0.02] rounded-xl p-2 border border-border/50">
+                    <div className="grid grid-cols-2 gap-3 bg-white/60 dark:bg-slate-800/60 rounded-2xl p-3 border border-slate-200/60 dark:border-slate-700/60">
                       <div className="flex flex-col">
-                        <label className="text-[9px] uppercase font-bold text-foreground/40 px-1">Campaign</label>
+                        <label className="text-[10px] uppercase font-bold text-foreground/40 px-2">Campaign</label>
                         <input
                           type="text"
                           value={lead.campaign_name || ''}
                           onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, campaign_name: e.target.value } : l))}
                           onBlur={(e) => handleInlineUpdate(lead.id, 'campaign_name', e.target.value)}
-                          className="text-[11px] font-medium w-full px-1 py-1 bg-transparent border border-transparent hover:border-border hover:bg-background focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-foreground/80 transition-all text-ellipsis overflow-hidden whitespace-nowrap"
+                          className="text-xs font-semibold w-full px-2 py-1.5 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800 focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none text-foreground/80 transition-all text-ellipsis overflow-hidden whitespace-nowrap"
                           placeholder="Campaign"
                         />
                       </div>
                       <div className="flex flex-col">
-                        <label className="text-[9px] uppercase font-bold text-foreground/40 px-1">Owner</label>
+                        <label className="text-[10px] uppercase font-bold text-foreground/40 px-2">Owner</label>
                         <input
                           type="text"
                           value={lead.whose_speaker || ''}
                           onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, whose_speaker: e.target.value } : l))}
                           onBlur={(e) => handleInlineUpdate(lead.id, 'whose_speaker', e.target.value)}
-                          className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 w-full px-1 py-1 bg-transparent border border-transparent hover:border-border hover:bg-background focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none transition-all text-ellipsis overflow-hidden whitespace-nowrap"
+                          className="text-xs font-bold text-emerald-600 dark:text-emerald-400 w-full px-2 py-1.5 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800 focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none transition-all text-ellipsis overflow-hidden whitespace-nowrap"
                           placeholder="Owner"
                         />
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-1.5">
+                    <div className="flex flex-col gap-2">
                       <select
                         value={lead.call_status || ''}
                         onChange={(e) => handleInlineUpdate(lead.id, 'call_status', e.target.value)}
-                        className={`w-full px-2 py-1.5 border border-transparent hover:border-border hover:opacity-90 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-xs font-bold transition-all cursor-pointer ${
-                          lead.call_status === 'Completed' ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-400' :
-                          lead.call_status === 'Rescheduled' ? 'text-blue-700 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-400' :
-                          lead.call_status === 'No Show' || lead.call_status === 'Cancelled' || lead.call_status === 'Missed' || lead.call_status === 'Not Responding' ? 'text-rose-700 bg-rose-50 dark:bg-rose-500/10 dark:text-rose-400' : 'text-foreground/60 bg-foreground/5'
+                        className={`w-full px-3 py-2.5 border border-transparent hover:border-slate-300 dark:hover:border-slate-700 hover:opacity-90 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none text-sm font-bold transition-all cursor-pointer ${
+                          lead.call_status === 'Completed' ? 'text-emerald-700 bg-emerald-100/50 dark:bg-emerald-500/10 dark:text-emerald-400' :
+                          lead.call_status === 'Rescheduled' ? 'text-blue-700 bg-blue-100/50 dark:bg-blue-500/10 dark:text-blue-400' :
+                          lead.call_status === 'No Show' || lead.call_status === 'Cancelled' || lead.call_status === 'Missed' || lead.call_status === 'Not Responding' ? 'text-rose-700 bg-rose-100/50 dark:bg-rose-500/10 dark:text-rose-400' : 'text-foreground/60 bg-white/60 dark:bg-slate-800/60'
                         }`}
                       >
                         <option value="">No Status</option>
                         {CALL_STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
                       
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-2">
                         <div className="relative flex-1 group/date">
-                          <Calendar size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-foreground/40 pointer-events-none group-hover/date:text-foreground/60 transition-colors" />
+                          <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 pointer-events-none group-hover/date:text-foreground/60 transition-colors" />
                           <input
                             type="date"
                             value={leadDate}
                             onChange={(e) => handleInlineDateOrTimeUpdate(lead.id, lead, e.target.value, leadTime)}
-                            className="w-full pl-6 pr-1 py-1.5 bg-foreground/5 border border-transparent hover:border-border focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-[10px] font-medium text-foreground/70 transition-all cursor-pointer"
+                            className="w-full pl-8 pr-2 py-2 bg-white/60 dark:bg-slate-800/60 border border-transparent hover:border-slate-300 dark:hover:border-slate-700 focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none text-xs font-medium text-foreground/70 transition-all cursor-pointer"
                           />
                         </div>
                         <div className="relative flex-1 group/time">
-                          <Clock size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-foreground/40 pointer-events-none group-hover/time:text-foreground/60 transition-colors" />
+                          <Clock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 pointer-events-none group-hover/time:text-foreground/60 transition-colors" />
                           <select
                             value={leadTime}
                             onChange={(e) => handleInlineDateOrTimeUpdate(lead.id, lead, leadDate, e.target.value)}
-                            className="w-full pl-6 pr-1 py-1.5 bg-foreground/5 border border-transparent hover:border-border focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-[10px] font-medium text-foreground/70 transition-all cursor-pointer appearance-none"
+                            className="w-full pl-8 pr-2 py-2 bg-white/60 dark:bg-slate-800/60 border border-transparent hover:border-slate-300 dark:hover:border-slate-700 focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none text-xs font-medium text-foreground/70 transition-all cursor-pointer appearance-none"
                           >
                             <option value="">Slot</option>
                             {TIME_SLOTS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -643,12 +643,12 @@ export default function LeadsPage() {
                       </div>
                     </div>
 
-                    <div className="flex flex-col flex-1 mt-1">
+                    <div className="flex flex-col flex-1 mt-2">
                       <textarea
                         value={lead.notes || ''}
                         onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, notes: e.target.value } : l))}
                         onBlur={(e) => handleInlineUpdate(lead.id, 'notes', e.target.value)}
-                        className="w-full px-2 py-1.5 bg-transparent border border-transparent hover:border-border hover:bg-foreground/5 focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-lg outline-none text-xs text-foreground/80 h-full min-h-[60px] resize-y transition-all leading-relaxed"
+                        className="w-full px-3 py-2 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800 focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/10 rounded-xl outline-none text-sm text-foreground/80 h-full min-h-[80px] resize-y transition-all leading-relaxed"
                         placeholder="Click to add notes..."
                       />
                     </div>
