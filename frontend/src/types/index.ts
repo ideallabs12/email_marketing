@@ -111,7 +111,7 @@ export interface CampaignRecipientStatus {
 }
 
 export interface CampaignAnalytics {
-  campaign: Pick<Campaign, 'id' | 'name' | 'status' | 'share_token'>;
+  campaign: Pick<Campaign, 'id' | 'name' | 'status' | 'share_token' | 'tracking_id'>;
   summary: {
     total_recipients: number;
     sent: number;

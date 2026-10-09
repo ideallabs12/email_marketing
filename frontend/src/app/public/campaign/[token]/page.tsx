@@ -30,6 +30,7 @@ interface BlastItem {
   target_display?: string;
   template_id?: number | null;
   template_name?: string | null;
+  tracking_id?: string;
 }
 
 interface CampaignTemplateData {
@@ -384,8 +385,13 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
               <span className="text-xs text-gray-400">Live View</span>
             </div>
             <div className="flex items-center gap-3 flex-wrap mt-1">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
                 {data?.campaign_name}
+                {currentBlast?.tracking_id && (
+                  <span className="text-sm font-mono px-2 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">
+                    #{currentBlast.tracking_id}
+                  </span>
+                )}
               </h1>
               {activeTargetDisplay && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200 shadow-xs" title={`Targeted: ${activeTargetDisplay}`}>
@@ -438,6 +444,11 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
                         b.status === 'failed' ? 'bg-red-400' : 'bg-gray-400'
                       }`} />
                       <span className="font-semibold">{b.name}</span>
+                      {b.tracking_id && (
+                        <span className={`text-[9px] font-mono px-1 py-0.5 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-500'}`}>
+                          #{b.tracking_id}
+                        </span>
+                      )}
                       <span className={`text-[10px] ${isSelected ? 'text-gray-300' : 'text-gray-400'}`}>
                         {b.sent_at ? new Date(b.sent_at).toLocaleDateString() : 'Draft'}
                       </span>

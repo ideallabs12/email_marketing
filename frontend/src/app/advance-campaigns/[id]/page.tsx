@@ -252,8 +252,9 @@ export default function AdvanceCampaignDetailPage() {
       <Card className="p-4">
         <div className="border-t border-border pt-3">
           <div className="hidden md:grid grid-cols-12 text-xs font-medium uppercase tracking-widest text-foreground/40 pb-2 border-b border-border mb-2 px-2">
-            <span className="col-span-4">Name</span>
-            <span className="col-span-3">Status</span>
+            <span className="col-span-3">Name</span>
+            <span className="col-span-2">Tracking ID</span>
+            <span className="col-span-2">Status</span>
             <span className="col-span-3">Sent At</span>
             <span className="col-span-2 text-right">Actions</span>
           </div>
@@ -267,7 +268,7 @@ export default function AdvanceCampaignDetailPage() {
               {sends.map((c) => (
                 <div key={c.id} className="flex flex-col md:grid md:grid-cols-12 gap-1 md:gap-0 py-4 md:py-3 text-sm items-start md:items-center hover:bg-foreground/5 rounded-lg md:rounded-md border border-border md:border-transparent bg-foreground/[0.02] md:bg-transparent px-3 md:px-2 mb-4 md:mb-0 transition-colors shadow-sm md:shadow-none">
                   {/* Name and Basic Info */}
-                  <div className="flex flex-col md:col-span-4 pr-2 min-w-0 w-full mb-3 md:mb-0">
+                  <div className="flex flex-col md:col-span-3 pr-2 min-w-0 w-full mb-3 md:mb-0">
                     {editingBlastId === c.id ? (
                       <div className="flex items-center gap-1 mb-1">
                         <input 
@@ -294,8 +295,20 @@ export default function AdvanceCampaignDetailPage() {
                     <span className="text-[11px] bg-foreground/5 text-foreground/70 px-1.5 py-0.5 rounded inline-block mt-1 truncate max-w-fit border border-border">Target: {getBatchNames(c.target_batches)}</span>
                   </div>
 
+                  {/* Tracking ID */}
+                  <div className="flex flex-col md:col-span-2 md:block mb-2 md:mb-0">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Tracking ID</span>
+                    {c.tracking_id ? (
+                      <span className="px-2 py-1 rounded-md bg-foreground/10 text-foreground font-mono font-bold text-sm border border-border">
+                        #{c.tracking_id}
+                      </span>
+                    ) : (
+                      <span className="text-foreground/30 text-xs">-</span>
+                    )}
+                  </div>
+
                   {/* Status Group */}
-                  <div className="flex flex-col md:col-span-3 md:block mb-2 md:mb-0">
+                  <div className="flex flex-col md:col-span-2 md:block mb-2 md:mb-0">
                     <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Status</span>
                     <span className="capitalize text-xs">
                       <span className={`px-2 py-0.5 border rounded-full inline-flex items-center space-x-1 ${

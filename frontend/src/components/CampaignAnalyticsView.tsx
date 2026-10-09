@@ -211,7 +211,14 @@ export default function CampaignAnalyticsView({ campaignId }: { campaignId: stri
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Campaign Analytics</h1>
+            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+              Campaign Analytics
+              {analytics?.campaign.tracking_id && (
+                <span className="px-2 py-1 rounded-md bg-foreground/10 text-foreground font-mono font-bold text-sm border border-border">
+                  #{analytics.campaign.tracking_id}
+                </span>
+              )}
+            </h1>
             <p className="text-foreground/50 mt-1 text-sm">{analytics?.campaign.name || 'Loading campaign…'}</p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">

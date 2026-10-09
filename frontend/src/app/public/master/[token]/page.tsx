@@ -15,6 +15,7 @@ interface BlastSummary {
   contact_list_name?: string;
   targeted_batch_name?: string;
   target_display?: string;
+  tracking_id?: string;
 }
 
 interface ContainerSummary {
@@ -32,6 +33,7 @@ interface PublicAnalyticsData {
   contact_list_name?: string | null;
   targeted_batch_name?: string | null;
   target_display?: string | null;
+  tracking_id?: string | null;
   totals?: {
     total_recipients: number;
     total_delivered: number;
@@ -644,6 +646,11 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                           <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${getStatusDot(blast.status)}`} />
                           <div className="flex-1 min-w-0">
                             <div className="truncate font-medium text-[13px]">{blast.name}</div>
+                            {blast.tracking_id && (
+                              <div className={`mt-0.5 text-[9px] font-mono px-1 py-0.5 inline-block rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-500'}`}>
+                                #{blast.tracking_id}
+                              </div>
+                            )}
                             {blast.target_display && (
                               <div className={`truncate text-[10px] mt-0.5 font-medium ${isSelected ? 'text-gray-300' : 'text-gray-500'}`} title={blast.target_display}>
                                 {blast.target_display}
@@ -911,7 +918,14 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                     </div>
                   )}
                   <div className="flex items-center gap-2.5 flex-wrap">
-                    <h2 className="font-bold text-gray-900 text-base leading-snug">{analytics?.campaign_name ?? '...'}</h2>
+                    <h2 className="font-bold text-gray-900 text-base leading-snug flex items-center gap-2">
+                      {analytics?.campaign_name ?? '...'}
+                      {analytics?.tracking_id && (
+                        <span className="text-xs font-mono px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">
+                          #{analytics.tracking_id}
+                        </span>
+                      )}
+                    </h2>
                     {analytics?.target_display && (
                       <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200 shadow-xs" title={`Target: ${analytics.target_display}`}>
                         <span className="text-gray-400 font-normal">Target:</span>

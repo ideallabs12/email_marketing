@@ -181,6 +181,7 @@ class PublicAdvanceCampaignView(views.APIView):
                 'template_name': b.template.name if getattr(b, 'template', None) else None,
                 'sent_at': b.sent_at.isoformat() if b.sent_at else None,
                 'created_at': b.created_at.isoformat() if b.created_at else None,
+                'tracking_id': getattr(b, 'tracking_id', None),
             })
 
         blast_id = request.query_params.get('blast_id')
@@ -279,6 +280,7 @@ class PublicAdvanceCampaignView(views.APIView):
                 "contact_list_name": sel_list_name,
                 "targeted_batch_name": sel_batch_name,
                 "target_display": sel_display,
+                "tracking_id": getattr(selected_blast, 'tracking_id', None),
                 "template": sel_template,
                 "totals": {
                     "total_recipients": contacts.count(),
@@ -406,6 +408,7 @@ class PublicCampaignAnalyticsView(views.APIView):
             "contact_list_name": list_name,
             "targeted_batch_name": batch_name,
             "target_display": display,
+            "tracking_id": getattr(campaign, 'tracking_id', None),
             "template": single_template,
             "totals": {
                 "total_recipients": contacts.count(),
@@ -534,6 +537,7 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
                 'name': campaign.name,
                 'status': campaign.status,
                 'share_token': campaign.share_token,
+                'tracking_id': getattr(campaign, 'tracking_id', None),
                 'advance_campaign_share_token': advance_token,
                 'advance_campaign_slug': advance_slug,
             },
@@ -830,6 +834,7 @@ class PublicMasterLinkCampaignsView(views.APIView):
                     'share_token': str(c.share_token) if getattr(c, 'share_token', None) else str(uuid.uuid5(uuid.NAMESPACE_DNS, f"campaign-{c.id}")),
                     'sent_at': c.sent_at.isoformat() if c.sent_at else None,
                     'created_at': c.created_at.isoformat() if c.created_at else None,
+                    'tracking_id': getattr(c, 'tracking_id', None),
                 })
 
             containers.append({
@@ -863,6 +868,7 @@ class PublicMasterLinkCampaignsView(views.APIView):
                     'share_token': str(c.share_token) if getattr(c, 'share_token', None) else str(uuid.uuid5(uuid.NAMESPACE_DNS, f"campaign-{c.id}")),
                     'sent_at': c.sent_at.isoformat() if c.sent_at else None,
                     'created_at': c.created_at.isoformat() if c.created_at else None,
+                    'tracking_id': getattr(c, 'tracking_id', None),
                 })
             containers.append({
                 'id': None,

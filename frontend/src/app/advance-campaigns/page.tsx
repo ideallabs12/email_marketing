@@ -151,9 +151,11 @@ export default function AdvanceCampaignsPage() {
         <Card className="p-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className="border-t border-border pt-3">
             <div className="hidden md:grid grid-cols-12 text-xs font-medium uppercase tracking-widest text-foreground/40 pb-2 border-b border-border mb-2 px-2">
-              <span className="col-span-4">Name</span>
-              <span className="col-span-3">Target List</span>
-              <span className="col-span-3">Created At</span>
+              <span className="col-span-3">Name</span>
+              <span className="col-span-1">Tracking ID</span>
+              <span className="col-span-2">Target List</span>
+              <span className="col-span-2">Total Blasts</span>
+              <span className="col-span-2">Created At</span>
               <span className="col-span-2 text-right">Actions</span>
             </div>
 
@@ -167,16 +169,30 @@ export default function AdvanceCampaignsPage() {
               <div className="divide-y divide-border">
                 {campaigns.map((c) => (
                   <div key={c.id} className="flex flex-col md:grid md:grid-cols-12 gap-1 md:gap-0 py-4 md:py-3 text-sm items-start md:items-center hover:bg-foreground/5 rounded-lg md:rounded-md border border-border md:border-transparent bg-foreground/[0.02] md:bg-transparent px-3 md:px-2 mb-4 md:mb-0 transition-colors shadow-sm md:shadow-none">
-                    <div className="flex flex-col md:col-span-4 pr-2 min-w-0 w-full mb-3 md:mb-0">
+                    <div className="flex flex-col md:col-span-3 pr-2 min-w-0 w-full mb-3 md:mb-0">
                       <span className="font-bold md:font-medium text-base md:text-sm truncate text-foreground">{c.name}</span>
                     </div>
 
-                    <div className="flex flex-col text-left md:col-span-3 md:block min-w-0 mb-2 md:mb-0">
+                    <div className="flex flex-col text-left md:col-span-1 md:block min-w-0 mb-2 md:mb-0">
+                      <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Tracking ID</span>
+                      {c.tracking_id ? (
+                        <span className="px-1.5 py-0.5 rounded-md bg-foreground/10 text-foreground/70 text-[10px] font-mono border border-border">#{c.tracking_id}</span>
+                      ) : (
+                        <span className="text-foreground/30 text-xs">-</span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col text-left md:col-span-2 md:block min-w-0 mb-2 md:mb-0">
                       <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Target List</span>
                       <span className="truncate font-medium text-foreground/80">{getListName(c.target_list)}</span>
                     </div>
 
-                    <div className="flex flex-col md:col-span-3 md:block w-full mb-4 md:mb-0">
+                    <div className="flex flex-col text-left md:col-span-2 md:block min-w-0 mb-2 md:mb-0">
+                      <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Total Blasts</span>
+                      <span className="font-bold text-foreground/80">{c.campaigns?.length || 0}</span>
+                    </div>
+
+                    <div className="flex flex-col md:col-span-2 md:block w-full mb-4 md:mb-0">
                       <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Created At</span>
                       <span className="text-foreground/70">{new Date(c.created_at).toLocaleDateString()}</span>
                     </div>
