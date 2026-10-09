@@ -20,12 +20,12 @@ interface Lead {
 }
 
 const CALL_STATUS_CHOICES = [
-  'Scheduled',
   'Completed',
   'Rescheduled',
   'No Show',
   'Cancelled',
-  'Missed'
+  'Missed',
+  'Not Responding'
 ];
 
 const generateTimeSlots = () => {
@@ -210,7 +210,7 @@ export default function LeadsPage() {
                 <th className="px-3 py-4 min-w-[180px] w-[25%]">Speaker / Email</th>
                 <th className="px-3 py-4 min-w-[160px] w-[22%]">Campaign / Batch</th>
                 <th className="px-3 py-4 min-w-[100px] w-[13%]">Owner</th>
-                <th className="px-3 py-4 min-w-[200px] w-[20%]">Call Status & Slot</th>
+                <th className="px-3 py-4 min-w-[200px] w-[20%]">Aftercall Status & Slot</th>
                 <th className="px-3 py-4 min-w-[160px] w-[20%]">Notes</th>
               </tr>
             </thead>
@@ -376,9 +376,9 @@ export default function LeadsPage() {
                               value={lead.call_status || ''}
                               onChange={(e) => handleInlineUpdate(lead.id, 'call_status', e.target.value)}
                               className={`w-full px-2 py-1.5 border border-transparent hover:border-border hover:opacity-90 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-xs font-bold transition-all cursor-pointer ${
-                                lead.call_status === 'Scheduled' ? 'text-blue-700 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-400' :
                                 lead.call_status === 'Completed' ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-400' :
-                                lead.call_status === 'No Show' || lead.call_status === 'Cancelled' || lead.call_status === 'Missed' ? 'text-rose-700 bg-rose-50 dark:bg-rose-500/10 dark:text-rose-400' : 'text-foreground/60 bg-foreground/5'
+                                lead.call_status === 'Rescheduled' ? 'text-blue-700 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-400' :
+                                lead.call_status === 'No Show' || lead.call_status === 'Cancelled' || lead.call_status === 'Missed' || lead.call_status === 'Not Responding' ? 'text-rose-700 bg-rose-50 dark:bg-rose-500/10 dark:text-rose-400' : 'text-foreground/60 bg-foreground/5'
                               }`}
                             >
                               <option value="">No Status</option>
