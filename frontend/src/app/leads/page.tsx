@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Card from '@/components/Card';
-import { Target, Check, X, Calendar, Clock } from 'lucide-react';
+import { Target, Check, X, Calendar, Clock, Trash2 } from 'lucide-react';
 import { apiClient } from '@/services/apiClient';
 
 interface Lead {
@@ -141,6 +141,19 @@ export default function LeadsPage() {
       fetchLeads();
       alert('Failed to save update: ' + err.message);
     } finally {
+      setSavingId(null);
+    }
+  };
+
+  const handleDeleteLead = async (id: number) => {
+    if (!window.confirm('Are you sure you want to permanently delete this lead?')) return;
+    try {
+      setSavingId(id);
+      await apiClient.delete(`/api/v1/leads/${id}/`);
+      setLeads(leads.filter(l => l.id !== id));
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to delete lead: ' + err.message);
       setSavingId(null);
     }
   };
@@ -396,14 +409,21 @@ export default function LeadsPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-5 py-4 align-top">
+                        <td className="px-5 py-4 align-top relative group/notes">
                           <textarea
                             value={lead.notes || ''}
                             onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, notes: e.target.value } : l))}
                             onBlur={(e) => handleInlineUpdate(lead.id, 'notes', e.target.value)}
-                            className="w-full px-3 py-2 bg-transparent border border-transparent hover:border-border hover:bg-background focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-lg outline-none text-xs text-foreground/80 min-h-[70px] resize-y transition-all leading-relaxed"
+                            className="w-full px-3 py-2 bg-transparent border border-transparent hover:border-border hover:bg-background focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-lg outline-none text-xs text-foreground/80 min-h-[70px] resize-y transition-all leading-relaxed pr-8"
                             placeholder="Click to add notes..."
                           />
+                          <button
+                            onClick={() => handleDeleteLead(lead.id)}
+                            className="absolute right-7 top-6 p-1.5 text-rose-400 hover:text-white hover:bg-rose-500 rounded-md opacity-0 group-hover:opacity-100 transition-all shadow-sm z-10"
+                            title="Delete Lead"
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         </td>
                       </tr>
                     );
