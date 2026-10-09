@@ -346,6 +346,10 @@ export default function ContactsPage() {
                     <div className="text-2xl font-bold text-foreground">
                       {list.contacts_count ?? 0} <span className="text-xs font-normal text-foreground/50 uppercase tracking-widest ml-1">Contacts</span>
                     </div>
+                    <div className="text-xs font-medium text-foreground/50 flex flex-col items-end">
+                      <span className="font-bold text-foreground">{allBatches.filter(b => b.contact_list === list.id).length}</span>
+                      <span className="text-[9px] uppercase tracking-wider">Batches</span>
+                    </div>
                   </div>
                 </Link>
               </Card>

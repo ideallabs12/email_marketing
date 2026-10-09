@@ -252,8 +252,15 @@ export default function ContactListDetailsPage() {
                     </button>
                   </div>
                   <h3 className="font-semibold text-lg text-foreground pr-8 truncate" title={batch.name}>{batch.name}</h3>
+                  {batch.tracking_id && (
+                    <div className="mt-1">
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-foreground/10 text-foreground/70 border border-border">
+                        #{batch.tracking_id}
+                      </span>
+                    </div>
+                  )}
                   {batch.created_at && (
-                    <div className="text-xs text-foreground/50 flex items-center gap-1 mt-1">
+                    <div className="text-xs text-foreground/50 flex items-center gap-1 mt-1.5">
                       <Calendar size={12} />
                       {new Date(batch.created_at).toLocaleDateString()}
                     </div>

@@ -28,7 +28,7 @@ class ContactBatchSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ContactBatch
-        fields = ['id', 'name', 'contact_list', 'contacts_count', 'created_at']
+        fields = ['id', 'name', 'contact_list', 'contacts_count', 'tracking_id', 'created_at']
 
     def get_contacts_count(self, obj):
         if hasattr(obj, 'contacts_count'):
