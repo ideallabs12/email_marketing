@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Card from '@/components/Card';
-import { Target, Check, X, Calendar, Clock, Trash2 } from 'lucide-react';
+import { Target, Check, X, Calendar, Clock, Trash2, List, LayoutGrid } from 'lucide-react';
 import { apiClient } from '@/services/apiClient';
 
 interface Lead {
@@ -46,6 +46,7 @@ const TIME_SLOTS = generateTimeSlots();
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'row' | 'card'>('row');
 
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newLeadForm, setNewLeadForm] = useState<Partial<Lead>>({
@@ -194,15 +195,32 @@ export default function LeadsPage() {
             Manage booked calls and follow-ups. Click on any field to edit directly. Changes save automatically.
           </p>
         </div>
-        <button 
-          onClick={() => setIsAddingNew(true)}
-          className="bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-700 transition shadow-sm whitespace-nowrap flex items-center gap-2"
-        >
-          <span>+</span> Add Lead Manually
-        </button>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex bg-foreground/5 rounded-lg p-1 border border-border/50">
+            <button 
+              onClick={() => setViewMode('row')} 
+              className={`px-3 py-1.5 rounded-md text-sm font-semibold flex items-center gap-1.5 transition-colors ${viewMode === 'row' ? 'bg-background shadow-xs text-foreground' : 'text-foreground/50 hover:text-foreground/80'}`}
+            >
+              <List size={15} /> Row
+            </button>
+            <button 
+              onClick={() => setViewMode('card')} 
+              className={`px-3 py-1.5 rounded-md text-sm font-semibold flex items-center gap-1.5 transition-colors ${viewMode === 'card' ? 'bg-background shadow-xs text-foreground' : 'text-foreground/50 hover:text-foreground/80'}`}
+            >
+              <LayoutGrid size={15} /> Card
+            </button>
+          </div>
+          <button 
+            onClick={() => setIsAddingNew(true)}
+            className="bg-emerald-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition shadow-sm whitespace-nowrap flex items-center gap-2 h-9"
+          >
+            <span>+</span> Add Lead
+          </button>
+        </div>
       </div>
 
-      <Card className="overflow-hidden w-full p-0 sm:p-0 border-border shadow-sm rounded-2xl">
+      {viewMode === 'row' ? (
+        <Card className="overflow-hidden w-full p-0 sm:p-0 border-border shadow-sm rounded-2xl">
         <div className="overflow-x-auto w-full">
           <table className="w-full text-sm text-left">
             <thead className="text-[11px] font-semibold text-foreground/50 uppercase tracking-wider bg-foreground/[0.02] border-b border-border">
@@ -434,6 +452,213 @@ export default function LeadsPage() {
           </table>
         </div>
       </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {loading ? (
+            <div className="col-span-full text-center py-12 text-foreground/50">Loading leads...</div>
+          ) : leads.length === 0 && !isAddingNew ? (
+            <div className="col-span-full text-center py-12 text-foreground/50">No leads added yet. Go to Analytics to add some!</div>
+          ) : (
+            <>
+              {isAddingNew && (
+                <div className="bg-emerald-50/40 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-2xl p-4 flex flex-col gap-3 shadow-sm relative">
+                  <div className="flex flex-col gap-1.5">
+                    <input 
+                      type="text" 
+                      value={newLeadForm.speaker_name || ''} 
+                      onChange={e => setNewLeadForm({...newLeadForm, speaker_name: e.target.value})} 
+                      className="text-lg font-bold w-full px-2 py-1.5 bg-background border border-emerald-200 dark:border-emerald-500/30 rounded-lg outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:font-normal" 
+                      placeholder="Speaker name"
+                    />
+                    <input 
+                      type="email" 
+                      value={newLeadForm.email || ''} 
+                      onChange={e => setNewLeadForm({...newLeadForm, email: e.target.value})} 
+                      className="text-xs w-full px-2 py-1.5 bg-background border border-emerald-200 dark:border-emerald-500/30 rounded-lg outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 transition-all text-foreground/70" 
+                      placeholder="Email address"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] uppercase font-bold text-foreground/40 px-1">Campaign</label>
+                      <input 
+                        type="text" 
+                        value={newLeadForm.campaign_name || ''} 
+                        onChange={e => setNewLeadForm({...newLeadForm, campaign_name: e.target.value})} 
+                        className="text-xs w-full px-2 py-1.5 bg-background border border-emerald-200 dark:border-emerald-500/30 rounded-lg outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 transition-all" 
+                        placeholder="Campaign name"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] uppercase font-bold text-foreground/40 px-1">Owner</label>
+                      <input 
+                        type="text" 
+                        value={newLeadForm.whose_speaker || ''} 
+                        onChange={e => setNewLeadForm({...newLeadForm, whose_speaker: e.target.value})} 
+                        className="text-xs font-semibold text-emerald-600 w-full px-2 py-1.5 bg-background border border-emerald-200 dark:border-emerald-500/30 rounded-lg outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 transition-all" 
+                        placeholder="Owner"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1 mt-1">
+                    <label className="text-[10px] uppercase font-bold text-foreground/40 px-1">Status & Date</label>
+                    <select 
+                      value={newLeadForm.call_status || ''} 
+                      onChange={e => setNewLeadForm({...newLeadForm, call_status: e.target.value})}
+                      className="w-full px-2 py-1.5 bg-background border border-emerald-200 dark:border-emerald-500/30 rounded-lg outline-none shadow-sm text-xs font-semibold focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                    >
+                      <option value="">No Status</option>
+                      {CALL_STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    <div className="flex gap-2">
+                      <input 
+                        type="date" 
+                        value={newLeadDate} 
+                        onChange={e => setNewLeadDate(e.target.value)}
+                        className="w-1/2 px-2 py-1.5 bg-background border border-emerald-200 dark:border-emerald-500/30 rounded-lg outline-none shadow-sm text-xs focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                      />
+                      <select 
+                        value={newLeadTime} 
+                        onChange={e => setNewLeadTime(e.target.value)}
+                        className="w-1/2 px-2 py-1.5 bg-background border border-emerald-200 dark:border-emerald-500/30 rounded-lg outline-none shadow-sm text-xs focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                      >
+                        <option value="">Time Slot</option>
+                        {TIME_SLOTS.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="mt-1 flex flex-col h-full">
+                    <label className="text-[10px] uppercase font-bold text-foreground/40 px-1 mb-1">Notes</label>
+                    <textarea 
+                      value={newLeadForm.notes || ''} 
+                      onChange={e => setNewLeadForm({...newLeadForm, notes: e.target.value})}
+                      className="w-full px-2 py-1.5 bg-background border border-emerald-200 dark:border-emerald-500/30 rounded-lg outline-none shadow-sm text-xs h-full min-h-[60px] resize-y focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                      placeholder="Add notes..."
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-emerald-200 dark:border-emerald-500/30">
+                    <button onClick={() => setIsAddingNew(false)} className="px-3 py-1.5 bg-white border border-border text-foreground/60 hover:bg-foreground/5 rounded-lg transition-colors shadow-sm text-xs font-semibold">Cancel</button>
+                    <button onClick={saveNewLead} className="px-3 py-1.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg transition-colors shadow-sm flex items-center gap-1 text-xs font-semibold"><Check size={14} /> Save Lead</button>
+                  </div>
+                </div>
+              )}
+
+              {leads.map(lead => {
+                const { date: leadDate, time: leadTime } = extractDateAndTime(lead.call_booked_on);
+                const isSaving = savingId === lead.id;
+                
+                return (
+                  <div key={lead.id} className={`bg-background border border-border shadow-sm hover:shadow-md rounded-2xl p-4 flex flex-col gap-3 transition-all relative group/card ${isSaving ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <button
+                      onClick={() => handleDeleteLead(lead.id)}
+                      className="absolute right-3 top-3 p-1.5 text-rose-400 hover:text-white hover:bg-rose-500 rounded-md opacity-0 group-hover/card:opacity-100 transition-all shadow-sm z-10 bg-background hover:border-transparent border border-border"
+                      title="Delete Lead"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                    
+                    <div className="flex flex-col pr-8">
+                      <input
+                        type="text"
+                        value={lead.speaker_name || ''}
+                        onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, speaker_name: e.target.value } : l))}
+                        onBlur={(e) => handleInlineUpdate(lead.id, 'speaker_name', e.target.value)}
+                        className="text-lg font-bold w-full px-1 py-0.5 bg-transparent border border-transparent hover:border-border hover:bg-foreground/5 focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-foreground transition-all text-ellipsis overflow-hidden whitespace-nowrap"
+                        placeholder="Speaker name"
+                      />
+                      <input
+                        type="text"
+                        value={lead.email || ''}
+                        onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, email: e.target.value } : l))}
+                        onBlur={(e) => handleInlineUpdate(lead.id, 'email', e.target.value)}
+                        className="text-xs w-full px-1 py-0.5 bg-transparent border border-transparent hover:border-border hover:bg-foreground/5 focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-foreground/60 transition-all text-ellipsis overflow-hidden whitespace-nowrap"
+                        placeholder="Email address"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 bg-foreground/[0.02] rounded-xl p-2 border border-border/50">
+                      <div className="flex flex-col">
+                        <label className="text-[9px] uppercase font-bold text-foreground/40 px-1">Campaign</label>
+                        <input
+                          type="text"
+                          value={lead.campaign_name || ''}
+                          onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, campaign_name: e.target.value } : l))}
+                          onBlur={(e) => handleInlineUpdate(lead.id, 'campaign_name', e.target.value)}
+                          className="text-[11px] font-medium w-full px-1 py-1 bg-transparent border border-transparent hover:border-border hover:bg-background focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-foreground/80 transition-all text-ellipsis overflow-hidden whitespace-nowrap"
+                          placeholder="Campaign"
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <label className="text-[9px] uppercase font-bold text-foreground/40 px-1">Owner</label>
+                        <input
+                          type="text"
+                          value={lead.whose_speaker || ''}
+                          onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, whose_speaker: e.target.value } : l))}
+                          onBlur={(e) => handleInlineUpdate(lead.id, 'whose_speaker', e.target.value)}
+                          className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 w-full px-1 py-1 bg-transparent border border-transparent hover:border-border hover:bg-background focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none transition-all text-ellipsis overflow-hidden whitespace-nowrap"
+                          placeholder="Owner"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <select
+                        value={lead.call_status || ''}
+                        onChange={(e) => handleInlineUpdate(lead.id, 'call_status', e.target.value)}
+                        className={`w-full px-2 py-1.5 border border-transparent hover:border-border hover:opacity-90 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-xs font-bold transition-all cursor-pointer ${
+                          lead.call_status === 'Completed' ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-400' :
+                          lead.call_status === 'Rescheduled' ? 'text-blue-700 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-400' :
+                          lead.call_status === 'No Show' || lead.call_status === 'Cancelled' || lead.call_status === 'Missed' || lead.call_status === 'Not Responding' ? 'text-rose-700 bg-rose-50 dark:bg-rose-500/10 dark:text-rose-400' : 'text-foreground/60 bg-foreground/5'
+                        }`}
+                      >
+                        <option value="">No Status</option>
+                        {CALL_STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                      
+                      <div className="flex items-center gap-1.5">
+                        <div className="relative flex-1 group/date">
+                          <Calendar size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-foreground/40 pointer-events-none group-hover/date:text-foreground/60 transition-colors" />
+                          <input
+                            type="date"
+                            value={leadDate}
+                            onChange={(e) => handleInlineDateOrTimeUpdate(lead.id, lead, e.target.value, leadTime)}
+                            className="w-full pl-6 pr-1 py-1.5 bg-foreground/5 border border-transparent hover:border-border focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-[10px] font-medium text-foreground/70 transition-all cursor-pointer"
+                          />
+                        </div>
+                        <div className="relative flex-1 group/time">
+                          <Clock size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-foreground/40 pointer-events-none group-hover/time:text-foreground/60 transition-colors" />
+                          <select
+                            value={leadTime}
+                            onChange={(e) => handleInlineDateOrTimeUpdate(lead.id, lead, leadDate, e.target.value)}
+                            className="w-full pl-6 pr-1 py-1.5 bg-foreground/5 border border-transparent hover:border-border focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-[10px] font-medium text-foreground/70 transition-all cursor-pointer appearance-none"
+                          >
+                            <option value="">Slot</option>
+                            {TIME_SLOTS.map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col flex-1 mt-1">
+                      <textarea
+                        value={lead.notes || ''}
+                        onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, notes: e.target.value } : l))}
+                        onBlur={(e) => handleInlineUpdate(lead.id, 'notes', e.target.value)}
+                        className="w-full px-2 py-1.5 bg-transparent border border-transparent hover:border-border hover:bg-foreground/5 focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-lg outline-none text-xs text-foreground/80 h-full min-h-[60px] resize-y transition-all leading-relaxed"
+                        placeholder="Click to add notes..."
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
