@@ -7,13 +7,41 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from .models import Campaign, AdvanceCampaign, PodcastSender
 from .serializers import CampaignSerializer, AdvanceCampaignSerializer, PodcastSenderSerializer
+from apps.contacts.models import ContactList, ContactBatch
 
 class PodcastSenderViewSet(viewsets.ModelViewSet):
     serializer_class = PodcastSenderSerializer
     queryset = PodcastSender.objects.all().order_by('name')
 
 
+class GlobalLookupView(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def get(self, request):
+        tid = request.query_params.get('tracking_id', '').strip().upper()
+        if not tid:
+            return Response({'error': 'No tracking_id provided'}, status=400)
+            
+        if tid.startswith('#'):
+            tid = tid[1:]
+            
+        camp = Campaign.objects.filter(tracking_id=tid).first()
+        if camp:
+            return Response({'type': 'campaign', 'id': camp.id, 'url': f'/campaigns/{camp.id}/analytics'})
+            
+        adv = AdvanceCampaign.objects.filter(tracking_id=tid).first()
+        if adv:
+            return Response({'type': 'advance_campaign', 'id': adv.id, 'url': f'/advance-campaigns/{adv.id}'})
+            
+        lst = ContactList.objects.filter(tracking_id=tid).first()
+        if lst:
+            return Response({'type': 'list', 'id': lst.id, 'url': f'/contacts?list={lst.id}'})
+            
+        batch = ContactBatch.objects.filter(tracking_id=tid).first()
+        if batch:
+            return Response({'type': 'batch', 'id': batch.id, 'url': f'/contacts?batch={batch.id}'})
+            
+        return Response({'error': 'Not found'}, status=404)
 class SenderListView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -58,6 +86,12 @@ class CampaignViewSet(viewsets.ModelViewSet):
         if self.action == 'list':
             qs = qs.filter(advance_campaign__isnull=True)
         return qs
+
+    def perform_create(self, serializer):
+        obj = serializer.save()
+        if obj.tracking_id and f"[#{obj.tracking_id}]" not in obj.name:
+            obj.name = f"{obj.name.strip()} [#{obj.tracking_id}]"
+            obj.save(update_fields=['name'])
 
     def destroy(self, request, *args, **kwargs):
         campaign = self.get_object()
@@ -151,6 +185,12 @@ class AdvanceCampaignViewSet(viewsets.ModelViewSet):
             return AdvanceCampaign.objects.all().order_by('-created_at')
         except Exception:
             return AdvanceCampaign.objects.defer('share_token').order_by('-created_at')
+
+    def perform_create(self, serializer):
+        obj = serializer.save()
+        if obj.tracking_id and f"[#{obj.tracking_id}]" not in obj.name:
+            obj.name = f"{obj.name.strip()} [#{obj.tracking_id}]"
+            obj.save(update_fields=['name'])
 
     def create(self, request, *args, **kwargs):
         try:

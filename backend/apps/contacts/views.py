@@ -22,6 +22,10 @@ class ContactListViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Create the list, then auto-create a default batch_01 for it."""
         contact_list = serializer.save()
+        if contact_list.tracking_id and f"[#{contact_list.tracking_id}]" not in contact_list.name:
+            contact_list.name = f"{contact_list.name.strip()} [#{contact_list.tracking_id}]"
+            contact_list.save(update_fields=['name'])
+            
         ContactBatch.objects.create(
             name='batch_01',
             contact_list=contact_list,
@@ -320,6 +324,12 @@ class ContactBatchViewSet(viewsets.ModelViewSet):
         if list_id:
             qs = qs.filter(contact_list_id=list_id)
         return qs
+
+    def perform_create(self, serializer):
+        batch = serializer.save()
+        if batch.tracking_id and f"[#{batch.tracking_id}]" not in batch.name:
+            batch.name = f"{batch.name.strip()} [#{batch.tracking_id}]"
+            batch.save(update_fields=['name'])
 
 class LeadViewSet(viewsets.ModelViewSet):
     queryset = Lead.objects.all().order_by('-created_at')

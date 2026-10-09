@@ -1,14 +1,37 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, Mail, Users, FileText, ChevronLeft, ChevronRight, MailWarning, LogOut, X, Library, LayoutTemplate, BarChart3, Target } from 'lucide-react';
+import { Home, Mail, Users, FileText, ChevronLeft, ChevronRight, MailWarning, LogOut, X, Library, LayoutTemplate, BarChart3, Target, Search } from 'lucide-react';
 import { apiClient } from '@/services/apiClient';
 import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?: boolean, setMobileMenuOpen?: (v: boolean) => void }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const query = searchQuery.trim();
+    if (!query) return;
+    
+    setIsSearching(true);
+    try {
+      const res = await apiClient.get(`/api/v1/lookup/?tracking_id=${encodeURIComponent(query)}`);
+      if (res.url) {
+        setSearchQuery('');
+        router.push(res.url);
+        if (setMobileMenuOpen) setMobileMenuOpen(false);
+      }
+    } catch (err: any) {
+      alert(err.message || 'ID not found');
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -46,13 +69,26 @@ export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: { mobileM
           <X size={20} />
         </button>
 
-      <div className={`text-xl font-bold mb-10 tracking-tight flex items-center h-8 ${isCollapsed ? 'justify-center text-sm' : ''}`}>
+      <div className={`text-xl font-bold mb-6 tracking-tight flex items-center h-8 ${isCollapsed ? 'justify-center text-sm' : ''}`}>
         {isCollapsed ? (
           <img src="/mass-mailing-logo.svg" alt="Logo" className="w-8 h-8 object-contain" />
         ) : (
           <img src="/mass-mailing-logo.svg" alt="Logo" className="h-8 w-auto object-contain" />
         )}
       </div>
+
+      <form onSubmit={handleSearch} className={`mb-6 relative ${isCollapsed ? 'hidden' : 'block'}`}>
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40" />
+        <input 
+          type="text" 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Jump to ID (e.g. X9K2)"
+          className="w-full pl-9 pr-3 py-2 bg-foreground/5 border border-border/50 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/30 transition-all placeholder:text-foreground/30 font-medium"
+          disabled={isSearching}
+        />
+      </form>
+
       <nav className={`flex-1 space-y-2 ${isCollapsed ? 'w-full' : ''}`}>
         <Link href="/" title="Dashboard" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
           <Home size={18} />
