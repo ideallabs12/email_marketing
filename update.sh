@@ -12,6 +12,7 @@ docker compose up -d --build
 
 # 3. Run database migrations
 echo "🗄️ Running database migrations..."
+docker compose exec backend python manage.py makemigrations
 docker compose exec backend python manage.py migrate
 docker compose restart backend celery_worker celery_beat
 
