@@ -170,110 +170,112 @@ export default function LeadsPage() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300 w-full max-w-[100vw] overflow-hidden px-1">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300 w-full max-w-[100vw] overflow-hidden px-2 sm:px-6 py-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Target className="text-emerald-500" />
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2 text-foreground">
+            <Target className="text-emerald-500" size={28} />
             Leads Tracker
           </h1>
-          <p className="text-foreground/50 mt-1 text-sm">Manage booked calls and follow-ups from your campaigns. Click any field to edit directly.</p>
+          <p className="text-foreground/60 mt-1.5 text-sm max-w-2xl">
+            Manage booked calls and follow-ups. Click on any field to edit directly. Changes save automatically.
+          </p>
         </div>
         <button 
           onClick={() => setIsAddingNew(true)}
-          className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition shadow-sm whitespace-nowrap"
+          className="bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-700 transition shadow-sm whitespace-nowrap flex items-center gap-2"
         >
-          + Add Lead Manually
+          <span>+</span> Add Lead Manually
         </button>
       </div>
 
-      <Card className="overflow-hidden w-full p-0 sm:p-0">
+      <Card className="overflow-hidden w-full p-0 sm:p-0 border-border shadow-sm rounded-2xl">
         <div className="overflow-x-auto w-full">
-          <table className="w-full text-sm text-left whitespace-nowrap">
-            <thead className="text-xs text-foreground/50 uppercase bg-foreground/5 border-b border-border">
+          <table className="w-full text-sm text-left">
+            <thead className="text-[11px] font-semibold text-foreground/50 uppercase tracking-wider bg-foreground/[0.02] border-b border-border">
               <tr>
-                <th className="px-4 py-3 min-w-[200px]">Speaker / Email</th>
-                <th className="px-4 py-3 min-w-[150px]">Campaign / Batch</th>
-                <th className="px-4 py-3 w-32">Owner</th>
-                <th className="px-4 py-3 min-w-[250px]">Call Status & Slot</th>
-                <th className="px-4 py-3 w-full">Notes</th>
+                <th className="px-5 py-4 min-w-[280px] w-1/4">Speaker / Email</th>
+                <th className="px-5 py-4 min-w-[240px] w-1/4">Campaign / Batch</th>
+                <th className="px-5 py-4 w-32">Owner</th>
+                <th className="px-5 py-4 min-w-[280px]">Call Status & Slot</th>
+                <th className="px-5 py-4 min-w-[280px] w-full">Notes</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-border/50">
               {loading ? (
-                <tr><td colSpan={5} className="text-center py-8">Loading leads...</td></tr>
+                <tr><td colSpan={5} className="text-center py-12 text-foreground/50">Loading leads...</td></tr>
               ) : leads.length === 0 && !isAddingNew ? (
-                <tr><td colSpan={5} className="text-center py-8 text-foreground/50">No leads added yet. Go to Analytics to add some!</td></tr>
+                <tr><td colSpan={5} className="text-center py-12 text-foreground/50">No leads added yet. Go to Analytics to add some!</td></tr>
               ) : (
                 <>
                   {isAddingNew && (
-                    <tr className="bg-emerald-50/50 dark:bg-emerald-500/10 transition-colors">
-                      <td className="px-4 py-3 font-medium align-top">
-                        <div className="space-y-1">
+                    <tr className="bg-emerald-50/40 dark:bg-emerald-500/10 transition-colors">
+                      <td className="px-5 py-4 font-medium align-top">
+                        <div className="flex flex-col gap-2">
                           <input 
                             type="text" 
                             value={newLeadForm.speaker_name || ''} 
                             onChange={e => setNewLeadForm({...newLeadForm, speaker_name: e.target.value})} 
-                            className="text-sm w-full p-1.5 border border-emerald-200 dark:border-emerald-500/30 rounded bg-background shadow-sm" 
+                            className="text-sm w-full p-2 border border-emerald-200 dark:border-emerald-500/30 rounded-lg bg-background shadow-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" 
                             placeholder="Speaker name"
                           />
                           <input 
                             type="email" 
                             value={newLeadForm.email || ''} 
                             onChange={e => setNewLeadForm({...newLeadForm, email: e.target.value})} 
-                            className="text-xs w-full p-1.5 border border-emerald-200 dark:border-emerald-500/30 rounded bg-background text-foreground/70 shadow-sm" 
+                            className="text-xs w-full p-2 border border-emerald-200 dark:border-emerald-500/30 rounded-lg bg-background text-foreground/70 shadow-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" 
                             placeholder="Email address"
                           />
                         </div>
                       </td>
-                      <td className="px-4 py-3 align-top">
-                        <div className="space-y-1">
+                      <td className="px-5 py-4 align-top">
+                        <div className="flex flex-col gap-2">
                           <input 
                             type="text" 
                             value={newLeadForm.campaign_name || ''} 
                             onChange={e => setNewLeadForm({...newLeadForm, campaign_name: e.target.value})} 
-                            className="text-sm w-full p-1.5 border border-emerald-200 dark:border-emerald-500/30 rounded bg-background shadow-sm" 
+                            className="text-sm w-full p-2 border border-emerald-200 dark:border-emerald-500/30 rounded-lg bg-background shadow-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" 
                             placeholder="Campaign name"
                           />
                           <input 
                             type="text" 
                             value={newLeadForm.batch_name || ''} 
                             onChange={e => setNewLeadForm({...newLeadForm, batch_name: e.target.value})} 
-                            className="text-xs w-full p-1.5 border border-emerald-200 dark:border-emerald-500/30 rounded bg-background shadow-sm text-foreground/70" 
+                            className="text-xs w-full p-2 border border-emerald-200 dark:border-emerald-500/30 rounded-lg bg-background shadow-sm text-foreground/70 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" 
                             placeholder="Batch name"
                           />
                         </div>
                       </td>
-                      <td className="px-4 py-3 align-top">
+                      <td className="px-5 py-4 align-top">
                         <input 
                           type="text" 
                           value={newLeadForm.whose_speaker || ''} 
                           onChange={e => setNewLeadForm({...newLeadForm, whose_speaker: e.target.value})} 
-                          className="w-full p-1.5 border border-emerald-200 dark:border-emerald-500/30 rounded bg-background text-sm font-semibold text-emerald-600 shadow-sm" 
+                          className="w-full p-2 border border-emerald-200 dark:border-emerald-500/30 rounded-lg bg-background text-sm font-semibold text-emerald-600 shadow-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" 
                           placeholder="Owner"
                         />
                       </td>
-                      <td className="px-4 py-3 align-top">
-                        <div className="space-y-2">
+                      <td className="px-5 py-4 align-top">
+                        <div className="flex flex-col gap-2">
                           <select 
                             value={newLeadForm.call_status || ''} 
                             onChange={e => setNewLeadForm({...newLeadForm, call_status: e.target.value})}
-                            className="w-full p-1.5 border border-emerald-200 dark:border-emerald-500/30 rounded bg-background text-sm font-semibold shadow-sm"
+                            className="w-full p-2 border border-emerald-200 dark:border-emerald-500/30 rounded-lg bg-background text-sm font-semibold shadow-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
                           >
                             <option value="">No Status</option>
                             {CALL_STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
                           </select>
-                          <div className="flex gap-1">
+                          <div className="flex gap-2">
                             <input 
                               type="date" 
                               value={newLeadDate} 
                               onChange={e => setNewLeadDate(e.target.value)}
-                              className="w-1/2 p-1.5 border border-emerald-200 dark:border-emerald-500/30 rounded bg-background text-xs shadow-sm"
+                              className="w-1/2 p-2 border border-emerald-200 dark:border-emerald-500/30 rounded-lg bg-background text-xs shadow-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
                             />
                             <select 
                               value={newLeadTime} 
                               onChange={e => setNewLeadTime(e.target.value)}
-                              className="w-1/2 p-1.5 border border-emerald-200 dark:border-emerald-500/30 rounded bg-background text-xs shadow-sm"
+                              className="w-1/2 p-2 border border-emerald-200 dark:border-emerald-500/30 rounded-lg bg-background text-xs shadow-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
                             >
                               <option value="">Time Slot</option>
                               {TIME_SLOTS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -281,16 +283,16 @@ export default function LeadsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 min-w-[250px] align-top relative">
+                      <td className="px-5 py-4 min-w-[250px] align-top relative">
                         <textarea 
                           value={newLeadForm.notes || ''} 
                           onChange={e => setNewLeadForm({...newLeadForm, notes: e.target.value})}
-                          className="w-full p-1.5 border border-emerald-200 dark:border-emerald-500/30 rounded bg-background text-sm h-full min-h-[70px] resize-y shadow-sm"
+                          className="w-full p-2 border border-emerald-200 dark:border-emerald-500/30 rounded-lg bg-background text-sm h-full min-h-[90px] resize-y shadow-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
                           placeholder="Add notes..."
                         />
-                        <div className="absolute right-6 bottom-4 flex gap-1">
-                          <button onClick={saveNewLead} className="p-1.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded transition-colors shadow-sm"><Check size={14} /></button>
-                          <button onClick={() => setIsAddingNew(false)} className="p-1.5 bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 rounded transition-colors shadow-sm"><X size={14} /></button>
+                        <div className="absolute right-7 bottom-6 flex gap-2">
+                          <button onClick={saveNewLead} className="p-2 bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg transition-colors shadow-sm flex items-center gap-1 text-xs font-semibold"><Check size={14} /> Save</button>
+                          <button onClick={() => setIsAddingNew(false)} className="p-2 bg-white border border-border text-foreground/60 hover:bg-foreground/5 rounded-lg transition-colors shadow-sm"><X size={14} /></button>
                         </div>
                       </td>
                     </tr>
@@ -300,88 +302,92 @@ export default function LeadsPage() {
                     const isSaving = savingId === lead.id;
                     
                     return (
-                      <tr key={lead.id} className={`hover:bg-foreground/[0.02] transition-colors group ${isSaving ? 'opacity-70' : ''}`}>
-                        <td className="px-4 py-3 align-top">
-                          <div className="space-y-1">
+                      <tr key={lead.id} className={`hover:bg-foreground/[0.02] transition-colors group ${isSaving ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <td className="px-5 py-4 align-top">
+                          <div className="flex flex-col gap-1.5">
                             <input
                               type="text"
-                              value={lead.speaker_name}
+                              value={lead.speaker_name || ''}
                               onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, speaker_name: e.target.value } : l))}
                               onBlur={(e) => handleInlineUpdate(lead.id, 'speaker_name', e.target.value)}
-                              className="text-sm w-full p-1 bg-transparent border border-transparent hover:border-border focus:border-emerald-500/50 focus:bg-background rounded outline-none font-medium transition-all"
+                              className="text-sm w-full px-2 py-1.5 bg-transparent border border-transparent hover:border-border hover:bg-background focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none font-semibold text-foreground transition-all text-ellipsis overflow-hidden whitespace-nowrap"
                               placeholder="Speaker name"
+                              title={lead.speaker_name}
                             />
                             <input
                               type="text"
-                              value={lead.email}
+                              value={lead.email || ''}
                               onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, email: e.target.value } : l))}
                               onBlur={(e) => handleInlineUpdate(lead.id, 'email', e.target.value)}
-                              className="text-xs w-full p-1 bg-transparent border border-transparent hover:border-border focus:border-emerald-500/50 focus:bg-background rounded outline-none text-foreground/60 transition-all"
-                              placeholder="Email"
+                              className="text-xs w-full px-2 py-1 bg-transparent border border-transparent hover:border-border hover:bg-background focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-foreground/60 transition-all text-ellipsis overflow-hidden whitespace-nowrap"
+                              placeholder="Email address"
+                              title={lead.email}
                             />
                           </div>
                         </td>
-                        <td className="px-4 py-3 align-top">
-                          <div className="space-y-1">
+                        <td className="px-5 py-4 align-top">
+                          <div className="flex flex-col gap-1.5">
                             <input
                               type="text"
-                              value={lead.campaign_name}
+                              value={lead.campaign_name || ''}
                               onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, campaign_name: e.target.value } : l))}
                               onBlur={(e) => handleInlineUpdate(lead.id, 'campaign_name', e.target.value)}
-                              className="text-sm w-full p-1 bg-transparent border border-transparent hover:border-border focus:border-emerald-500/50 focus:bg-background rounded outline-none font-medium text-foreground/80 transition-all"
+                              className="text-sm w-full px-2 py-1.5 bg-transparent border border-transparent hover:border-border hover:bg-background focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none font-medium text-foreground/80 transition-all text-ellipsis overflow-hidden whitespace-nowrap"
                               placeholder="Campaign name"
+                              title={lead.campaign_name}
                             />
                             <input
                               type="text"
-                              value={lead.batch_name}
+                              value={lead.batch_name || ''}
                               onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, batch_name: e.target.value } : l))}
                               onBlur={(e) => handleInlineUpdate(lead.id, 'batch_name', e.target.value)}
-                              className="text-[11px] font-mono w-full p-1 bg-transparent border border-transparent hover:border-border focus:border-emerald-500/50 focus:bg-background rounded outline-none text-foreground/60 transition-all"
-                              placeholder="No batch"
+                              className="text-[11px] font-mono w-full px-2 py-1 bg-transparent border border-transparent hover:border-border hover:bg-background focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-foreground/50 transition-all text-ellipsis overflow-hidden whitespace-nowrap"
+                              placeholder="No batch specified"
+                              title={lead.batch_name}
                             />
                           </div>
                         </td>
-                        <td className="px-4 py-3 align-top">
+                        <td className="px-5 py-4 align-top">
                           <input
                             type="text"
-                            value={lead.whose_speaker}
+                            value={lead.whose_speaker || ''}
                             onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, whose_speaker: e.target.value } : l))}
                             onBlur={(e) => handleInlineUpdate(lead.id, 'whose_speaker', e.target.value)}
-                            className="w-full p-1 bg-transparent border border-transparent hover:border-border focus:border-emerald-500/50 focus:bg-background rounded outline-none text-xs font-bold text-emerald-600 dark:text-emerald-400 transition-all"
+                            className="w-full px-2 py-1.5 bg-transparent border border-transparent hover:border-border hover:bg-background focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-xs font-bold text-emerald-600 dark:text-emerald-400 transition-all text-ellipsis overflow-hidden whitespace-nowrap"
                             placeholder="Owner"
                           />
                         </td>
-                        <td className="px-4 py-3 align-top">
-                          <div className="space-y-1">
+                        <td className="px-5 py-4 align-top">
+                          <div className="flex flex-col gap-2">
                             <select
                               value={lead.call_status || ''}
                               onChange={(e) => handleInlineUpdate(lead.id, 'call_status', e.target.value)}
-                              className={`w-full p-1 border-transparent focus:border-emerald-500/50 rounded outline-none text-xs font-bold transition-all cursor-pointer ${
-                                lead.call_status === 'Scheduled' ? 'text-blue-500 bg-blue-500/10 hover:bg-blue-500/20' :
-                                lead.call_status === 'Completed' ? 'text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20' :
-                                lead.call_status === 'No Show' || lead.call_status === 'Cancelled' || lead.call_status === 'Missed' ? 'text-red-500 bg-red-500/10 hover:bg-red-500/20' : 'text-foreground/60 bg-foreground/5 hover:bg-foreground/10'
+                              className={`w-full px-2 py-1.5 border border-transparent hover:border-border hover:opacity-90 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-xs font-bold transition-all cursor-pointer ${
+                                lead.call_status === 'Scheduled' ? 'text-blue-700 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-400' :
+                                lead.call_status === 'Completed' ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-400' :
+                                lead.call_status === 'No Show' || lead.call_status === 'Cancelled' || lead.call_status === 'Missed' ? 'text-rose-700 bg-rose-50 dark:bg-rose-500/10 dark:text-rose-400' : 'text-foreground/60 bg-foreground/5'
                               }`}
                             >
                               <option value="">No Status</option>
                               {CALL_STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
                             
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1.5">
                               <div className="relative flex-1 group/date">
-                                <Calendar size={12} className="absolute left-1.5 top-1/2 -translate-y-1/2 text-foreground/40 pointer-events-none" />
+                                <Calendar size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-foreground/40 pointer-events-none group-hover/date:text-foreground/60 transition-colors" />
                                 <input
                                   type="date"
                                   value={leadDate}
                                   onChange={(e) => handleInlineDateOrTimeUpdate(lead.id, lead, e.target.value, leadTime)}
-                                  className="w-full pl-5 p-1 bg-transparent border border-transparent hover:border-border focus:border-emerald-500/50 focus:bg-background rounded outline-none text-[11px] text-foreground/70 transition-all cursor-pointer"
+                                  className="w-full pl-7 pr-1 py-1.5 bg-transparent border border-transparent hover:border-border hover:bg-background focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-[11px] font-medium text-foreground/70 transition-all cursor-pointer"
                                 />
                               </div>
                               <div className="relative flex-1 group/time">
-                                <Clock size={12} className="absolute left-1.5 top-1/2 -translate-y-1/2 text-foreground/40 pointer-events-none" />
+                                <Clock size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-foreground/40 pointer-events-none group-hover/time:text-foreground/60 transition-colors" />
                                 <select
                                   value={leadTime}
                                   onChange={(e) => handleInlineDateOrTimeUpdate(lead.id, lead, leadDate, e.target.value)}
-                                  className="w-full pl-5 p-1 bg-transparent border border-transparent hover:border-border focus:border-emerald-500/50 focus:bg-background rounded outline-none text-[11px] text-foreground/70 transition-all cursor-pointer appearance-none"
+                                  className="w-full pl-7 pr-1 py-1.5 bg-transparent border border-transparent hover:border-border hover:bg-background focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-md outline-none text-[11px] font-medium text-foreground/70 transition-all cursor-pointer appearance-none"
                                 >
                                   <option value="">Slot</option>
                                   {TIME_SLOTS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -390,13 +396,13 @@ export default function LeadsPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3 align-top min-w-[250px]">
+                        <td className="px-5 py-4 align-top">
                           <textarea
-                            value={lead.notes}
+                            value={lead.notes || ''}
                             onChange={(e) => setLeads(leads.map(l => l.id === lead.id ? { ...l, notes: e.target.value } : l))}
                             onBlur={(e) => handleInlineUpdate(lead.id, 'notes', e.target.value)}
-                            className="w-full p-1.5 bg-transparent border border-transparent hover:border-border focus:border-emerald-500/50 focus:bg-background rounded outline-none text-xs text-foreground/70 min-h-[60px] resize-y transition-all"
-                            placeholder="Add notes..."
+                            className="w-full px-3 py-2 bg-transparent border border-transparent hover:border-border hover:bg-background focus:border-emerald-500/50 focus:bg-background focus:ring-2 focus:ring-emerald-500/10 rounded-lg outline-none text-xs text-foreground/80 min-h-[70px] resize-y transition-all leading-relaxed"
+                            placeholder="Click to add notes..."
                           />
                         </td>
                       </tr>
