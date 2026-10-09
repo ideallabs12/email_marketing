@@ -327,3 +327,18 @@ class LeadViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['speaker_name', 'email', 'campaign_name', 'whose_speaker', 'call_status']
     ordering_fields = ['created_at', 'call_booked_on', 'speaker_name']
+
+    def create(self, request, *args, **kwargs):
+        email = request.data.get('email', '').strip()
+        campaign_name = request.data.get('campaign_name', '').strip()
+        
+        # If both email and campaign_name are provided, check for duplicates
+        if email and campaign_name:
+            existing_lead = Lead.objects.filter(email__iexact=email, campaign_name__iexact=campaign_name).first()
+            if existing_lead:
+                return Response(
+                    {'error': f'Lead already exists for {email} in campaign {campaign_name}.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+        return super().create(request, *args, **kwargs)

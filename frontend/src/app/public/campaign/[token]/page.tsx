@@ -202,10 +202,13 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
           whose_speaker: 'Auto',
         })
       });
-      if (!res.ok) throw new Error('API Error');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'API Error');
+      }
       alert('Added to Leads successfully!');
     } catch (err: any) {
-      alert('Failed to add lead: ' + err.message);
+      alert(err.message);
     }
   };
 

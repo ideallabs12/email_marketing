@@ -124,7 +124,11 @@ export default function CampaignAnalyticsView({ campaignId }: { campaignId: stri
       });
       alert('Added to Leads successfully!');
     } catch (err: any) {
-      alert('Failed to add lead: ' + (err.message || 'Unknown error'));
+      if (err.response && err.response.data && err.response.data.error) {
+        alert(err.response.data.error);
+      } else {
+        alert(err.message || 'Unknown error');
+      }
     }
   };
 

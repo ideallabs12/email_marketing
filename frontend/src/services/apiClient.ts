@@ -37,7 +37,12 @@ export const apiClient = {
       body: JSON.stringify(data),
     });
     if (!response.ok) {
-      throw new Error(`POST ${endpoint} failed: ${response.statusText}`);
+      let errorMsg = `POST ${endpoint} failed: ${response.statusText}`;
+      try {
+        const errData = await response.json();
+        if (errData.error) errorMsg = errData.error;
+      } catch (e) {}
+      throw new Error(errorMsg);
     }
     return response.json();
   },
