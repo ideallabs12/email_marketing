@@ -259,6 +259,9 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
   const [contacts, setContacts] = useState<any[]>([]);
   const [contactsLoading, setContactsLoading] = useState(false);
   const [contactsSearchQuery, setContactsSearchQuery] = useState('');
+  
+  const [analyticsSearchQuery, setAnalyticsSearchQuery] = useState('');
+  const [recentsSearchQuery, setRecentsSearchQuery] = useState('');
 
   const fetchContacts = async (search = '', showLoading = true) => {
     if (!search.trim()) {
@@ -481,9 +484,19 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
       });
   }, [containers, searchQuery]);
 
-  const filteredRows = analytics?.data.filter(row =>
-    statusFilter === 'all' || row.delivery_status === statusFilter
-  ) ?? [];
+  const filteredRows = analytics?.data.filter(row => {
+    const statusMatch = statusFilter === 'all' || row.delivery_status === statusFilter;
+    if (!statusMatch) return false;
+    if (!analyticsSearchQuery.trim()) return true;
+    const q = analyticsSearchQuery.toLowerCase().trim();
+    return row.email?.toLowerCase().includes(q) || row.speaker_name?.toLowerCase().includes(q);
+  }) ?? [];
+
+  const filteredRecents = recents.filter(row => {
+    if (!recentsSearchQuery.trim()) return true;
+    const q = recentsSearchQuery.toLowerCase().trim();
+    return row.email?.toLowerCase().includes(q) || row.speaker_name?.toLowerCase().includes(q);
+  });
 
   const showOpenedAt = ['all', 'opened'].includes(statusFilter);
   const showClickedAt = ['clicked'].includes(statusFilter);
@@ -788,34 +801,47 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
             </div>
           </div>
         ) : viewMode === 'recents' ? (
-          <div className="flex-1 overflow-auto">
-            {recentsLoading ? (
-              <div className="flex items-center justify-center py-20 text-gray-400">
-                <Loader2 className="animate-spin mr-2" size={20} /> Loading recent clicks...
+          <div className="flex-1 flex flex-col min-h-0 bg-white">
+            <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center gap-3">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                <input
+                  type="text"
+                  placeholder="Search by name or email..."
+                  value={recentsSearchQuery}
+                  onChange={(e) => setRecentsSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-500"
+                />
               </div>
-            ) : (
-              <table className="w-full text-sm text-left border-collapse">
-                <thead className="bg-gray-50 sticky top-0 z-10">
-                  <tr className="text-xs text-gray-500 uppercase tracking-wider font-semibold border-b border-gray-200">
-                    <th className="px-5 py-3 w-10 text-center">#</th>
-                    <th className="px-5 py-3">Name</th>
-                    <th className="px-5 py-3">Email</th>
-                    <th className="px-5 py-3">Campaign</th>
-                    <th className="px-5 py-3">Batch / Blast</th>
-                    <th className="px-5 py-3">Status</th>
-                    <th className="px-5 py-3">Clicked At</th>
-                    <th className="px-5 py-3">Links</th>
-                    <th className="px-5 py-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recents.length === 0 ? (
-                    <tr>
-                      <td colSpan={8} className="py-16 text-center text-gray-400 text-sm">
-                        No recent clicks found.
-                      </td>
+            </div>
+            <div className="flex-1 overflow-auto">
+              {recentsLoading ? (
+                <div className="flex items-center justify-center py-20 text-gray-400">
+                  <Loader2 className="animate-spin mr-2" size={20} /> Loading recent clicks...
+                </div>
+              ) : (
+                <table className="w-full text-sm text-left border-collapse">
+                  <thead className="bg-gray-50 sticky top-0 z-10">
+                    <tr className="text-xs text-gray-500 uppercase tracking-wider font-semibold border-b border-gray-200">
+                      <th className="px-5 py-3 w-10 text-center">#</th>
+                      <th className="px-5 py-3">Name</th>
+                      <th className="px-5 py-3">Email</th>
+                      <th className="px-5 py-3">Campaign</th>
+                      <th className="px-5 py-3">Batch / Blast</th>
+                      <th className="px-5 py-3">Status</th>
+                      <th className="px-5 py-3">Clicked At</th>
+                      <th className="px-5 py-3">Links</th>
+                      <th className="px-5 py-3 text-right">Actions</th>
                     </tr>
-                  ) : recents.map((row, i) => (
+                  </thead>
+                  <tbody>
+                    {filteredRecents.length === 0 ? (
+                      <tr>
+                        <td colSpan={9} className="py-16 text-center text-gray-400 text-sm">
+                          {recentsSearchQuery ? 'No recent clicks match your search.' : 'No recent clicks found.'}
+                        </td>
+                      </tr>
+                    ) : filteredRecents.map((row, i) => (
                     <tr key={i} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="px-5 py-3 text-center text-gray-400 text-xs">{i + 1}</td>
                       <td className="px-5 py-3 font-medium text-gray-900">{row.speaker_name || '—'}</td>
@@ -863,6 +889,7 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                 </tbody>
               </table>
             )}
+            </div>
           </div>
         ) : !selectedBlastToken ? (
           <div className="flex-1 flex flex-col items-center justify-center text-gray-300 relative">
@@ -903,6 +930,16 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0 self-start xl:self-center">
+                <div className="relative w-[200px] mr-2">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                  <input
+                    type="text"
+                    placeholder="Search name/email..."
+                    value={analyticsSearchQuery}
+                    onChange={(e) => setAnalyticsSearchQuery(e.target.value)}
+                    className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-900/20"
+                  />
+                </div>
                 <div className="flex gap-1 flex-wrap">
                   {['all', 'delivered', 'opened', 'clicked', 'sent', 'pending', 'failed'].map(s => (
                     <button

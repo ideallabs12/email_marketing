@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CheckCircle2, CircleX, Eye, MailCheck, MousePointerClick, RefreshCw, UserMinus, ShieldAlert, Clock, MailWarning, AlertTriangle, Link as LinkIcon, MonitorSmartphone, Download, Share2, Check } from 'lucide-react';
+import { CheckCircle2, CircleX, Eye, MailCheck, MousePointerClick, RefreshCw, UserMinus, ShieldAlert, Clock, MailWarning, AlertTriangle, Link as LinkIcon, MonitorSmartphone, Download, Share2, Check, Search } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import Card from './Card';
 import { apiClient } from '../services/apiClient';
@@ -53,6 +53,7 @@ export default function CampaignAnalyticsView({ campaignId }: { campaignId: stri
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -194,6 +195,13 @@ export default function CampaignAnalyticsView({ campaignId }: { campaignId: stri
   const timeSeriesData = Object.values(timeSeriesMap).sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
   const topLinks = Object.entries(linkCounts).map(([link, count]) => ({ link, count })).sort((a, b) => b.count - a.count);
 
+  const filteredRecipients = analytics?.recipients ? analytics.recipients.filter(r => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    return r.email?.toLowerCase().includes(q) || 
+           [r.first_name, r.last_name].join(' ').toLowerCase().includes(q);
+  }) : [];
+
   if (loading && !analytics) {
     return <div className="p-8 text-center text-foreground/50">Loading analytics...</div>;
   }
@@ -299,19 +307,31 @@ export default function CampaignAnalyticsView({ campaignId }: { campaignId: stri
       </div>
 
       <Card>
-        <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-1.5 md:gap-2 pb-5 border-b border-border">
-          {filters.map(({ value, label }) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setFilter(value)}
-              className={`px-1 md:px-3 py-1.5 rounded-md md:rounded-full border text-[10px] md:text-xs font-semibold transition-colors text-center truncate ${
-                activeFilter === value ? 'bg-foreground text-background border-foreground' : 'border-border hover:bg-foreground hover:text-background'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+        <div className="flex flex-col gap-4 pb-5 border-b border-border">
+          <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-1.5 md:gap-2">
+            {filters.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setFilter(value)}
+                className={`px-1 md:px-3 py-1.5 rounded-md md:rounded-full border text-[10px] md:text-xs font-semibold transition-colors text-center truncate ${
+                  activeFilter === value ? 'bg-foreground text-background border-foreground' : 'border-border hover:bg-foreground hover:text-background'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="relative max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40" size={16} />
+            <input
+              type="text"
+              placeholder="Search recipients by name or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:border-foreground/30 transition-colors"
+            />
+          </div>
         </div>
 
         <div className="hidden md:grid grid-cols-12 gap-3 text-xs font-medium uppercase tracking-widest text-foreground/40 py-4 border-b border-border">
@@ -324,11 +344,11 @@ export default function CampaignAnalyticsView({ campaignId }: { campaignId: stri
 
         {loading && analytics?.recipients.length === 0 ? (
           <div className="text-center py-12 text-sm text-foreground/45">Loading recipients…</div>
-        ) : analytics?.recipients.length === 0 ? (
+        ) : filteredRecipients.length === 0 ? (
           <div className="text-center py-12 text-sm text-foreground/45">No contacts match this filter.</div>
         ) : (
           <div className="divide-y divide-border">
-            {analytics?.recipients.map((recipient) => (
+            {filteredRecipients.map((recipient) => (
               <div key={recipient.contact_id} className="flex flex-col md:grid md:grid-cols-12 gap-1 md:gap-3 py-4 md:py-3 text-sm items-start md:items-center hover:bg-foreground/5 rounded-lg md:rounded-md border border-border md:border-transparent bg-foreground/[0.02] md:bg-transparent px-3 md:px-2 -mx-3 md:-mx-2 mb-3 md:mb-0 transition-colors shadow-sm md:shadow-none">
                 
                 <div className="flex justify-between items-start w-full md:contents mb-2 md:mb-0">
