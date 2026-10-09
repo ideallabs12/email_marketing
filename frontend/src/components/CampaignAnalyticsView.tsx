@@ -115,6 +115,8 @@ export default function CampaignAnalyticsView({ campaignId }: { campaignId: stri
   };
 
   const handleAddLead = async (recipient: any) => {
+    if (!window.confirm(`Are you sure you want to add ${recipient.email} to your leads?`)) return;
+    
     try {
       await apiClient.post('/api/v1/leads/', {
         speaker_name: [recipient.first_name, recipient.last_name].filter(Boolean).join(' ') || recipient.email || 'Unknown',

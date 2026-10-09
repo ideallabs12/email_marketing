@@ -182,6 +182,8 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
   };
 
   const handleAddLead = async (row: any) => {
+    if (!window.confirm(`Are you sure you want to add ${row.email} to your leads?`)) return;
+    
     try {
       const savedPwd = typeof window !== 'undefined' ? sessionStorage.getItem(`master_pwd_${token}`) || '' : '';
       const headers: any = { 'Content-Type': 'application/json' };
