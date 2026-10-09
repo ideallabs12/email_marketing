@@ -74,11 +74,11 @@ class Lead(models.Model):
         ('Cancelled', 'Cancelled'),
     ]
 
-    speaker_name = models.CharField(max_length=255)
+    speaker_name = models.CharField(max_length=255, blank=True)
     email = models.EmailField()
-    campaign_name = models.CharField(max_length=255)
+    campaign_name = models.CharField(max_length=255, blank=True)
     batch_name = models.CharField(max_length=255, blank=True)
-    whose_speaker = models.CharField(max_length=255)
+    whose_speaker = models.CharField(max_length=255, blank=True)
     call_booked_on = models.DateTimeField(null=True, blank=True)
     call_status = models.CharField(max_length=50, choices=CALL_STATUS_CHOICES, blank=True, null=True)
     followup = models.DateTimeField(null=True, blank=True)
