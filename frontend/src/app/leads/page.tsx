@@ -79,16 +79,22 @@ export default function LeadsPage() {
   };
 
   const combineDateAndTime = (dateStr: string, timeStr: string) => {
-    if (!dateStr || !timeStr) return null;
-    const [month, day, year] = new Date(dateStr).toLocaleDateString().split('/');
-    // Parse time like "1:15 PM"
-    const [time, ampm] = timeStr.split(' ');
+    if (!dateStr && !timeStr) return null;
+    
+    const dStr = dateStr || new Date().toISOString().split('T')[0];
+    const tStr = timeStr || '12:00 PM';
+
+    const parts = dStr.split('-');
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+
+    const [time, ampm] = tStr.split(' ');
     let [hours, minutes] = time.split(':').map(Number);
     if (ampm === 'PM' && hours < 12) hours += 12;
     if (ampm === 'AM' && hours === 12) hours = 0;
     
-    const d = new Date(dateStr);
-    d.setHours(hours, minutes, 0, 0);
+    const d = new Date(year, month, day, hours, minutes, 0, 0);
     return d.toISOString();
   };
 
@@ -97,7 +103,11 @@ export default function LeadsPage() {
     const d = new Date(isoString);
     if (isNaN(d.getTime())) return { date: '', time: '' };
     
-    const date = d.toISOString().split('T')[0];
+    // Format date in local timezone YYYY-MM-DD
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const date = `${year}-${month}-${day}`;
     
     let hours = d.getHours();
     let minutes: any = d.getMinutes();
