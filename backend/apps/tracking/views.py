@@ -1023,3 +1023,63 @@ class PublicMasterLinkContactsView(views.APIView):
             })
 
         return Response({'data': data})
+class PublicMasterLinkLeadsView(views.APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        try:
+            settings = MasterLinkSettings.objects.get(token=token, is_active=True)
+        except MasterLinkSettings.DoesNotExist:
+            return Response({'detail': 'This link is disabled or invalid.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if settings.password:
+            import urllib.parse
+            header_pwd = request.headers.get('X-Master-Password', '')
+            param_pwd = request.query_params.get('password', '')
+            unquoted_param = urllib.parse.unquote(param_pwd)
+            expected = str(settings.password).strip()
+
+            matches = any(
+                str(p).strip() == expected
+                for p in [header_pwd, param_pwd, unquoted_param]
+                if p
+            )
+            if not matches:
+                return Response({'detail': 'password_required', 'has_password': True}, status=status.HTTP_401_UNAUTHORIZED)
+
+        from apps.contacts.models import Lead
+        search = request.query_params.get('search', '').strip()
+        limit = 100
+
+        qs = Lead.objects.all().order_by('-id')
+        if search:
+            tokens = search.split()
+            search_query = Q()
+            for t in tokens:
+                search_query &= (
+                    Q(email__icontains=t) |
+                    Q(speaker_name__icontains=t) |
+                    Q(campaign_name__icontains=t) |
+                    Q(batch_name__icontains=t)
+                )
+            qs = qs.filter(search_query)
+        
+        qs = qs[:limit]
+
+        data = []
+        for l in qs:
+            data.append({
+                'id': l.id,
+                'speaker_name': l.speaker_name,
+                'email': l.email,
+                'campaign_name': l.campaign_name,
+                'batch_name': l.batch_name,
+                'whose_speaker': l.whose_speaker,
+                'call_booked_on': l.call_booked_on.isoformat() if l.call_booked_on else None,
+                'call_status': l.call_status,
+                'source_tracking_id': l.source_tracking_id,
+                'followup': l.followup.isoformat() if l.followup else None,
+                'notes': l.notes,
+            })
+
+        return Response({'data': data})

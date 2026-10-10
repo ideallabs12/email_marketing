@@ -254,13 +254,17 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const [viewMode, setViewMode] = useState<'analytics' | 'recents' | 'contacts'>('analytics');
+  const [viewMode, setViewMode] = useState<'analytics' | 'recents' | 'contacts' | 'leads'>('analytics');
   const [recents, setRecents] = useState<any[]>([]);
   const [recentsLoading, setRecentsLoading] = useState(false);
 
   const [contacts, setContacts] = useState<any[]>([]);
   const [contactsLoading, setContactsLoading] = useState(false);
   const [contactsSearchQuery, setContactsSearchQuery] = useState('');
+
+  const [leads, setLeads] = useState<any[]>([]);
+  const [leadsLoading, setLeadsLoading] = useState(false);
+  const [leadsSearchQuery, setLeadsSearchQuery] = useState('');
   
   const [analyticsSearchQuery, setAnalyticsSearchQuery] = useState('');
   const [recentsSearchQuery, setRecentsSearchQuery] = useState('');
@@ -289,6 +293,29 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
       console.error('Failed to load contacts:', err);
     } finally {
       if (showLoading) setContactsLoading(false);
+    }
+  };
+
+  const fetchLeads = async (search = '', showLoading = true) => {
+    if (showLoading) setLeadsLoading(true);
+    const savedPwd = typeof window !== 'undefined' ? sessionStorage.getItem(`master_pwd_${token}`) || '' : '';
+    const trimmedPwd = savedPwd.trim();
+    let url = `${API_BASE_URL}/api/v1/public/master-link/${token}/leads/?search=${encodeURIComponent(search)}`;
+    if (trimmedPwd) {
+      url += `&password=${encodeURIComponent(trimmedPwd)}`;
+    }
+    const headers: Record<string, string> = {};
+    if (trimmedPwd) headers['X-Master-Password'] = trimmedPwd;
+    try {
+      const res = await fetch(url, { headers, cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        setLeads(data.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to load leads:', err);
+    } finally {
+      if (showLoading) setLeadsLoading(false);
     }
   };
 
@@ -415,6 +442,8 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
       fetchRecents(recents.length === 0);
     } else if (viewMode === 'contacts') {
       // Do not fetch on mount, wait for search
+    } else if (viewMode === 'leads') {
+      fetchLeads(leadsSearchQuery, leads.length === 0);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode, token, API_BASE_URL]);
@@ -725,6 +754,17 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
               >
                 Contact Directory
               </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('leads')}
+                className={`py-3.5 font-semibold text-sm transition-colors border-b-2 cursor-pointer ${
+                  viewMode === 'leads'
+                    ? 'text-gray-900 border-gray-900'
+                    : 'text-gray-500 border-transparent hover:text-gray-700'
+                }`}
+              >
+                Lead Tracker
+              </button>
             </div>
           </div>
 
@@ -799,6 +839,66 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                         </td>
                         <td className="px-5 py-3 text-gray-500 text-xs">
                           {c.batches && c.batches.length > 0 ? c.batches.join(', ') : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        ) : viewMode === 'leads' ? (
+          <div className="flex-1 flex flex-col min-h-0 bg-white">
+            <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center gap-3">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                <input
+                  type="text"
+                  placeholder="Search by name, email, or campaign..."
+                  value={leadsSearchQuery}
+                  onChange={(e) => setLeadsSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && fetchLeads(leadsSearchQuery)}
+                  className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-500"
+                />
+              </div>
+              <button
+                onClick={() => fetchLeads(leadsSearchQuery)}
+                className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm cursor-pointer"
+              >
+                Search
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto">
+              {leadsLoading ? (
+                <div className="flex items-center justify-center py-20 text-gray-400">
+                  <Loader2 className="animate-spin mr-2" size={20} /> Loading leads...
+                </div>
+              ) : leads.length === 0 ? (
+                <div className="py-20 text-center text-gray-400 text-sm">
+                  {leadsSearchQuery ? 'No leads found.' : 'No leads available.'}
+                </div>
+              ) : (
+                <table className="w-full text-sm text-left border-collapse">
+                  <thead className="bg-gray-50 sticky top-0 z-10">
+                    <tr className="text-xs text-gray-500 uppercase tracking-wider font-semibold border-b border-gray-200">
+                      <th className="px-5 py-3">Name</th>
+                      <th className="px-5 py-3">Email</th>
+                      <th className="px-5 py-3">Campaign</th>
+                      <th className="px-5 py-3">Batch</th>
+                      <th className="px-5 py-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leads.map((l, i) => (
+                      <tr key={i} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td className="px-5 py-3 font-medium text-gray-900">{l.speaker_name || '—'}</td>
+                        <td className="px-5 py-3 text-gray-500">{l.email}</td>
+                        <td className="px-5 py-3 text-gray-900">{l.campaign_name || '—'}</td>
+                        <td className="px-5 py-3 text-gray-500">{l.batch_name || '—'}</td>
+                        <td className="px-5 py-3">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                            {l.call_status || 'Pending'}
+                          </span>
                         </td>
                       </tr>
                     ))}
