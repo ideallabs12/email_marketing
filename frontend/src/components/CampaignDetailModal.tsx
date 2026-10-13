@@ -173,6 +173,30 @@ export default function CampaignDetailModal({
             <div className="flex items-center flex-wrap gap-2.5">
               {getStatusBadge(campaign.status)}
 
+              {campaign.company && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
+                  🏢 {campaign.company}
+                </span>
+              )}
+
+              {campaign.whose_campaign && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                  👤 {campaign.whose_campaign}
+                </span>
+              )}
+
+              {(campaign.data_batch || campaign.target_batches_name) && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono font-medium bg-foreground/5 text-foreground/80 border border-border">
+                  🗂️ {campaign.data_batch || campaign.target_batches_name}
+                </span>
+              )}
+
+              {campaign.template_name && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                  📄 {campaign.template_name}
+                </span>
+              )}
+
               {campaign.tracking_id && (
                 <button
                   onClick={handleCopyTrackingId}

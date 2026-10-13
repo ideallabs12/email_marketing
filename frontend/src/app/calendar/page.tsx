@@ -6,7 +6,8 @@ import {
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, Search, Filter, 
   Send, Clock, CheckCircle2, AlertCircle, Hourglass, Layers, 
   Eye, BarChart3, Plus, ArrowUpRight, Sparkles, X, ChevronDown, 
-  CalendarDays, LayoutGrid, List, Check, Zap, Users
+  CalendarDays, LayoutGrid, List, Check, Zap, Users, FileText, Building2,
+  FolderOpen
 } from 'lucide-react';
 import { apiClient } from '@/services/apiClient';
 import { CalendarCampaign, CalendarCampaignPerformance } from '@/types';
@@ -15,12 +16,14 @@ import CampaignDetailModal from '@/components/CampaignDetailModal';
 type ViewMode = 'month' | 'week' | 'agenda';
 type StatusFilter = 'all' | 'sent' | 'scheduled' | 'sending' | 'draft' | 'failed';
 type TypeFilter = 'all' | 'standalone' | 'advance';
+type DensityMode = 'detailed' | 'compact';
 
 export default function CalendarPage() {
   const [campaigns, setCampaigns] = useState<CalendarCampaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
+  const [densityMode, setDensityMode] = useState<DensityMode>('detailed');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -64,7 +67,6 @@ export default function CalendarPage() {
   async function loadCampaigns(showLoader = true) {
     if (showLoader) setLoading(true);
     try {
-      // 1. Try our dedicated rich calendar action
       let items: CalendarCampaign[] = [];
       try {
         const res = await apiClient.get('/api/v1/campaigns/calendar/');
@@ -140,21 +142,165 @@ export default function CalendarPage() {
     }
   };
 
+  // Helper to extract top 4 priority attributes
+  const getCampaignMeta = (camp: CalendarCampaign) => {
+    // 1. Company
+    let company = camp.company || '';
+    if (!company) {
+      const fromStr = (camp.from_email || '').toUpperCase();
+      const nameStr = (camp.name || '').toUpperCase();
+      const tempStr = (camp.template_name || '').toUpperCase();
+      if (nameStr.includes('WYNX') || fromStr.includes('WYNX') || tempStr.includes('WYNX')) {
+        company = 'WYNx Talks';
+      } else if (nameStr.includes('SIGNATURE') || fromStr.includes('SIGNATURE') || tempStr.includes('SIGNATURE')) {
+        company = 'Signature Talks';
+      } else if (nameStr.includes('VOICE') || fromStr.includes('VOICE') || tempStr.includes('VOICE')) {
+        company = 'Voice Talks';
+      } else if (nameStr.includes('ICON') || fromStr.includes('ICON') || tempStr.includes('ICON')) {
+        company = 'ICON Conferences';
+      } else if (nameStr.includes('IDIAS') || fromStr.includes('IDIAS') || tempStr.includes('IDIAS')) {
+        company = 'IDIAS';
+      } else if (camp.from_email?.includes('<')) {
+        company = camp.from_email.split('<')[0].trim();
+      } else if (camp.from_email?.includes('@')) {
+        const domain = camp.from_email.split('@')[1]?.split('.')[0] || '';
+        company = domain ? domain.charAt(0).toUpperCase() + domain.slice(1) : 'Email Marketing';
+      } else {
+        company = 'WYNx Talks';
+      }
+    }
+
+    // 2. Data Batch
+    const batch = camp.data_batch || camp.target_batches_name || (camp.target_list_name ? `List: ${camp.target_list_name}` : 'All Contacts');
+
+    // 3. Whose Campaign (Owner / Speaker / Sequence)
+    let owner = camp.whose_campaign || '';
+    if (!owner) {
+      if (camp.advance_campaign_name) {
+        owner = camp.advance_campaign_name;
+      } else if (camp.data_batch || camp.target_batches_name) {
+        const rawBatch = (camp.data_batch || camp.target_batches_name || '').split(',')[0].trim();
+        const cleaned = rawBatch.toLowerCase().replace(/_data|-data|data/g, '').replace(/^[_-]+|[_-]+$/g, '');
+        owner = cleaned ? cleaned.charAt(0).toUpperCase() + cleaned.slice(1) : rawBatch;
+      } else {
+        owner = 'Standard';
+      }
+    }
+
+    // 4. Which Template
+    const template = camp.template_name || (camp.template_id ? `Template #${camp.template_id}` : 'Universal Template');
+
+    return { company, owner, batch, template };
+  };
+
+  const getCompanyBadgeStyle = (company: string) => {
+    const c = company.toLowerCase();
+    if (c.includes('wynx')) {
+      return 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/25';
+    }
+    if (c.includes('signature')) {
+      return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25';
+    }
+    if (c.includes('voice')) {
+      return 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/25';
+    }
+    if (c.includes('icon')) {
+      return 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25';
+    }
+    if (c.includes('idias')) {
+      return 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/25';
+    }
+    return 'bg-zinc-500/10 text-zinc-700 dark:text-zinc-300 border-zinc-500/25';
+  };
+
+  // Switch View Mode Handler
+  const handleSwitchViewMode = (mode: ViewMode) => {
+    if (mode === 'week') {
+      // Ensure Week view starts on THIS WEEK
+      const today = new Date();
+      if (currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear()) {
+        setCurrentDate(today);
+      }
+    }
+    setViewMode(mode);
+  };
+
   // Calendar date navigation
-  const prevMonth = () => {
-    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+  const handlePrev = () => {
+    if (viewMode === 'week') {
+      setCurrentDate(prev => {
+        const d = new Date(prev);
+        d.setDate(d.getDate() - 7);
+        return d;
+      });
+    } else {
+      setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+    }
   };
 
-  const nextMonth = () => {
-    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+  const handleNext = () => {
+    if (viewMode === 'week') {
+      setCurrentDate(prev => {
+        const d = new Date(prev);
+        d.setDate(d.getDate() + 7);
+        return d;
+      });
+    } else {
+      setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+    }
   };
 
-  const goToToday = () => {
+  const handleToday = () => {
     setCurrentDate(new Date());
   };
 
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
+
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const weekDayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  // Calculate Week Days for Week View
+  const currentWeekDays = useMemo(() => {
+    const d = new Date(currentDate);
+    const dayOfWeek = d.getDay(); // 0 = Sunday
+    const sunday = new Date(d);
+    sunday.setDate(d.getDate() - dayOfWeek);
+    sunday.setHours(0, 0, 0, 0);
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const days = [];
+
+    for (let i = 0; i < 7; i++) {
+      const dayDate = new Date(sunday);
+      dayDate.setDate(sunday.getDate() + i);
+      const str = `${dayDate.getFullYear()}-${String(dayDate.getMonth() + 1).padStart(2, '0')}-${String(dayDate.getDate()).padStart(2, '0')}`;
+      days.push({
+        date: dayDate,
+        dateString: str,
+        isToday: str === todayStr,
+      });
+    }
+    return days;
+  }, [currentDate]);
+
+  // Formatted header string for current view
+  const headerDateLabel = useMemo(() => {
+    if (viewMode === 'week') {
+      if (currentWeekDays.length === 7) {
+        const start = currentWeekDays[0].date;
+        const end = currentWeekDays[6].date;
+        const startStr = `${monthNames[start.getMonth()].slice(0, 3)} ${start.getDate()}`;
+        const endStr = `${monthNames[end.getMonth()].slice(0, 3)} ${end.getDate()}, ${end.getFullYear()}`;
+        return `Week of ${startStr} – ${endStr}`;
+      }
+    }
+    return `${monthNames[currentMonth]} ${currentYear}`;
+  }, [viewMode, currentWeekDays, currentMonth, currentYear]);
 
   // Filtered campaigns
   const filteredCampaigns = useMemo(() => {
@@ -176,9 +322,14 @@ export default function CalendarPage() {
         const matchesName = c.name?.toLowerCase().includes(query);
         const matchesSubj = c.subject?.toLowerCase().includes(query);
         const matchesId = c.tracking_id?.toLowerCase().includes(query) || c.id.toString() === query;
+        const matchesBatch = (c.data_batch || c.target_batches_name)?.toLowerCase().includes(query);
+        const matchesOwner = c.whose_campaign?.toLowerCase().includes(query);
+        const matchesCompany = c.company?.toLowerCase().includes(query);
+        const matchesTemplate = c.template_name?.toLowerCase().includes(query);
         const matchesTarget = c.target_list_name?.toLowerCase().includes(query);
         const matchesFrom = c.from_email?.toLowerCase().includes(query);
-        if (!matchesName && !matchesSubj && !matchesId && !matchesTarget && !matchesFrom) {
+
+        if (!matchesName && !matchesSubj && !matchesId && !matchesBatch && !matchesOwner && !matchesCompany && !matchesTemplate && !matchesTarget && !matchesFrom) {
           return false;
         }
       }
@@ -249,7 +400,6 @@ export default function CalendarPage() {
       isToday: boolean;
     }[] = [];
 
-    // Today string
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
@@ -278,7 +428,7 @@ export default function CalendarPage() {
       });
     }
 
-    // Next month padding to fill grid (multiples of 7, up to 35 or 42)
+    // Next month padding to fill grid (multiples of 7)
     const remaining = (7 - (days.length % 7)) % 7;
     for (let i = 1; i <= remaining; i++) {
       const d = new Date(currentYear, currentMonth + 1, i);
@@ -338,13 +488,6 @@ export default function CalendarPage() {
         };
     }
   };
-
-  const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
-
-  const weekDayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   // Status counts for filter chips
   const statusCounts = useMemo(() => {
@@ -471,75 +614,107 @@ export default function CalendarPage() {
 
       {/* Main Calendar Navigation & Filter Controls Bar */}
       <div className="bg-surface border border-border rounded-2xl p-4 shadow-xs space-y-4">
-        {/* Month Navigation & View Mode Switcher */}
+        {/* Month/Week Navigation & View Mode Switcher */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          {/* Month Switcher */}
+          {/* Date Range Navigation */}
           <div className="flex items-center gap-2">
             <div className="flex items-center bg-background border border-border rounded-xl p-0.5">
               <button
-                onClick={prevMonth}
+                onClick={handlePrev}
                 className="p-2 rounded-lg text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors"
-                title="Previous Month"
+                title={viewMode === 'week' ? "Previous Week" : "Previous Month"}
               >
                 <ChevronLeft size={16} />
               </button>
               <button
-                onClick={goToToday}
+                onClick={handleToday}
                 className="px-3 py-1.5 text-xs font-semibold text-foreground/80 hover:text-foreground transition-colors"
+                title="Jump to Today / Current Week"
               >
-                Today
+                {viewMode === 'week' ? 'This Week' : 'Today'}
               </button>
               <button
-                onClick={nextMonth}
+                onClick={handleNext}
                 className="p-2 rounded-lg text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors"
-                title="Next Month"
+                title={viewMode === 'week' ? "Next Week" : "Next Month"}
               >
                 <ChevronRight size={16} />
               </button>
             </div>
 
             <h2 className="text-lg md:text-xl font-bold text-foreground px-2 flex items-center gap-2">
-              <span>{monthNames[currentMonth]} {currentYear}</span>
+              <span>{headerDateLabel}</span>
             </h2>
           </div>
 
-          {/* View Mode Switcher (Month / Week / Agenda) */}
-          <div className="flex items-center gap-1.5 bg-background border border-border p-1 rounded-xl self-start sm:self-auto text-xs">
-            <button
-              onClick={() => setViewMode('month')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
-                viewMode === 'month'
-                  ? 'bg-surface text-foreground font-semibold shadow-xs'
-                  : 'text-foreground/50 hover:text-foreground'
-              }`}
-            >
-              <LayoutGrid size={14} />
-              <span>Month</span>
-            </button>
+          {/* View Mode Switcher & Card Density Toggle */}
+          <div className="flex items-center flex-wrap gap-2">
+            {/* Card Density Toggle for Month View */}
+            {viewMode === 'month' && (
+              <div className="flex items-center gap-1 bg-background border border-border p-1 rounded-xl text-xs">
+                <button
+                  onClick={() => setDensityMode('detailed')}
+                  className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
+                    densityMode === 'detailed'
+                      ? 'bg-surface text-foreground font-semibold shadow-xs'
+                      : 'text-foreground/50 hover:text-foreground'
+                  }`}
+                  title="Show Company, Batch, Template, and Owner on each card"
+                >
+                  Detailed Cards
+                </button>
+                <button
+                  onClick={() => setDensityMode('compact')}
+                  className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
+                    densityMode === 'compact'
+                      ? 'bg-surface text-foreground font-semibold shadow-xs'
+                      : 'text-foreground/50 hover:text-foreground'
+                  }`}
+                  title="Show compact pills"
+                >
+                  Compact
+                </button>
+              </div>
+            )}
 
-            <button
-              onClick={() => setViewMode('week')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
-                viewMode === 'week'
-                  ? 'bg-surface text-foreground font-semibold shadow-xs'
-                  : 'text-foreground/50 hover:text-foreground'
-              }`}
-            >
-              <CalendarDays size={14} />
-              <span>Week</span>
-            </button>
+            {/* View Mode Switcher */}
+            <div className="flex items-center gap-1 bg-background border border-border p-1 rounded-xl text-xs">
+              <button
+                onClick={() => handleSwitchViewMode('month')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
+                  viewMode === 'month'
+                    ? 'bg-surface text-foreground font-semibold shadow-xs'
+                    : 'text-foreground/50 hover:text-foreground'
+                }`}
+              >
+                <LayoutGrid size={14} />
+                <span>Month</span>
+              </button>
 
-            <button
-              onClick={() => setViewMode('agenda')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
-                viewMode === 'agenda'
-                  ? 'bg-surface text-foreground font-semibold shadow-xs'
-                  : 'text-foreground/50 hover:text-foreground'
-              }`}
-            >
-              <List size={14} />
-              <span>Agenda</span>
-            </button>
+              <button
+                onClick={() => handleSwitchViewMode('week')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
+                  viewMode === 'week'
+                    ? 'bg-surface text-foreground font-semibold shadow-xs'
+                    : 'text-foreground/50 hover:text-foreground'
+                }`}
+              >
+                <CalendarDays size={14} />
+                <span>Week</span>
+              </button>
+
+              <button
+                onClick={() => handleSwitchViewMode('agenda')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
+                  viewMode === 'agenda'
+                    ? 'bg-surface text-foreground font-semibold shadow-xs'
+                    : 'text-foreground/50 hover:text-foreground'
+                }`}
+              >
+                <List size={14} />
+                <span>Agenda</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -586,7 +761,7 @@ export default function CalendarPage() {
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40" />
               <input
                 type="text"
-                placeholder="Search by name, ID, list..."
+                placeholder="Search owner, batch, template, co..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-8 pr-7 py-1.5 bg-background border border-border rounded-xl text-xs focus:outline-none focus:border-foreground/30 transition-colors placeholder:text-foreground/30 font-medium"
@@ -636,12 +811,12 @@ export default function CalendarPage() {
                     <div
                       key={dayItem.dateString + idx}
                       onClick={() => openDayDrawer(dayItem.dateString)}
-                      className={`min-h-[110px] sm:min-h-[135px] p-2 transition-all relative flex flex-col cursor-pointer group hover:bg-foreground/[0.02] ${
+                      className={`min-h-[170px] sm:min-h-[200px] p-2 transition-all relative flex flex-col cursor-pointer group hover:bg-foreground/[0.02] ${
                         !isCurrentMonth ? 'bg-background/40 opacity-40' : 'bg-surface'
-                      } ${isToday ? 'bg-emerald-500/[0.03] ring-1 ring-inset ring-emerald-500/30' : ''}`}
+                      } ${isToday ? 'bg-emerald-500/[0.03] ring-1 ring-inset ring-emerald-500/40' : ''}`}
                     >
                       {/* Date Header */}
-                      <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center justify-between mb-2">
                         <span className={`text-xs font-semibold rounded-full w-6 h-6 flex items-center justify-center transition-colors ${
                           isToday 
                             ? 'bg-emerald-500 text-white shadow-xs font-bold' 
@@ -651,42 +826,88 @@ export default function CalendarPage() {
                         </span>
 
                         {hasCampaigns && (
-                          <span className="text-[10px] font-semibold text-foreground/50 bg-foreground/5 px-1.5 py-0.5 rounded-full">
-                            {dayCampaigns.length}
+                          <span className="text-[10px] font-semibold text-foreground/60 bg-foreground/5 px-2 py-0.5 rounded-full">
+                            {dayCampaigns.length} {dayCampaigns.length === 1 ? 'blast' : 'blasts'}
                           </span>
                         )}
                       </div>
 
-                      {/* Campaign Pills List */}
-                      <div className="space-y-1 flex-1 overflow-hidden">
-                        {dayCampaigns.slice(0, 3).map(camp => {
-                          const col = getStatusColor(camp.status);
-                          return (
-                            <div
-                              key={camp.id}
-                              onClick={(e) => openCampaignDetail(camp, e)}
-                              className="group/pill flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-medium bg-foreground/5 hover:bg-foreground/10 border border-border/50 text-foreground transition-all truncate"
-                              title={`${camp.name} — ${camp.status.toUpperCase()} (${camp.primary_time || ''})`}
-                            >
-                              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${col.dot}`} />
-                              {camp.primary_time && (
-                                <span className="text-[9px] font-mono text-foreground/40 flex-shrink-0">
-                                  {camp.primary_time}
-                                </span>
-                              )}
-                              <span className="truncate flex-1 font-medium text-foreground/90">
-                                {camp.name}
-                              </span>
-                              {camp.tracking_id && (
-                                <span className="text-[9px] font-mono opacity-50 flex-shrink-0">
-                                  #{camp.tracking_id}
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
+                      {/* Campaign Cards List */}
+                      <div className="space-y-1.5 flex-1 overflow-hidden">
+                        {densityMode === 'detailed' ? (
+                          // DETAILED CARDS VIEW (Company, Owner, Data Batch, Template)
+                          dayCampaigns.slice(0, 2).map(camp => {
+                            const col = getStatusColor(camp.status);
+                            const meta = getCampaignMeta(camp);
 
-                        {dayCampaigns.length > 3 && (
+                            return (
+                              <div
+                                key={camp.id}
+                                onClick={(e) => openCampaignDetail(camp, e)}
+                                className="p-2 rounded-xl border border-border/80 bg-background/90 hover:border-emerald-500/40 hover:shadow-xs transition-all text-xs space-y-1 cursor-pointer group/card"
+                                title={`${camp.name}\nCompany: ${meta.company}\nOwner: ${meta.owner}\nBatch: ${meta.batch}\nTemplate: ${meta.template}`}
+                              >
+                                {/* Line 1: Company Badge & Status/Time */}
+                                <div className="flex items-center justify-between gap-1">
+                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border truncate max-w-[110px] ${getCompanyBadgeStyle(meta.company)}`}>
+                                    🏢 {meta.company}
+                                  </span>
+                                  <div className="flex items-center gap-1 flex-shrink-0">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${col.dot}`} />
+                                    {camp.primary_time && (
+                                      <span className="text-[9px] font-mono text-foreground/50">{camp.primary_time}</span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Line 2: Whose Campaign (Owner) */}
+                                <div className="flex items-center gap-1 text-[11px] font-bold text-foreground truncate">
+                                  <Users size={11} className="text-emerald-500 flex-shrink-0" />
+                                  <span className="truncate">{meta.owner}</span>
+                                </div>
+
+                                {/* Line 3: Data Batch */}
+                                <div className="flex items-center gap-1 text-[10px] text-foreground/75 truncate bg-foreground/[0.03] px-1.5 py-0.5 rounded border border-border/40 font-mono">
+                                  <FolderOpen size={10} className="text-blue-500 flex-shrink-0" />
+                                  <span className="truncate">{meta.batch}</span>
+                                </div>
+
+                                {/* Line 4: Template Name */}
+                                <div className="flex items-center gap-1 text-[10px] text-foreground/60 truncate">
+                                  <FileText size={10} className="text-amber-500 flex-shrink-0" />
+                                  <span className="truncate" title={meta.template}>{meta.template}</span>
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          // COMPACT PILLS VIEW
+                          dayCampaigns.slice(0, 3).map(camp => {
+                            const col = getStatusColor(camp.status);
+                            const meta = getCampaignMeta(camp);
+
+                            return (
+                              <div
+                                key={camp.id}
+                                onClick={(e) => openCampaignDetail(camp, e)}
+                                className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-medium bg-foreground/5 hover:bg-foreground/10 border border-border/50 text-foreground transition-all truncate"
+                                title={`${camp.name}\nCompany: ${meta.company}\nOwner: ${meta.owner}\nBatch: ${meta.batch}\nTemplate: ${meta.template}`}
+                              >
+                                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${col.dot}`} />
+                                <span className="font-bold text-[10px] text-foreground/80 truncate">
+                                  {meta.company.slice(0, 8)}
+                                </span>
+                                <span className="text-foreground/40 font-mono text-[9px]">·</span>
+                                <span className="truncate flex-1 font-medium text-foreground/90">
+                                  {meta.owner}
+                                </span>
+                              </div>
+                            );
+                          })
+                        )}
+
+                        {/* +N More indicator */}
+                        {dayCampaigns.length > (densityMode === 'detailed' ? 2 : 3) && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -694,7 +915,7 @@ export default function CalendarPage() {
                             }}
                             className="w-full text-left px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
                           >
-                            +{dayCampaigns.length - 3} more
+                            +{dayCampaigns.length - (densityMode === 'detailed' ? 2 : 3)} more blasts
                           </button>
                         )}
                       </div>
@@ -705,73 +926,103 @@ export default function CalendarPage() {
             </div>
           )}
 
-          {/* WEEK VIEW */}
+          {/* WEEK VIEW (Properly Centered on Active/Current Week) */}
           {viewMode === 'week' && (
             <div className="bg-surface border border-border rounded-2xl shadow-xs overflow-hidden">
-              <div className="p-4 border-b border-border flex items-center justify-between text-sm">
-                <span className="font-semibold text-foreground">Week of {monthNames[currentMonth]} {currentDate.getDate()}, {currentYear}</span>
-                <span className="text-xs text-foreground/50">Click any card to inspect campaign details</span>
+              <div className="p-4 border-b border-border flex items-center justify-between text-sm bg-foreground/[0.015]">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-foreground">{headerDateLabel}</span>
+                  <span className="text-xs text-foreground/50 hidden sm:inline">(Sunday to Saturday schedule)</span>
+                </div>
+                <span className="text-xs text-foreground/50">Click any card to inspect full details</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-7 divide-y sm:divide-y-0 sm:divide-x divide-border">
-                {Array.from({ length: 7 }).map((_, i) => {
-                  const d = new Date(currentDate);
-                  const startOfWeek = d.getDate() - d.getDay() + i;
-                  const weekDay = new Date(d.setDate(startOfWeek));
-                  const weekDayStr = `${weekDay.getFullYear()}-${String(weekDay.getMonth() + 1).padStart(2, '0')}-${String(weekDay.getDate()).padStart(2, '0')}`;
-                  const dayCampaigns = campaignsByDate.get(weekDayStr) || [];
-                  const isToday = new Date().toISOString().split('T')[0] === weekDayStr;
+                {currentWeekDays.map(weekDayItem => {
+                  const dayCampaigns = campaignsByDate.get(weekDayItem.dateString) || [];
+                  const isToday = weekDayItem.isToday;
 
                   return (
-                    <div key={weekDayStr} className={`p-3 min-h-[300px] flex flex-col ${isToday ? 'bg-emerald-500/[0.02]' : ''}`}>
-                      <div className="border-b border-border/60 pb-2 mb-3">
-                        <div className="text-[11px] uppercase tracking-wider font-semibold text-foreground/50">
-                          {weekDayNames[weekDay.getDay()]}
-                        </div>
-                        <div className="flex items-center justify-between mt-0.5">
-                          <span className={`text-sm font-bold ${isToday ? 'text-emerald-600' : 'text-foreground'}`}>
-                            {weekDay.getDate()} {monthNames[weekDay.getMonth()].slice(0, 3)}
+                    <div 
+                      key={weekDayItem.dateString} 
+                      className={`p-3 min-h-[420px] flex flex-col ${
+                        isToday ? 'bg-emerald-500/[0.03] ring-1 ring-inset ring-emerald-500/30' : ''
+                      }`}
+                    >
+                      {/* Column Header */}
+                      <div className="border-b border-border/60 pb-2.5 mb-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] uppercase tracking-wider font-semibold text-foreground/50">
+                            {weekDayNames[weekDayItem.date.getDay()]}
                           </span>
-                          <span className="text-[10px] bg-foreground/5 px-1.5 py-0.5 rounded text-foreground/60 font-medium">
+                          {isToday && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500 text-white shadow-2xs">
+                              TODAY
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between mt-1">
+                          <span className={`text-base font-extrabold ${isToday ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'}`}>
+                            {weekDayItem.date.getDate()} {monthNames[weekDayItem.date.getMonth()].slice(0, 3)}
+                          </span>
+                          <span className="text-[10px] bg-foreground/5 px-2 py-0.5 rounded-full text-foreground/60 font-semibold">
                             {dayCampaigns.length}
                           </span>
                         </div>
                       </div>
 
-                      <div className="space-y-2 flex-1">
+                      {/* Campaigns in this day of the week */}
+                      <div className="space-y-2.5 flex-1">
                         {dayCampaigns.map(camp => {
                           const col = getStatusColor(camp.status);
+                          const meta = getCampaignMeta(camp);
+
                           return (
                             <div
                               key={camp.id}
                               onClick={() => openCampaignDetail(camp)}
-                              className="p-2.5 rounded-xl border border-border bg-background hover:border-foreground/30 hover:shadow-xs transition-all cursor-pointer space-y-1.5"
+                              className="p-3 rounded-xl border border-border bg-background hover:border-emerald-500/50 hover:shadow-sm transition-all cursor-pointer space-y-1.5 group"
                             >
+                              {/* Row 1: Company Badge & Status */}
                               <div className="flex items-center justify-between gap-1">
-                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${col.badge}`}>
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border truncate ${getCompanyBadgeStyle(meta.company)}`}>
+                                  🏢 {meta.company}
+                                </span>
+                                <span className={`text-[10px] font-semibold px-1.5 py-0.2 rounded-full border ${col.badge}`}>
                                   {camp.status}
                                 </span>
-                                {camp.primary_time && (
-                                  <span className="text-[10px] font-mono text-foreground/50">
-                                    {camp.primary_time}
-                                  </span>
-                                )}
                               </div>
-                              <div className="font-semibold text-xs text-foreground line-clamp-2">
-                                {camp.name}
+
+                              {/* Row 2: Whose Campaign */}
+                              <div className="flex items-center gap-1.5 text-xs font-bold text-foreground truncate">
+                                <Users size={12} className="text-emerald-500 flex-shrink-0" />
+                                <span className="truncate">{meta.owner}</span>
                               </div>
-                              {camp.target_list_name && (
-                                <div className="text-[10px] text-foreground/50 truncate flex items-center gap-1">
-                                  <Users size={10} />
-                                  <span>{camp.target_list_name}</span>
-                                </div>
-                              )}
+
+                              {/* Row 3: Data Batch */}
+                              <div className="flex items-center gap-1.5 text-[11px] text-foreground/75 truncate bg-foreground/[0.03] px-2 py-0.5 rounded border border-border/40 font-mono">
+                                <FolderOpen size={11} className="text-blue-500 flex-shrink-0" />
+                                <span className="truncate font-semibold">{meta.batch}</span>
+                              </div>
+
+                              {/* Row 4: Template Name */}
+                              <div className="flex items-center gap-1.5 text-[10px] text-foreground/60 truncate">
+                                <FileText size={11} className="text-amber-500 flex-shrink-0" />
+                                <span className="truncate" title={meta.template}>{meta.template}</span>
+                              </div>
+
+                              {/* Row 5: Time and Tracking ID */}
+                              <div className="flex items-center justify-between pt-1 border-t border-border/40 text-[10px] font-mono text-foreground/40">
+                                <span>{camp.primary_time || '—'}</span>
+                                {camp.tracking_id && <span>#{camp.tracking_id}</span>}
+                              </div>
                             </div>
                           );
                         })}
 
                         {dayCampaigns.length === 0 && (
-                          <div className="h-24 flex items-center justify-center text-[11px] text-foreground/30 italic">
+                          <div className="h-32 flex items-center justify-center text-xs text-foreground/30 italic">
                             No campaigns
                           </div>
                         )}
@@ -804,6 +1055,7 @@ export default function CalendarPage() {
                   {filteredCampaigns.map(camp => {
                     const col = getStatusColor(camp.status);
                     const perf = camp.performance;
+                    const meta = getCampaignMeta(camp);
 
                     return (
                       <div
@@ -811,43 +1063,41 @@ export default function CalendarPage() {
                         onClick={() => openCampaignDetail(camp)}
                         className="p-4 rounded-xl border border-border bg-background hover:bg-foreground/[0.02] hover:border-foreground/20 transition-all cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4"
                       >
-                        <div className="space-y-1.5 flex-1">
+                        <div className="space-y-2 flex-1">
                           <div className="flex items-center flex-wrap gap-2">
-                            <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${col.badge}`}>
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded border ${getCompanyBadgeStyle(meta.company)}`}>
+                              🏢 {meta.company}
+                            </span>
+                            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                              👤 {meta.owner}
+                            </span>
+                            <span className="text-xs font-mono font-medium px-2 py-0.5 rounded bg-foreground/5 text-foreground/80 border border-border">
+                              🗂️ {meta.batch}
+                            </span>
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${col.badge}`}>
                               {camp.status}
                             </span>
-                            {camp.tracking_id && (
-                              <span className="text-xs font-mono bg-foreground/5 px-2 py-0.5 rounded text-foreground/70">
-                                #{camp.tracking_id}
-                              </span>
-                            )}
-                            {camp.is_advanced && (
-                              <span className="text-xs font-medium text-purple-600 bg-purple-500/10 px-2 py-0.5 rounded-full">
-                                Advance Blast
-                              </span>
-                            )}
                             <span className="text-xs font-medium text-foreground/50 flex items-center gap-1">
                               <CalendarIcon size={12} />
                               {camp.primary_date} {camp.primary_time ? `at ${camp.primary_time}` : ''}
                             </span>
                           </div>
 
-                          <h4 className="text-base font-bold text-foreground">
-                            {camp.name}
-                          </h4>
-
-                          <div className="text-xs text-foreground/60 flex items-center flex-wrap gap-x-4 gap-y-1">
-                            {camp.subject && (
-                              <span className="italic line-clamp-1">
-                                &quot;{camp.subject}&quot;
+                          <div className="space-y-0.5">
+                            <h4 className="text-base font-bold text-foreground">
+                              {camp.name}
+                            </h4>
+                            <div className="flex items-center gap-2 text-xs text-foreground/60">
+                              <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                                <FileText size={12} />
+                                {meta.template}
                               </span>
-                            )}
-                            {camp.target_list_name && (
-                              <span className="flex items-center gap-1">
-                                <Users size={12} className="text-foreground/40" />
-                                {camp.target_list_name}
-                              </span>
-                            )}
+                              {camp.subject && (
+                                <span className="italic line-clamp-1 opacity-70">
+                                  — &quot;{camp.subject}&quot;
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
 
@@ -941,24 +1191,48 @@ export default function CalendarPage() {
               ) : (
                 dayDrawerCampaigns.map(camp => {
                   const col = getStatusColor(camp.status);
+                  const meta = getCampaignMeta(camp);
+
                   return (
                     <div
                       key={camp.id}
                       onClick={() => openCampaignDetail(camp)}
-                      className="p-3.5 rounded-xl border border-border bg-background hover:border-foreground/30 transition-all cursor-pointer space-y-2 group shadow-2xs"
+                      className="p-4 rounded-xl border border-border bg-background hover:border-emerald-500/40 transition-all cursor-pointer space-y-2 group shadow-2xs"
                     >
+                      {/* Company & Status row */}
                       <div className="flex items-center justify-between">
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${col.badge}`}>
-                          {camp.status}
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getCompanyBadgeStyle(meta.company)}`}>
+                          🏢 {meta.company}
                         </span>
-                        {camp.primary_time && (
-                          <span className="text-xs font-mono text-foreground/50">
-                            {camp.primary_time}
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${col.badge}`}>
+                            {camp.status}
                           </span>
-                        )}
+                          {camp.primary_time && (
+                            <span className="text-xs font-mono text-foreground/50">
+                              {camp.primary_time}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      <h4 className="text-sm font-bold text-foreground group-hover:text-emerald-600 transition-colors">
+                      {/* Owner & Data Batch */}
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                          <Users size={13} className="text-emerald-500 flex-shrink-0" />
+                          <span>Owner: {meta.owner}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs text-foreground/75 font-mono bg-foreground/[0.03] px-2 py-0.5 rounded border border-border/40">
+                          <FolderOpen size={12} className="text-blue-500 flex-shrink-0" />
+                          <span>Batch: {meta.batch}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs text-foreground/60">
+                          <FileText size={12} className="text-amber-500 flex-shrink-0" />
+                          <span className="truncate">Template: {meta.template}</span>
+                        </div>
+                      </div>
+
+                      <h4 className="text-sm font-bold text-foreground group-hover:text-emerald-600 transition-colors pt-1 border-t border-border/40">
                         {camp.name}
                       </h4>
 
@@ -968,10 +1242,9 @@ export default function CalendarPage() {
                         </p>
                       )}
 
-                      <div className="flex items-center justify-between text-xs text-foreground/50 pt-1 border-t border-border/50">
-                        <span>{camp.target_list_name || 'All Contacts'}</span>
-                        <span className="inline-flex items-center gap-1 text-emerald-600 text-xs font-semibold">
-                          Inspect <ArrowUpRight size={12} />
+                      <div className="flex items-center justify-end text-xs text-emerald-600 font-semibold pt-1">
+                        <span className="inline-flex items-center gap-1">
+                          Inspect Details <ArrowUpRight size={12} />
                         </span>
                       </div>
                     </div>

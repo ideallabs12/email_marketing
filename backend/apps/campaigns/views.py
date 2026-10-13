@@ -128,6 +128,40 @@ class CampaignViewSet(viewsets.ModelViewSet):
 
             list_name, batch_name, target_display = format_campaign_target(c)
 
+            # Determine Company
+            company = "WYNx Talks"
+            from_str = str(c.from_email or '').upper()
+            name_str = str(c.name or '').upper()
+            t_name_str = str(c.template.name or '').upper() if getattr(c, 'template', None) else ''
+
+            if 'WYNX' in name_str or 'WYNX' in from_str or 'WYNX' in t_name_str:
+                company = "WYNx Talks"
+            elif 'SIGNATURE' in name_str or 'SIGNATURE' in from_str or 'SIGNATURE' in t_name_str:
+                company = "Signature Talks"
+            elif 'VOICE' in name_str or 'VOICE' in from_str or 'VOICE' in t_name_str:
+                company = "Voice Talks"
+            elif 'ICON' in name_str or 'ICON' in from_str or 'ICON' in t_name_str:
+                company = "ICON Conferences"
+            elif 'IDIAS' in name_str or 'IDIAS' in from_str or 'IDIAS' in t_name_str:
+                company = "IDIAS"
+            elif '<' in str(c.from_email or ''):
+                company = str(c.from_email).split('<')[0].strip()
+            elif '@' in str(c.from_email or ''):
+                company = str(c.from_email).split('@')[1].split('.')[0].capitalize()
+
+            # Determine Whose Campaign (Owner / Speaker / Sequence)
+            owner = ""
+            if c.advance_campaign:
+                owner = c.advance_campaign.name
+            elif c.podcast_sender:
+                owner = c.podcast_sender.name
+            elif batch_name:
+                first_b = batch_name.split(',')[0].strip()
+                cleaned = first_b.lower().replace('_data', '').replace('-data', '').replace('data', '').strip('_').strip('-')
+                owner = cleaned.capitalize() if cleaned else first_b
+            else:
+                owner = list_name or "Standard"
+
             data.append({
                 'id': c.id,
                 'name': c.name,
@@ -153,7 +187,10 @@ class CampaignViewSet(viewsets.ModelViewSet):
                 'target_list_id': c.target_list_id,
                 'target_list_name': list_name,
                 'target_batches_name': batch_name,
+                'data_batch': batch_name,
                 'target_display': target_display,
+                'company': company,
+                'whose_campaign': owner,
                 'performance': perf_data,
             })
 

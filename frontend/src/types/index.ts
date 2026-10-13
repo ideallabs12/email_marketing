@@ -128,6 +128,9 @@ export interface CalendarCampaign {
   target_list_name?: string | null;
   target_batches_name?: string | null;
   target_display?: string;
+  company?: string;
+  whose_campaign?: string;
+  data_batch?: string;
   performance?: CalendarCampaignPerformance | null;
 }
 
