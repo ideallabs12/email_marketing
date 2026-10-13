@@ -90,6 +90,47 @@ export interface CampaignPerformance {
   updated_at: string;
 }
 
+export interface CalendarCampaignPerformance {
+  total_sent: number;
+  total_opens: number;
+  total_clicks: number;
+  total_bounces: number;
+  total_delivered: number;
+  total_failed: number;
+  total_unsubscribed?: number;
+  open_rate: number;
+  click_rate: number;
+}
+
+export interface CalendarCampaign {
+  id: number;
+  name: string;
+  subject: string;
+  status: 'draft' | 'scheduled' | 'sending' | 'sent' | 'failed';
+  from_email: string;
+  sent_at: string | null;
+  scheduled_at: string | null;
+  created_at: string;
+  updated_at?: string;
+  primary_date: string;
+  primary_time?: string;
+  run_date_type?: 'sent' | 'scheduled' | 'created';
+  tracking_id?: string;
+  share_token?: string | null;
+  is_advanced?: boolean;
+  advance_campaign_id?: number | null;
+  advance_campaign_name?: string | null;
+  template_id?: number | null;
+  template_name?: string | null;
+  template_html?: string;
+  template_body?: string;
+  target_list_id?: number | null;
+  target_list_name?: string | null;
+  target_batches_name?: string | null;
+  target_display?: string;
+  performance?: CalendarCampaignPerformance | null;
+}
+
 export type CampaignRecipientFilter = 'all' | 'delivered' | 'failed' | 'opened' | 'clicked' | 'sent' | 'pending' | 'unsubscribed' | 'complaint' | 'deferred' | 'hard_bounce' | 'soft_bounce' | 'invalid_email' | 'blocked' | 'error';
 
 export interface CampaignRecipientStatus {

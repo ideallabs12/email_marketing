@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, Mail, Users, FileText, ChevronLeft, ChevronRight, MailWarning, LogOut, X, Library, LayoutTemplate, BarChart3, Target, Search } from 'lucide-react';
+import { Home, Mail, Users, FileText, ChevronLeft, ChevronRight, MailWarning, LogOut, X, Library, LayoutTemplate, BarChart3, Target, Search, Calendar } from 'lucide-react';
 import { apiClient } from '@/services/apiClient';
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -94,15 +94,19 @@ export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: { mobileM
           <Home size={18} />
           {!isCollapsed && <span>Dashboard</span>}
         </Link>
-        <Link href="/campaigns" title="Campaigns" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
+        <Link href="/campaigns" title="Campaigns" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'} ${pathname === '/campaigns' ? 'bg-foreground/10 text-foreground font-semibold' : ''}`}>
           <Mail size={18} />
           {!isCollapsed && <span>Campaigns</span>}
         </Link>
-        <Link href="/advance-campaigns" title="Advanced Campaigns" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
+        <Link href="/advance-campaigns" title="Advanced Campaigns" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'} ${pathname.startsWith('/advance-campaigns') ? 'bg-foreground/10 text-foreground font-semibold' : ''}`}>
           <LayoutTemplate size={18} />
           {!isCollapsed && <span>Adv. Campaigns</span>}
         </Link>
-        <Link href="/analytics" title="Centralized Analytics" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
+        <Link href="/calendar" title="Calendar" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'} ${pathname === '/calendar' ? 'bg-foreground/10 text-foreground font-semibold' : ''}`}>
+          <Calendar size={18} />
+          {!isCollapsed && <span>Calendar</span>}
+        </Link>
+        <Link href="/analytics" title="Centralized Analytics" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'} ${pathname === '/analytics' ? 'bg-foreground/10 text-foreground font-semibold' : ''}`}>
           <BarChart3 size={18} />
           {!isCollapsed && <span>Analytics</span>}
         </Link>

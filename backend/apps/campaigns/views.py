@@ -83,7 +83,8 @@ class CampaignViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = Campaign.objects.all().order_by('-created_at')
-        if self.action == 'list':
+        include_all = str(self.request.query_params.get('include_all', '')).lower() in ('true', '1')
+        if self.action == 'list' and not include_all:
             qs = qs.filter(advance_campaign__isnull=True)
         return qs
 
@@ -92,6 +93,71 @@ class CampaignViewSet(viewsets.ModelViewSet):
         if obj.tracking_id and f"[#{obj.tracking_id}]" not in obj.name:
             obj.name = f"{obj.name.strip()} [#{obj.tracking_id}]"
             obj.save(update_fields=['name'])
+
+    @action(detail=False, methods=['get'], url_path='calendar')
+    def calendar(self, request):
+        from apps.tracking.views import format_campaign_target
+
+        qs = Campaign.objects.all().select_related(
+            'template', 'target_list', 'advance_campaign', 'podcast_sender'
+        ).prefetch_related('target_batches')
+
+        data = []
+        for c in qs.order_by('-created_at'):
+            run_dt = c.sent_at or c.scheduled_at or c.created_at
+            run_date_str = run_dt.strftime('%Y-%m-%d') if run_dt else ''
+            run_time_str = run_dt.strftime('%H:%M') if run_dt else ''
+
+            perf_data = None
+            try:
+                perf = getattr(c, 'performance', None)
+                if perf:
+                    perf_data = {
+                        'total_sent': perf.total_sent,
+                        'total_opens': perf.total_opens,
+                        'total_clicks': perf.total_clicks,
+                        'total_bounces': perf.total_bounces,
+                        'total_delivered': perf.total_delivered,
+                        'total_failed': perf.total_failed,
+                        'total_unsubscribed': getattr(perf, 'total_unsubscribed', 0),
+                        'open_rate': round((perf.total_opens / perf.total_delivered * 100), 1) if perf.total_delivered > 0 else 0,
+                        'click_rate': round((perf.total_clicks / perf.total_delivered * 100), 1) if perf.total_delivered > 0 else 0,
+                    }
+            except Exception:
+                perf_data = None
+
+            list_name, batch_name, target_display = format_campaign_target(c)
+
+            data.append({
+                'id': c.id,
+                'name': c.name,
+                'subject': c.subject or (c.template.subject if c.template else ''),
+                'status': c.status,
+                'from_email': c.from_email,
+                'sent_at': c.sent_at.isoformat() if c.sent_at else None,
+                'scheduled_at': c.scheduled_at.isoformat() if c.scheduled_at else None,
+                'created_at': c.created_at.isoformat() if c.created_at else None,
+                'updated_at': c.updated_at.isoformat() if c.updated_at else None,
+                'primary_date': run_date_str,
+                'primary_time': run_time_str,
+                'run_date_type': 'sent' if c.sent_at else ('scheduled' if c.scheduled_at else 'created'),
+                'tracking_id': c.tracking_id,
+                'share_token': str(c.share_token) if c.share_token else None,
+                'is_advanced': bool(c.advance_campaign_id),
+                'advance_campaign_id': c.advance_campaign_id,
+                'advance_campaign_name': c.advance_campaign.name if c.advance_campaign else None,
+                'template_id': c.template_id,
+                'template_name': c.template.name if c.template else None,
+                'template_html': c.template.html_content if c.template else '',
+                'template_body': c.template.body if c.template else '',
+                'target_list_id': c.target_list_id,
+                'target_list_name': list_name,
+                'target_batches_name': batch_name,
+                'target_display': target_display,
+                'performance': perf_data,
+            })
+
+        return Response({'results': data, 'count': len(data)})
 
     def destroy(self, request, *args, **kwargs):
         campaign = self.get_object()
