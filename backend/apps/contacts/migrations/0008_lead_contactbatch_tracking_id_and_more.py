@@ -10,52 +10,113 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.CreateModel(
-            name='Lead',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('speaker_name', models.CharField(blank=True, max_length=255)),
-                ('email', models.EmailField(max_length=254)),
-                ('campaign_name', models.CharField(blank=True, max_length=255)),
-                ('batch_name', models.CharField(blank=True, max_length=255)),
-                ('whose_speaker', models.CharField(blank=True, max_length=255)),
-                ('call_booked_on', models.DateTimeField(blank=True, null=True)),
-                ('call_status', models.CharField(blank=True, choices=[('Scheduled', 'Scheduled'), ('Completed', 'Completed'), ('Rescheduled', 'Rescheduled'), ('No Show', 'No Show'), ('Cancelled', 'Cancelled'), ('Missed', 'Missed'), ('Not Responding', 'Not Responding')], max_length=50, null=True)),
-                ('source_tracking_id', models.CharField(blank=True, db_index=True, max_length=10, null=True)),
-                ('followup', models.DateTimeField(blank=True, null=True)),
-                ('notes', models.TextField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+        migrations.SeparateDatabaseAndState(
+            state_operations=[
+                migrations.CreateModel(
+                    name='Lead',
+                    fields=[
+                        ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                        ('speaker_name', models.CharField(blank=True, max_length=255)),
+                        ('email', models.EmailField(max_length=254)),
+                        ('campaign_name', models.CharField(blank=True, max_length=255)),
+                        ('batch_name', models.CharField(blank=True, max_length=255)),
+                        ('whose_speaker', models.CharField(blank=True, max_length=255)),
+                        ('call_booked_on', models.DateTimeField(blank=True, null=True)),
+                        ('call_status', models.CharField(blank=True, choices=[('Scheduled', 'Scheduled'), ('Completed', 'Completed'), ('Rescheduled', 'Rescheduled'), ('No Show', 'No Show'), ('Cancelled', 'Cancelled'), ('Missed', 'Missed'), ('Not Responding', 'Not Responding')], max_length=50, null=True)),
+                        ('source_tracking_id', models.CharField(blank=True, db_index=True, max_length=10, null=True)),
+                        ('followup', models.DateTimeField(blank=True, null=True)),
+                        ('notes', models.TextField(blank=True)),
+                        ('created_at', models.DateTimeField(auto_now_add=True)),
+                        ('updated_at', models.DateTimeField(auto_now=True)),
+                    ],
+                ),
+                migrations.AddField(
+                    model_name='contactbatch',
+                    name='tracking_id',
+                    field=models.CharField(blank=True, db_index=True, max_length=10, null=True, unique=True),
+                ),
+                migrations.AddField(
+                    model_name='contactlist',
+                    name='tracking_id',
+                    field=models.CharField(blank=True, db_index=True, max_length=10, null=True, unique=True),
+                ),
+                migrations.CreateModel(
+                    name='UnsubscribedContact',
+                    fields=[
+                        ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                        ('email', models.EmailField(db_index=True, max_length=254, unique=True)),
+                        ('first_name', models.CharField(blank=True, max_length=255)),
+                        ('last_name', models.CharField(blank=True, max_length=255)),
+                        ('reason', models.TextField(blank=True, default='Speaker requested removal')),
+                        ('source', models.CharField(choices=[('body_link', 'Email Body Link'), ('header_button', 'Inbox Header Button (Gmail/Apple/Yahoo)'), ('manual', 'Manual / Speaker Request'), ('webhook', 'Brevo Webhook'), ('complaint', 'Spam Complaint')], default='manual', max_length=50)),
+                        ('campaign_name', models.CharField(blank=True, max_length=255)),
+                        ('campaign_id', models.IntegerField(blank=True, null=True)),
+                        ('user_agent', models.CharField(blank=True, max_length=512)),
+                        ('ip_address', models.GenericIPAddressField(blank=True, null=True)),
+                        ('unsubscribed_at', models.DateTimeField(auto_now_add=True, db_index=True)),
+                    ],
+                    options={
+                        'ordering': ['-unsubscribed_at'],
+                        'indexes': [models.Index(fields=['email'], name='contacts_un_email_e75dbe_idx'), models.Index(fields=['source'], name='contacts_un_source_dd91d9_idx'), models.Index(fields=['-unsubscribed_at'], name='contacts_un_unsubsc_620414_idx')],
+                    },
+                ),
             ],
-        ),
-        migrations.AddField(
-            model_name='contactbatch',
-            name='tracking_id',
-            field=models.CharField(blank=True, db_index=True, max_length=10, null=True, unique=True),
-        ),
-        migrations.AddField(
-            model_name='contactlist',
-            name='tracking_id',
-            field=models.CharField(blank=True, db_index=True, max_length=10, null=True, unique=True),
-        ),
-        migrations.CreateModel(
-            name='UnsubscribedContact',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('email', models.EmailField(db_index=True, max_length=254, unique=True)),
-                ('first_name', models.CharField(blank=True, max_length=255)),
-                ('last_name', models.CharField(blank=True, max_length=255)),
-                ('reason', models.TextField(blank=True, default='Speaker requested removal')),
-                ('source', models.CharField(choices=[('body_link', 'Email Body Link'), ('header_button', 'Inbox Header Button (Gmail/Apple/Yahoo)'), ('manual', 'Manual / Speaker Request'), ('webhook', 'Brevo Webhook'), ('complaint', 'Spam Complaint')], default='manual', max_length=50)),
-                ('campaign_name', models.CharField(blank=True, max_length=255)),
-                ('campaign_id', models.IntegerField(blank=True, null=True)),
-                ('user_agent', models.CharField(blank=True, max_length=512)),
-                ('ip_address', models.GenericIPAddressField(blank=True, null=True)),
-                ('unsubscribed_at', models.DateTimeField(auto_now_add=True, db_index=True)),
+            database_operations=[
+                migrations.RunSQL(
+                    sql="""
+                    CREATE TABLE IF NOT EXISTS contacts_lead (
+                        id BIGSERIAL PRIMARY KEY,
+                        speaker_name VARCHAR(255) NOT NULL DEFAULT '',
+                        email VARCHAR(254) NOT NULL,
+                        campaign_name VARCHAR(255) NOT NULL DEFAULT '',
+                        batch_name VARCHAR(255) NOT NULL DEFAULT '',
+                        whose_speaker VARCHAR(255) NOT NULL DEFAULT '',
+                        call_booked_on TIMESTAMPTZ NULL,
+                        call_status VARCHAR(50) NULL,
+                        source_tracking_id VARCHAR(10) NULL,
+                        followup TIMESTAMPTZ NULL,
+                        notes TEXT NOT NULL DEFAULT '',
+                        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                    );
+
+                    DO $$
+                    BEGIN
+                        IF NOT EXISTS (
+                            SELECT 1 FROM information_schema.columns 
+                            WHERE table_name='contacts_contactbatch' AND column_name='tracking_id'
+                        ) THEN
+                            ALTER TABLE contacts_contactbatch ADD COLUMN tracking_id VARCHAR(10) NULL UNIQUE;
+                        END IF;
+                        IF NOT EXISTS (
+                            SELECT 1 FROM information_schema.columns 
+                            WHERE table_name='contacts_contactlist' AND column_name='tracking_id'
+                        ) THEN
+                            ALTER TABLE contacts_contactlist ADD COLUMN tracking_id VARCHAR(10) NULL UNIQUE;
+                        END IF;
+                    END $$;
+
+                    CREATE TABLE IF NOT EXISTS contacts_unsubscribedcontact (
+                        id BIGSERIAL PRIMARY KEY,
+                        email VARCHAR(254) NOT NULL UNIQUE,
+                        first_name VARCHAR(255) NOT NULL DEFAULT '',
+                        last_name VARCHAR(255) NOT NULL DEFAULT '',
+                        reason TEXT NOT NULL DEFAULT 'Speaker requested removal',
+                        source VARCHAR(50) NOT NULL DEFAULT 'manual',
+                        campaign_name VARCHAR(255) NOT NULL DEFAULT '',
+                        campaign_id INTEGER NULL,
+                        user_agent VARCHAR(512) NOT NULL DEFAULT '',
+                        ip_address INET NULL,
+                        unsubscribed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                    );
+                    CREATE INDEX IF NOT EXISTS contacts_unsubscribedcontact_email_idx ON contacts_unsubscribedcontact (email);
+                    CREATE INDEX IF NOT EXISTS contacts_unsubscribedcontact_source_idx ON contacts_unsubscribedcontact (source);
+                    CREATE INDEX IF NOT EXISTS contacts_unsubscribedcontact_unsub_at_idx ON contacts_unsubscribedcontact (unsubscribed_at DESC);
+                    """,
+                    reverse_sql="""
+                    DROP TABLE IF EXISTS contacts_unsubscribedcontact;
+                    """,
+                ),
             ],
-            options={
-                'ordering': ['-unsubscribed_at'],
-                'indexes': [models.Index(fields=['email'], name='contacts_un_email_e75dbe_idx'), models.Index(fields=['source'], name='contacts_un_source_dd91d9_idx'), models.Index(fields=['-unsubscribed_at'], name='contacts_un_unsubsc_620414_idx')],
-            },
         ),
     ]
