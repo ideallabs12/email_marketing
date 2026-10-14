@@ -356,7 +356,7 @@ export default function ContactListDetailsPage() {
                     <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Status</span>
                     <span>
                       <span className={`inline-block text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 border rounded-full ${
-                        c.is_subscribed ? 'border-foreground text-foreground bg-foreground/5 md:bg-transparent' : 'border-border text-foreground/30'
+                        c.is_subscribed ? 'border-emerald-500/40 text-emerald-500 bg-emerald-500/10' : 'border-rose-500/40 text-rose-500 bg-rose-500/10'
                       }`}>
                         {c.is_subscribed ? 'Active' : 'Unsub'}
                       </span>

@@ -3,8 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 import csv
 import io
-from .models import Contact, ContactList, IgnoredContact, ContactBatch, MutualContact, Lead
-from .serializers import ContactSerializer, ContactListSerializer, IgnoredContactSerializer, ContactBatchSerializer, MutualContactSerializer, LeadSerializer
+from .models import Contact, ContactList, IgnoredContact, ContactBatch, MutualContact, Lead, UnsubscribedContact
+from .serializers import ContactSerializer, ContactListSerializer, IgnoredContactSerializer, ContactBatchSerializer, MutualContactSerializer, LeadSerializer, UnsubscribedContactSerializer
 from django.db.models import ProtectedError, Count, Q
 
 class ContactListViewSet(viewsets.ModelViewSet):
@@ -173,6 +173,21 @@ class ContactViewSet(viewsets.ModelViewSet):
                     )
                     continue
 
+                # ── GLOBAL SUPPRESSION / UNSUBSCRIBE CHECK ──
+                # If contact exists in UnsubscribedContact, do NOT import into list and do NOT mark active
+                if UnsubscribedContact.objects.filter(email__iexact=email).exists():
+                    skipped_count += 1
+                    reason_str = "Suppressed: Email is on Global Unsubscribe List"
+                    skipped_emails.append(f"Row {row_idx}: {email} ({reason_str})")
+                    IgnoredContact.objects.create(
+                        email=email,
+                        first_name=first_name,
+                        last_name=last_name,
+                        reason=f"Row {row_idx}: {reason_str}"
+                    )
+                    Contact.objects.filter(email__iexact=email).update(is_subscribed=False)
+                    continue
+
                 # ── STRICT 1-CONTACT-1-LIST MUTUALS CHECK ──
                 # If contact already belongs to any other non-default list, do NOT add to target_list
                 if target_list:
@@ -210,6 +225,8 @@ class ContactViewSet(viewsets.ModelViewSet):
                 
                 is_subscribed_str = row_data.get('is_subscribed', 'true').strip().lower()
                 is_subscribed = is_subscribed_str in ['true', '1', 'yes', 'y']
+                if UnsubscribedContact.objects.filter(email__iexact=email).exists():
+                    is_subscribed = False
 
                 contact, created = Contact.objects.update_or_create(
                     email=email,
@@ -352,3 +369,69 @@ class LeadViewSet(viewsets.ModelViewSet):
                 )
                 
         return super().create(request, *args, **kwargs)
+
+
+class UnsubscribedContactViewSet(viewsets.ModelViewSet):
+    queryset = UnsubscribedContact.objects.all().order_by('-unsubscribed_at')
+    serializer_class = UnsubscribedContactSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['email', 'first_name', 'last_name', 'reason', 'campaign_name']
+    ordering_fields = ['unsubscribed_at', 'email', 'source', 'campaign_name']
+    ordering = ['-unsubscribed_at']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        source = self.request.query_params.get('source')
+        if source and source != 'all':
+            qs = qs.filter(source=source)
+        return qs
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        # Automatically mark any existing contact as unsubscribed
+        Contact.objects.filter(email__iexact=instance.email).update(is_subscribed=False)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        email = instance.email
+        response = super().destroy(request, *args, **kwargs)
+        # When removing from suppression (re-subscribing), update Contact.is_subscribed = True
+        Contact.objects.filter(email__iexact=email).update(is_subscribed=True)
+        return response
+
+    @action(detail=False, methods=['get'], url_path='summary')
+    def summary(self, request):
+        total = UnsubscribedContact.objects.count()
+        body_link = UnsubscribedContact.objects.filter(source='body_link').count()
+        header_button = UnsubscribedContact.objects.filter(source='header_button').count()
+        manual = UnsubscribedContact.objects.filter(source='manual').count()
+        webhook = UnsubscribedContact.objects.filter(source='webhook').count()
+        complaint = UnsubscribedContact.objects.filter(source='complaint').count()
+        return Response({
+            'total': total,
+            'body_link': body_link,
+            'header_button': header_button,
+            'manual': manual,
+            'webhook': webhook,
+            'complaint': complaint,
+        })
+
+    @action(detail=False, methods=['get'], url_path='export-csv')
+    def export_csv(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        from django.http import HttpResponse
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="unsubscribed_contacts.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['Email', 'First Name', 'Last Name', 'Source', 'Campaign', 'Reason', 'Unsubscribed At'])
+        for item in queryset:
+            writer.writerow([
+                item.email,
+                item.first_name,
+                item.last_name,
+                item.get_source_display(),
+                item.campaign_name,
+                item.reason,
+                item.unsubscribed_at.strftime('%Y-%m-%d %H:%M:%S') if item.unsubscribed_at else '',
+            ])
+        return response

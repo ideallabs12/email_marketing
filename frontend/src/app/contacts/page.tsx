@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
-import { Plus, Search, X, Trash2, Users, Upload, Check, AlertCircle, Edit, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Search, X, Trash2, Users, Upload, Check, AlertCircle, Edit, ChevronDown, ChevronRight, UserX } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 import { ContactList, Contact, ContactBatch } from '../../types';
 import Link from 'next/link';
@@ -263,6 +263,12 @@ export default function ContactsPage() {
             <Button variant="outline" className="w-full sm:w-auto flex items-center justify-center gap-2 text-red-500 hover:bg-red-50 hover:border-red-200">
               <AlertCircle size={16} />
               <span>Ignored Contacts</span>
+            </Button>
+          </Link>
+          <Link href="/contacts/unsubscribed" className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full sm:w-auto flex items-center justify-center gap-2 text-rose-500 hover:bg-rose-50 hover:border-rose-200">
+              <UserX size={16} />
+              <span>Unsubscribed List</span>
             </Button>
           </Link>
           <Button onClick={() => setShowImportModal(true)} variant="outline" className="w-full sm:w-auto flex items-center justify-center gap-2">

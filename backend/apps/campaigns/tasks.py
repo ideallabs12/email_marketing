@@ -23,12 +23,20 @@ def render_template(template_str, context):
     result = re.sub(r'{{\s*[\w_]+\s*\|\s*default:\s*"([^"]+)"\s*}}', default_replacer, result)
     result = re.sub(r"{{\s*[\w_]+\s*\|\s*default:\s*'([^']+)'\s*}}", default_replacer, result)
 
+    # If an unsubscribe url was provided in context, dynamically replace any hardcoded Unsubscribe links pointing to #
+    unsub_url = context.get('unsubscribe_url') or context.get('unsubscribe_link') or context.get('Unsubscribe Link')
+    if unsub_url:
+        result = re.sub(
+            r'<a\s+([^>]*?)href=[\'"]#[\'"]([^>]*?)>\s*Unsubscribe\s*</a>',
+            rf'<a \1href="{unsub_url}"\2>Unsubscribe</a>',
+            result,
+            flags=re.IGNORECASE
+        )
+
     # Strip any remaining unreplaced simple single-word tags
     result = re.sub(r'{{\s*[\w_]+\s*}}', '', result)
 
-    # IMPORTANT: Also strip multi-word variables like {{Unsubscribe Link}} that have spaces.
-    # These are NOT valid template variables in our system and must never be sent raw to
-    # Brevo (which has its own template parser and will throw a syntax error on them).
+    # Strip any remaining unreplaced multi-word tags
     result = re.sub(r'{{\s*[^}]+\s*}}', '', result)
 
     return result
@@ -50,9 +58,15 @@ def send_campaign_emails(self, campaign_id: int):
         logger.warning("Campaign %s is not in sending state. Skipping.", campaign_id)
         return
 
+    from apps.contacts.models import UnsubscribedContact
+    suppressed_emails = set(UnsubscribedContact.objects.values_list('email', flat=True))
+
     contacts = campaign.target_list.contacts.filter(is_subscribed=True)
     if campaign.target_batches.exists():
         contacts = contacts.filter(batches__in=campaign.target_batches.all()).distinct()
+
+    # ── SHIELD 1: PRE-FLIGHT GLOBAL SUPPRESSION FILTER ──
+    contacts = contacts.exclude(email__in=suppressed_emails)
         
     if not contacts.exists():
         logger.info("Campaign %s: no subscribed contacts found for the given targets.", campaign_id)
@@ -131,6 +145,31 @@ def send_campaign_emails(self, campaign_id: int):
             
 
             
+            from django.core import signing
+
+            base_url = 'https://outreach.idealab-vizag.com'
+
+            token_body = signing.dumps({
+                'email': contact.email.strip().lower(),
+                'campaign_id': campaign.id,
+                'channel': 'body_link',
+            }, salt='outreach-unsubscribe')
+            body_unsubscribe_url = f"{base_url}/api/v1/public/unsubscribe/?token={token_body}"
+
+            token_header = signing.dumps({
+                'email': contact.email.strip().lower(),
+                'campaign_id': campaign.id,
+                'channel': 'header_button',
+            }, salt='outreach-unsubscribe')
+            header_unsubscribe_url = f"{base_url}/api/v1/public/unsubscribe/?token={token_header}"
+
+            context.update({
+                'unsubscribe_url': body_unsubscribe_url,
+                'unsubscribe_link': body_unsubscribe_url,
+                'Unsubscribe Link': body_unsubscribe_url,
+                'Unsubscribe_Link': body_unsubscribe_url,
+            })
+
             html_content = render_template(layout_template, context)
             text_content = strip_tags(html_content)
 
@@ -144,8 +183,11 @@ def send_campaign_emails(self, campaign_id: int):
                 body=text_content,
                 from_email=from_email,
                 to=[contact.email],
-                # Brevo returns this tag with webhook events for attribution.
-                headers={'X-Mailin-Tag': f'campaign-{campaign.id}'},
+                headers={
+                    'X-Mailin-Tag': f'campaign-{campaign.id}',
+                    'List-Unsubscribe': f'<{header_unsubscribe_url}>',
+                    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+                },
             )
             email.attach_alternative(html_content, 'text/html')
             email.send(fail_silently=False)

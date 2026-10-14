@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../../../components/Card';
 import Button from '../../../components/Button';
-import { ArrowLeft, Trash2, AlertCircle, Download } from 'lucide-react';
+import { ArrowLeft, Trash2, AlertCircle, Download, UserX, Users, ShieldAlert } from 'lucide-react';
 import { apiClient } from '../../../services/apiClient';
 import Link from 'next/link';
 
@@ -104,19 +104,28 @@ export default function IgnoredContactsPage() {
         </div>
       </div>
 
-      {/* Tab Switcher: Mutual Contacts vs Ignored Contacts */}
+      {/* Tab Switcher: Mutual Contacts vs Ignored Contacts vs Unsubscribed List */}
       <div className="flex border-b border-border space-x-6 text-sm font-medium">
         <Link
           href="/contacts/mutuals"
           className="pb-3 border-b-2 border-transparent text-foreground/60 hover:text-foreground hover:border-border flex items-center gap-2"
         >
+          <Users size={16} />
           <span>Mutual Contacts</span>
         </Link>
         <Link
           href="/contacts/ignored"
           className="pb-3 border-b-2 border-primary text-primary flex items-center gap-2"
         >
+          <ShieldAlert size={16} />
           <span>Ignored / Invalid Contacts ({ignoredContacts.length})</span>
+        </Link>
+        <Link
+          href="/contacts/unsubscribed"
+          className="pb-3 border-b-2 border-transparent text-foreground/60 hover:text-foreground hover:border-border flex items-center gap-2"
+        >
+          <UserX size={16} />
+          <span>Unsubscribed List</span>
         </Link>
       </div>
 

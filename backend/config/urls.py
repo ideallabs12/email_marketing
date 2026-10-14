@@ -19,10 +19,10 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken.views import obtain_auth_token
 
-from apps.contacts.views import ContactViewSet, ContactListViewSet, IgnoredContactViewSet, ContactBatchViewSet, MutualContactViewSet, LeadViewSet
+from apps.contacts.views import ContactViewSet, ContactListViewSet, IgnoredContactViewSet, ContactBatchViewSet, MutualContactViewSet, LeadViewSet, UnsubscribedContactViewSet
 from apps.templates.views import EmailTemplateViewSet
 from apps.campaigns.views import CampaignViewSet, SenderListView, AdvanceCampaignViewSet, PodcastSenderViewSet, GlobalLookupView
-from apps.tracking.views import CampaignPerformanceViewSet, CampaignAnalyticsViewSet, BrevoWebhookView, BouncedEmailViewSet, PublicCampaignAnalyticsView, MasterLinkSettingsView, PublicMasterLinkCampaignsView, PublicAdvanceCampaignView, PublicMasterLinkRecentsView, PublicMasterLinkContactsView, PublicMasterLinkLeadsView
+from apps.tracking.views import CampaignPerformanceViewSet, CampaignAnalyticsViewSet, BrevoWebhookView, BouncedEmailViewSet, PublicCampaignAnalyticsView, MasterLinkSettingsView, PublicMasterLinkCampaignsView, PublicAdvanceCampaignView, PublicMasterLinkRecentsView, PublicMasterLinkContactsView, PublicMasterLinkLeadsView, PublicUnsubscribeView
 
 def ensure_db_schema():
     from django.db import connection
@@ -67,6 +67,24 @@ def ensure_db_schema():
                 );
             """)
             cursor.execute("""
+                CREATE TABLE IF NOT EXISTS contacts_unsubscribedcontact (
+                    id BIGSERIAL PRIMARY KEY,
+                    email VARCHAR(254) NOT NULL UNIQUE,
+                    first_name VARCHAR(255) NOT NULL DEFAULT '',
+                    last_name VARCHAR(255) NOT NULL DEFAULT '',
+                    reason TEXT NOT NULL DEFAULT 'Speaker requested removal',
+                    source VARCHAR(50) NOT NULL DEFAULT 'manual',
+                    campaign_name VARCHAR(255) NOT NULL DEFAULT '',
+                    campaign_id INTEGER NULL,
+                    user_agent VARCHAR(512) NOT NULL DEFAULT '',
+                    ip_address INET NULL,
+                    unsubscribed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+                CREATE INDEX IF NOT EXISTS contacts_unsubscribedcontact_email_idx ON contacts_unsubscribedcontact (email);
+                CREATE INDEX IF NOT EXISTS contacts_unsubscribedcontact_source_idx ON contacts_unsubscribedcontact (source);
+                CREATE INDEX IF NOT EXISTS contacts_unsubscribedcontact_unsub_at_idx ON contacts_unsubscribedcontact (unsubscribed_at DESC);
+            """)
+            cursor.execute("""
                 INSERT INTO django_migrations (app, name, applied)
                 SELECT 'campaigns', '0011_advancecampaign_share_token', NOW()
                 WHERE NOT EXISTS (
@@ -83,6 +101,7 @@ router.register(r'contacts', ContactViewSet, basename='contact')
 router.register(r'contact-lists', ContactListViewSet, basename='contactlist')
 router.register(r'ignored-contacts', IgnoredContactViewSet, basename='ignoredcontact')
 router.register(r'mutual-contacts', MutualContactViewSet, basename='mutualcontact')
+router.register(r'unsubscribed-contacts', UnsubscribedContactViewSet, basename='unsubscribedcontact')
 router.register(r'contact-batches', ContactBatchViewSet, basename='contactbatch')
 router.register(r'leads', LeadViewSet, basename='lead')
 router.register(r'templates', EmailTemplateViewSet, basename='emailtemplate')
@@ -102,6 +121,7 @@ urlpatterns = [
     path('api/v1/senders/', SenderListView.as_view(), name='sender-list'),
     path('api/v1/webhooks/brevo/', BrevoWebhookView.as_view(), name='brevo-webhook'),
     path('api/v1/webhooks/brevo', BrevoWebhookView.as_view(), name='brevo-webhook-no-slash'),
+    path('api/v1/public/unsubscribe/', PublicUnsubscribeView.as_view(), name='public-unsubscribe'),
     path('api/v1/public/campaign/<str:token>/', PublicAdvanceCampaignView.as_view(), name='public-advance-campaign'),
     path('api/v1/public-analytics/<uuid:token>/', PublicCampaignAnalyticsView.as_view(), name='public-analytics'),
     path('api/v1/master-link/settings/', MasterLinkSettingsView.as_view(), name='master-link-settings'),

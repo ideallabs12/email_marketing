@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../../../components/Card';
 import Button from '../../../components/Button';
-import { ArrowLeft, Trash2, AlertCircle, Download, Search, Users, ShieldAlert, Check } from 'lucide-react';
+import { ArrowLeft, Trash2, AlertCircle, Download, Search, Users, ShieldAlert, Check, UserX } from 'lucide-react';
 import { apiClient } from '../../../services/apiClient';
 import Link from 'next/link';
 
@@ -172,6 +172,13 @@ export default function MutualContactsPage() {
         >
           <ShieldAlert size={16} />
           <span>Ignored / Invalid Contacts</span>
+        </Link>
+        <Link
+          href="/contacts/unsubscribed"
+          className="pb-3 border-b-2 border-transparent text-foreground/60 hover:text-foreground hover:border-border flex items-center gap-2"
+        >
+          <UserX size={16} />
+          <span>Unsubscribed List</span>
         </Link>
       </div>
 

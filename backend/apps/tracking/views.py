@@ -672,10 +672,36 @@ class BrevoWebhookView(views.APIView):
                 performance.total_unsubscribed += 1
                 if recipient:
                     recipient.status = 'unsubscribed'
+                if email:
+                    from apps.contacts.models import UnsubscribedContact, Contact
+                    clean_email = email.strip().lower()
+                    UnsubscribedContact.objects.get_or_create(
+                        email=clean_email,
+                        defaults={
+                            'source': 'webhook',
+                            'reason': 'Brevo unsubscribe webhook event',
+                            'campaign_name': campaign.name if campaign else '',
+                            'campaign_id': campaign.id if campaign else None,
+                        }
+                    )
+                    Contact.objects.filter(email__iexact=clean_email).update(is_subscribed=False)
             elif event_type == 'spam':
                 performance.total_complaints += 1
                 if recipient:
                     recipient.status = 'complaint'
+                if email:
+                    from apps.contacts.models import UnsubscribedContact, Contact
+                    clean_email = email.strip().lower()
+                    UnsubscribedContact.objects.get_or_create(
+                        email=clean_email,
+                        defaults={
+                            'source': 'complaint',
+                            'reason': 'Brevo spam complaint webhook event',
+                            'campaign_name': campaign.name if campaign else '',
+                            'campaign_id': campaign.id if campaign else None,
+                        }
+                    )
+                    Contact.objects.filter(email__iexact=clean_email).update(is_subscribed=False)
             elif event_type == 'deferred':
                 performance.total_deferred += 1
                 if recipient:
@@ -1083,3 +1109,207 @@ class PublicMasterLinkLeadsView(views.APIView):
             })
 
         return Response({'data': data})
+
+
+class PublicUnsubscribeView(views.APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request):
+        return self.handle_unsubscribe(request)
+
+    def post(self, request):
+        return self.handle_unsubscribe(request)
+
+    def handle_unsubscribe(self, request):
+        from django.core import signing
+        from apps.contacts.models import UnsubscribedContact, Contact
+        from apps.campaigns.models import Campaign
+        from apps.tracking.models import CampaignPerformance, CampaignRecipientStatus
+
+        token = request.GET.get('token') or (request.data.get('token') if hasattr(request, 'data') else None)
+        if not token:
+            token = request.POST.get('token')
+        email = request.GET.get('email') or (request.data.get('email') if hasattr(request, 'data') else None)
+        if not email:
+            email = request.POST.get('email')
+        source_override = request.GET.get('source') or (request.data.get('source') if hasattr(request, 'data') else None)
+        campaign_id = None
+        channel = 'body_link'
+
+        if token:
+            try:
+                payload = signing.loads(token, salt='outreach-unsubscribe', max_age=86400 * 365)
+                if isinstance(payload, dict):
+                    email = payload.get('email')
+                    campaign_id = payload.get('campaign_id')
+                    channel = payload.get('channel', 'body_link')
+                elif isinstance(payload, str):
+                    email = payload
+            except Exception:
+                if not email:
+                    return self.render_response(request, success=False, message="Invalid or expired unsubscribe link. Please contact support to be removed.", email="")
+
+        if not email:
+            return self.render_response(request, success=False, message="No email address specified to unsubscribe.", email="")
+
+        email = email.strip().lower()
+
+        # Determine source
+        body_bytes = getattr(request, 'body', b'')
+        is_rfc_one_click = False
+        try:
+            if b'List-Unsubscribe=One-Click' in body_bytes or request.POST.get('List-Unsubscribe') == 'One-Click':
+                is_rfc_one_click = True
+        except Exception:
+            pass
+
+        if request.method == 'POST' and is_rfc_one_click:
+            source = 'header_button'
+        elif channel == 'header_button' or source_override == 'header_button':
+            source = 'header_button'
+        else:
+            source = 'body_link'
+
+        campaign_name = ''
+        if campaign_id:
+            try:
+                camp = Campaign.objects.filter(id=campaign_id).first()
+                if camp:
+                    campaign_name = camp.name
+            except Exception:
+                pass
+
+        user_agent = request.META.get('HTTP_USER_AGENT', '')[:512]
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip_address = x_forwarded_for.split(',')[0].strip()
+        else:
+            ip_address = request.META.get('REMOTE_ADDR')
+
+        # 1. Update or create in UnsubscribedContact table
+        UnsubscribedContact.objects.update_or_create(
+            email=email,
+            defaults={
+                'source': source,
+                'campaign_name': campaign_name,
+                'campaign_id': campaign_id,
+                'user_agent': user_agent,
+                'ip_address': ip_address,
+                'reason': f"Unsubscribed via {dict(UnsubscribedContact.SOURCE_CHOICES).get(source, source)}",
+            }
+        )
+
+        # 2. Update Contact table to is_subscribed=False
+        Contact.objects.filter(email__iexact=email).update(is_subscribed=False)
+
+        # 3. Update CampaignRecipientStatus and CampaignPerformance if campaign_id is provided
+        if campaign_id:
+            try:
+                recipient = CampaignRecipientStatus.objects.filter(
+                    campaign_id=campaign_id,
+                    contact__email__iexact=email
+                ).first()
+                if recipient:
+                    recipient.status = 'unsubscribed'
+                    recipient.save(update_fields=['status'])
+
+                from django.db.models import F
+                CampaignPerformance.objects.filter(campaign_id=campaign_id).update(
+                    total_unsubscribed=F('total_unsubscribed') + 1
+                )
+            except Exception:
+                pass
+
+        return self.render_response(request, success=True, message="You have been successfully unsubscribed.", email=email)
+
+    def render_response(self, request, success, message, email):
+        from django.http import HttpResponse, JsonResponse
+        accept_header = request.headers.get('Accept', '')
+        if 'application/json' in accept_header or getattr(request, 'content_type', '') == 'application/json':
+            return JsonResponse({'success': success, 'message': message, 'email': email})
+
+        icon = '✓' if success else '✕'
+        icon_bg = 'rgba(16, 185, 129, 0.15)' if success else 'rgba(239, 68, 68, 0.15)'
+        icon_color = '#10b981' if success else '#ef4444'
+        title = 'Successfully Unsubscribed' if success else 'Unsubscribe Notice'
+        email_html = f'<div style="display:inline-block; background:#1e293b; color:#cbd5e1; font-weight:600; font-size:14px; padding:6px 16px; border-radius:20px; margin-bottom:20px; word-break:break-all;">{email}</div>' if email else ''
+        body_text = 'We have removed your email from our speaker outreach and conference invitations list. You will not receive any further emails from us.' if success else message
+
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unsubscribe Confirmation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {{ box-sizing: border-box; }}
+        body {{
+            margin: 0;
+            padding: 20px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #090d16;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }}
+        .card {{
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 20px;
+            padding: 44px 32px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+        }}
+        .icon-circle {{
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background: {icon_bg};
+            color: {icon_color};
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            font-size: 32px;
+            font-weight: bold;
+        }}
+        h1 {{
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 0 16px 0;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+        }}
+        p {{
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0 0 28px 0;
+        }}
+        .footer-note {{
+            border-top: 1px solid #1e293b;
+            padding-top: 20px;
+            font-size: 12px;
+            color: #64748b;
+        }}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon-circle">{icon}</div>
+        <h1>{title}</h1>
+        {email_html}
+        <p>{body_text}</p>
+        <div class="footer-note">
+            If this was a mistake, or if you wish to participate in future conferences, please reach out to our team directly.
+        </div>
+    </div>
+</body>
+</html>"""
+        return HttpResponse(html, content_type='text/html')

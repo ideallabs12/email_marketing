@@ -118,4 +118,41 @@ class Lead(models.Model):
         return f"{self.speaker_name} ({self.email})"
 
 
+class UnsubscribedContact(models.Model):
+    SOURCE_CHOICES = [
+        ('body_link', 'Email Body Link'),
+        ('header_button', 'Inbox Header Button (Gmail/Apple/Yahoo)'),
+        ('manual', 'Manual / Speaker Request'),
+        ('webhook', 'Brevo Webhook'),
+        ('complaint', 'Spam Complaint'),
+    ]
+
+    email = models.EmailField(unique=True, db_index=True)
+    first_name = models.CharField(max_length=255, blank=True)
+    last_name = models.CharField(max_length=255, blank=True)
+    reason = models.TextField(blank=True, default='Speaker requested removal')
+    source = models.CharField(max_length=50, choices=SOURCE_CHOICES, default='manual')
+    campaign_name = models.CharField(max_length=255, blank=True)
+    campaign_id = models.IntegerField(null=True, blank=True)
+    user_agent = models.CharField(max_length=512, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    unsubscribed_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-unsubscribed_at']
+        indexes = [
+            models.Index(fields=['email']),
+            models.Index(fields=['source']),
+            models.Index(fields=['-unsubscribed_at']),
+        ]
+
+    def save(self, *args, **kwargs):
+        if self.email:
+            self.email = self.email.strip().lower()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.email} ({self.get_source_display()})"
+
+
 

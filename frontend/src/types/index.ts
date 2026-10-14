@@ -176,3 +176,27 @@ export interface CampaignAnalytics {
   filter: CampaignRecipientFilter;
   recipients: CampaignRecipientStatus[];
 }
+
+export interface UnsubscribedContact {
+  id: number;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  reason: string;
+  source: 'body_link' | 'header_button' | 'manual' | 'webhook' | 'complaint';
+  source_display?: string;
+  campaign_name?: string;
+  campaign_id?: number | null;
+  user_agent?: string;
+  ip_address?: string | null;
+  unsubscribed_at: string;
+}
+
+export interface UnsubscribedSummary {
+  total: number;
+  body_link: number;
+  header_button: number;
+  manual: number;
+  webhook: number;
+  complaint: number;
+}
