@@ -3,7 +3,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
-import { Plus, Upload, Search, X, Check, AlertCircle, Trash2, Users, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { 
+  Plus, Upload, Search, X, Check, AlertCircle, Trash2, Users, 
+  ChevronLeft, ChevronRight, Loader2, UserX, UserCheck, ShieldAlert 
+} from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 import { Contact, ContactList, ContactBatch } from '../../types';
 import Link from 'next/link';
@@ -19,9 +22,24 @@ export default function DirectoryPage() {
   const [pageSize, setPageSize] = useState(50);
   const [totalCount, setTotalCount] = useState(0);
 
+  // Modals state
   const [showAddModal, setShowAddModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
 
+  // Unsubscribe & Resubscribe Modal State
+  const [unsubModalContact, setUnsubModalContact] = useState<Contact | null>(null);
+  const [unsubReason, setUnsubReason] = useState('Speaker emailed direct request');
+  const [customReason, setCustomReason] = useState('');
+  const [unsubLoading, setUnsubLoading] = useState(false);
+  const [unsubError, setUnsubError] = useState('');
+
+  const [resubscribeContact, setResubscribeContact] = useState<Contact | null>(null);
+  const [resubscribeLoading, setResubscribeLoading] = useState(false);
+
+  // User feedback toast / banner
+  const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Add Contact Form State
   const [newEmail, setNewEmail] = useState('');
   const [newFirstName, setNewFirstName] = useState('');
   const [newLastName, setNewLastName] = useState('');
@@ -32,12 +50,20 @@ export default function DirectoryPage() {
   const [loadingBatches, setLoadingBatches] = useState(false);
   const [addError, setAddError] = useState('');
 
+  // Import CSV State
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [targetListId, setTargetListId] = useState<string>('');
   const [whoIsImporting, setWhoIsImporting] = useState('');
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState('');
   const [importing, setImporting] = useState(false);
+
+  // Auto-dismiss feedback message after 4s
+  useEffect(() => {
+    if (!feedbackMsg) return;
+    const t = setTimeout(() => setFeedbackMsg(null), 4000);
+    return () => clearTimeout(t);
+  }, [feedbackMsg]);
 
   // Load lists once on mount
   useEffect(() => {
@@ -118,6 +144,7 @@ export default function DirectoryPage() {
       setAvailableBatches([]);
       loadContacts();
       loadLists();
+      setFeedbackMsg({ type: 'success', text: `Added ${newEmail} successfully.` });
     } catch (err: any) {
       setAddError(err.message || 'Failed to add contact.');
     }
@@ -185,49 +212,148 @@ export default function DirectoryPage() {
       await apiClient.delete(`/api/v1/contacts/${id}/`);
       loadContacts();
       loadLists();
+      setFeedbackMsg({ type: 'success', text: 'Contact deleted.' });
     } catch (err: any) {
       console.error('Failed to delete contact:', err);
       alert('Failed to delete contact.');
     }
   };
 
+  // Open Unsubscribe Modal
+  const handleOpenUnsubModal = (contact: Contact) => {
+    setUnsubModalContact(contact);
+    setUnsubReason('Speaker emailed direct request');
+    setCustomReason('');
+    setUnsubError('');
+  };
+
+  // Confirm Unsubscribe Contact
+  const handleConfirmUnsubscribe = async () => {
+    if (!unsubModalContact) return;
+    setUnsubLoading(true);
+    setUnsubError('');
+
+    const finalReason = unsubReason === 'Other / Custom reason' 
+      ? (customReason.trim() || 'Speaker direct request')
+      : unsubReason;
+
+    try {
+      await apiClient.post('/api/v1/unsubscribed-contacts/', {
+        email: unsubModalContact.email.trim().toLowerCase(),
+        first_name: unsubModalContact.first_name || '',
+        last_name: unsubModalContact.last_name || '',
+        reason: finalReason,
+        source: 'manual',
+      });
+
+      // Update state locally so UI updates immediately
+      setContacts(prev => prev.map(c => 
+        c.id === unsubModalContact.id ? { ...c, is_subscribed: false } : c
+      ));
+
+      setFeedbackMsg({
+        type: 'success',
+        text: `Added ${unsubModalContact.email} to Unsubscribe List.`
+      });
+      setUnsubModalContact(null);
+    } catch (err: any) {
+      console.error('Failed to add to unsubscribe list:', err);
+      setUnsubError(err?.message || 'Failed to add contact to unsubscribe list.');
+    } finally {
+      setUnsubLoading(false);
+    }
+  };
+
+  // Confirm Re-subscribe Contact
+  const handleConfirmResubscribe = async () => {
+    if (!resubscribeContact) return;
+    setResubscribeLoading(true);
+    try {
+      await apiClient.post('/api/v1/unsubscribed-contacts/resubscribe/', {
+        email: resubscribeContact.email.trim().toLowerCase(),
+      });
+
+      // Update state locally
+      setContacts(prev => prev.map(c => 
+        c.id === resubscribeContact.id ? { ...c, is_subscribed: true } : c
+      ));
+
+      setFeedbackMsg({
+        type: 'success',
+        text: `Re-subscribed ${resubscribeContact.email}. They are now active.`
+      });
+      setResubscribeContact(null);
+    } catch (err: any) {
+      console.error('Failed to re-subscribe contact:', err);
+      setFeedbackMsg({
+        type: 'error',
+        text: err?.message || 'Failed to re-subscribe contact.'
+      });
+    } finally {
+      setResubscribeLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
+      {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Users size={28} />
             User Directory
           </h1>
-          <p className="text-foreground/50 mt-1 text-sm">Manage your contacts and subscribers.</p>
+          <p className="text-foreground/50 mt-1 text-sm">Manage your contacts, subscribers, and suppression status.</p>
         </div>
-        <div className="flex flex-col sm:flex-row flex-wrap gap-3 mt-4 sm:mt-0">
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <Link href="/contacts/mutuals" className="w-full sm:w-auto">
-              <Button variant="outline" className="flex items-center justify-center gap-2 text-amber-500 hover:bg-amber-50 hover:border-amber-200 w-full">
-                <Users size={18} />
-                Mutual Contacts
-              </Button>
-            </Link>
-            <Link href="/contacts/ignored" className="w-full sm:w-auto">
-              <Button variant="outline" className="flex items-center justify-center gap-2 text-red-500 hover:bg-red-50 hover:border-red-200 w-full">
-                <AlertCircle size={18} />
-                Ignored Contacts
-              </Button>
-            </Link>
-            <Button onClick={() => setShowImportModal(true)} variant="outline" className="flex items-center justify-center gap-2 w-full sm:w-auto">
-              <Upload size={18} />
-              Import
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2.5 mt-4 sm:mt-0">
+          <Link href="/contacts/unsubscribed" className="w-full sm:w-auto">
+            <Button variant="outline" className="flex items-center justify-center gap-2 text-rose-500 hover:bg-rose-500/10 hover:border-rose-300 dark:hover:border-rose-900/50 w-full">
+              <UserX size={18} />
+              Unsubscribed List
             </Button>
-            <Button onClick={() => setShowAddModal(true)} className="flex items-center justify-center gap-2 w-full sm:w-auto">
-              <Plus size={18} />
-              Add Contact
+          </Link>
+          <Link href="/contacts/mutuals" className="w-full sm:w-auto">
+            <Button variant="outline" className="flex items-center justify-center gap-2 text-amber-500 hover:bg-amber-500/10 hover:border-amber-300 dark:hover:border-amber-900/50 w-full">
+              <Users size={18} />
+              Mutual Contacts
             </Button>
-          </div>
+          </Link>
+          <Link href="/contacts/ignored" className="w-full sm:w-auto">
+            <Button variant="outline" className="flex items-center justify-center gap-2 text-red-500 hover:bg-red-500/10 hover:border-red-300 dark:hover:border-red-900/50 w-full">
+              <AlertCircle size={18} />
+              Ignored Contacts
+            </Button>
+          </Link>
+          <Button onClick={() => setShowImportModal(true)} variant="outline" className="flex items-center justify-center gap-2 w-full sm:w-auto">
+            <Upload size={18} />
+            Import
+          </Button>
+          <Button onClick={() => setShowAddModal(true)} className="flex items-center justify-center gap-2 w-full sm:w-auto">
+            <Plus size={18} />
+            Add Contact
+          </Button>
         </div>
       </div>
 
+      {/* Global Feedback Banner */}
+      {feedbackMsg && (
+        <div className={`p-3.5 rounded-lg flex items-center justify-between text-sm border shadow-sm transition-all ${
+          feedbackMsg.type === 'success' 
+            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400' 
+            : 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
+        }`}>
+          <div className="flex items-center gap-2.5">
+            {feedbackMsg.type === 'success' ? <Check size={18} className="shrink-0" /> : <AlertCircle size={18} className="shrink-0" />}
+            <span className="font-medium">{feedbackMsg.text}</span>
+          </div>
+          <button onClick={() => setFeedbackMsg(null)} className="opacity-70 hover:opacity-100 p-1">
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       <Card>
+        {/* Filters and Search */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="flex items-center space-x-3 bg-background border border-border rounded-md px-3 py-2 w-full max-w-md">
             <Search size={16} className="text-foreground/40" />
@@ -264,14 +390,15 @@ export default function DirectoryPage() {
           </div>
         </div>
 
+        {/* Directory Table */}
         <div className="border-t border-border pt-4">
           <div className="hidden md:grid grid-cols-12 text-xs font-medium uppercase tracking-widest text-foreground/40 pb-3 border-b border-border mb-3 px-2">
             <span className="col-span-3">Email</span>
             <span className="col-span-2">First Name</span>
             <span className="col-span-2">Last Name</span>
             <span className="col-span-2">List</span>
-            <span className="col-span-2 text-right">Status</span>
-            <span className="col-span-1 text-right"></span>
+            <span className="col-span-1 text-center">Status</span>
+            <span className="col-span-2 text-right">Actions</span>
           </div>
 
           {loading && contacts.length === 0 ? (
@@ -286,60 +413,89 @@ export default function DirectoryPage() {
           ) : (
             <div className={`divide-y divide-border ${loading ? 'opacity-60 transition-opacity' : ''}`}>
               {contacts.map(c => (
-                <div key={c.id} className="flex flex-col md:grid md:grid-cols-12 gap-1 md:gap-0 py-4 md:py-3 text-sm items-start md:items-center hover:bg-foreground/5 rounded-lg md:rounded-md border border-border md:border-transparent bg-foreground/[0.02] md:bg-transparent px-3 md:px-2 -mx-3 md:-mx-2 mb-3 md:mb-0 transition-colors shadow-sm md:shadow-none group relative">
+                <div key={c.id} className="flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-0 py-4 md:py-3 text-sm items-start md:items-center hover:bg-foreground/[0.03] rounded-lg md:rounded-md border border-border md:border-transparent bg-foreground/[0.01] md:bg-transparent px-3 md:px-2 -mx-3 md:-mx-2 mb-3 md:mb-0 transition-colors shadow-sm md:shadow-none group relative">
                   
-                  {/* Mobile: Combined Email & Name */}
-                  <div className="flex flex-col md:col-span-3 min-w-0 pr-8 md:pr-0 w-full mb-2 md:mb-0">
+                  {/* Email Column */}
+                  <div className="flex flex-col md:col-span-3 min-w-0 pr-2 w-full mb-1 md:mb-0">
                     <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Contact</span>
-                    <span className="font-bold md:font-medium text-base md:text-sm truncate text-foreground">{c.email}</span>
+                    <span className="font-semibold md:font-medium text-base md:text-sm truncate text-foreground" title={c.email}>
+                      {c.email}
+                    </span>
                     <span className="text-xs text-foreground/50 mt-0.5 truncate md:hidden">
                       {c.first_name || c.last_name ? `${c.first_name || ''} ${c.last_name || ''}`.trim() : 'No name provided'}
                     </span>
                   </div>
 
-                  {/* Desktop Only: Separate First/Last Name */}
-                  <div className="hidden md:flex flex-col md:col-span-2 truncate">
+                  {/* Desktop Only: First Name */}
+                  <div className="hidden md:flex flex-col md:col-span-2 truncate pr-2 text-foreground/80">
                     <span>{c.first_name || '—'}</span>
                   </div>
-                  <div className="hidden md:flex flex-col md:col-span-2 truncate">
+
+                  {/* Desktop Only: Last Name */}
+                  <div className="hidden md:flex flex-col md:col-span-2 truncate pr-2 text-foreground/80">
                     <span>{c.last_name || '—'}</span>
                   </div>
 
-                  {/* Mobile: Status and List Row */}
-                  <div className="flex justify-between items-center w-full md:contents mt-1 md:mt-0 pt-2 md:pt-0 border-t border-border/50 md:border-0">
-                    <div className="flex flex-col md:col-span-2 md:text-right md:order-last">
-                      <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">Status</span>
-                      <span>
-                        <span className={`inline-block text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 border rounded-full ${
-                          c.is_subscribed ? 'border-foreground text-foreground bg-foreground/5 md:bg-transparent' : 'border-border text-foreground/30'
-                        }`}>
-                          {c.is_subscribed ? 'Active' : 'Unsub'}
-                        </span>
-                      </span>
-                    </div>
-
-                    <div className="flex flex-col md:col-span-2 truncate text-right md:text-left" title={c.lists.map(listId => lists.find(l => l.id === listId)?.name).filter(Boolean).join(', ')}>
-                      <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40 mb-1">List</span>
-                      <span className="font-medium text-foreground/80">
-                        {(() => {
-                          const listNames = c.lists.map(listId => lists.find(l => l.id === listId)?.name).filter(Boolean).join(', ');
-                          if (!listNames) return '—';
-                          return listNames.length > 15 ? listNames.slice(0, 15) + '...' : listNames;
-                        })()}
-                      </span>
-                    </div>
+                  {/* List Column */}
+                  <div className="flex items-center justify-between md:justify-start w-full md:w-auto md:col-span-2 truncate pr-2">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40">List</span>
+                    <span className="font-medium text-foreground/80 text-xs md:text-sm" title={c.lists.map(listId => lists.find(l => l.id === listId)?.name).filter(Boolean).join(', ')}>
+                      {(() => {
+                        const listNames = c.lists.map(listId => lists.find(l => l.id === listId)?.name).filter(Boolean).join(', ');
+                        if (!listNames) return '—';
+                        return listNames.length > 18 ? listNames.slice(0, 18) + '...' : listNames;
+                      })()}
+                    </span>
                   </div>
 
-                  {/* Delete Action (Top right on mobile) */}
-                  <div className="absolute right-3 top-4 md:relative md:right-0 md:top-0 md:col-span-1 text-right">
+                  {/* Status Column */}
+                  <div className="flex items-center justify-between md:justify-center w-full md:w-auto md:col-span-1">
+                    <span className="md:hidden text-[10px] uppercase font-bold text-foreground/40">Status</span>
+                    <span>
+                      {c.is_subscribed ? (
+                        <span className="inline-flex items-center text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 border rounded-full border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10">
+                          Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 border rounded-full border-rose-500/30 text-rose-600 dark:text-rose-400 bg-rose-500/10" title="Unsubscribed / Suppressed">
+                          <UserX size={10} className="shrink-0" />
+                          Unsub
+                        </span>
+                      )}
+                    </span>
+                  </div>
+
+                  {/* Actions Column (Unsubscribe + Delete) */}
+                  <div className="flex items-center justify-end gap-1.5 w-full md:w-auto md:col-span-2 pt-2 md:pt-0 border-t border-border/50 md:border-0 mt-2 md:mt-0">
+                    {c.is_subscribed ? (
+                      <button
+                        onClick={() => handleOpenUnsubModal(c)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded border border-rose-500/30 text-rose-600 dark:text-rose-400 bg-rose-500/5 hover:bg-rose-500/15 hover:border-rose-500/50 transition-colors shadow-sm"
+                        title="Add to Unsubscribe List"
+                      >
+                        <UserX size={13} className="shrink-0 text-rose-500" />
+                        <span>Unsubscribe</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setResubscribeContact(c)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 hover:bg-emerald-500/15 hover:border-emerald-500/50 transition-colors shadow-sm"
+                        title="Re-subscribe Contact"
+                      >
+                        <UserCheck size={13} className="shrink-0 text-emerald-500" />
+                        <span>Re-subscribe</span>
+                      </button>
+                    )}
+
                     <button 
                       onClick={() => handleDeleteContact(c.id)}
-                      className="text-foreground/40 md:text-foreground/30 hover:text-red-500 transition-all p-2 md:p-1 md:opacity-50 hover:opacity-100"
-                      title="Delete Contact"
+                      className="text-foreground/40 hover:text-red-500 hover:bg-red-500/10 transition-colors p-1.5 rounded"
+                      title="Delete Contact from Database"
                     >
-                      <Trash2 size={16} className="md:w-4 md:h-4" />
+                      <Trash2 size={15} />
                     </button>
                   </div>
+
                 </div>
               ))}
             </div>
@@ -409,6 +565,172 @@ export default function DirectoryPage() {
         </div>
       </Card>
 
+      {/* Unsubscribe Contact Modal */}
+      {unsubModalContact && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md p-6 border border-border bg-background shadow-xl relative animate-in fade-in-50 zoom-in-95 duration-150">
+            <button 
+              className="absolute top-4 right-4 text-foreground/50 hover:text-foreground" 
+              onClick={() => {
+                setUnsubModalContact(null);
+                setUnsubError('');
+              }}
+            >
+              <X size={20} />
+            </button>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 shrink-0">
+                <UserX size={20} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold">Add to Unsubscribe List</h2>
+                <p className="text-xs text-foreground/50">Add this speaker to the suppression list</p>
+              </div>
+            </div>
+
+            <div className="mb-4 p-3 rounded-lg border border-border bg-foreground/[0.02]">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-foreground/40 block mb-1">Target Contact</span>
+              <p className="font-semibold text-sm text-foreground">{unsubModalContact.email}</p>
+              {(unsubModalContact.first_name || unsubModalContact.last_name) && (
+                <p className="text-xs text-foreground/60 mt-0.5">
+                  {[unsubModalContact.first_name, unsubModalContact.last_name].filter(Boolean).join(' ')}
+                </p>
+              )}
+            </div>
+
+            <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs text-amber-600 dark:text-amber-400 flex items-start gap-2">
+              <ShieldAlert size={16} className="shrink-0 mt-0.5" />
+              <span>
+                This contact will be permanently suppressed. All current and future email campaigns will automatically skip this email, even if re-imported.
+              </span>
+            </div>
+
+            {unsubError && (
+              <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg text-xs text-rose-500 flex items-start gap-2">
+                <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                <span>{unsubError}</span>
+              </div>
+            )}
+
+            <div className="space-y-3 mb-5">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Reason for Unsubscribe</label>
+                <select
+                  value={unsubReason}
+                  onChange={(e) => setUnsubReason(e.target.value)}
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                >
+                  <option value="Speaker emailed direct request">Speaker emailed direct request</option>
+                  <option value="Speaker requested removal via phone / WhatsApp">Speaker requested removal via phone / WhatsApp</option>
+                  <option value="Unsubscribed via speaker assistant">Unsubscribed via speaker assistant</option>
+                  <option value="Wrong contact / Not interested">Wrong contact / Not interested</option>
+                  <option value="Other / Custom reason">Other / Custom reason...</option>
+                </select>
+              </div>
+
+              {unsubReason === 'Other / Custom reason' && (
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Custom Reason</label>
+                  <input
+                    type="text"
+                    value={customReason}
+                    onChange={(e) => setCustomReason(e.target.value)}
+                    placeholder="Enter specific reason..."
+                    className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                    autoFocus
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setUnsubModalContact(null);
+                  setUnsubError('');
+                }}
+                disabled={unsubLoading}
+              >
+                Cancel
+              </Button>
+              <button
+                onClick={handleConfirmUnsubscribe}
+                disabled={unsubLoading}
+                className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-rose-600 hover:bg-rose-700 text-white transition-colors disabled:opacity-50 shadow-sm"
+              >
+                {unsubLoading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Adding to list...</span>
+                  </>
+                ) : (
+                  <>
+                    <UserX size={16} />
+                    <span>Confirm Unsubscribe</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Re-subscribe Confirmation Modal */}
+      {resubscribeContact && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md p-6 border border-border bg-background shadow-xl relative animate-in fade-in-50 zoom-in-95 duration-150">
+            <button 
+              className="absolute top-4 right-4 text-foreground/50 hover:text-foreground" 
+              onClick={() => setResubscribeContact(null)}
+            >
+              <X size={20} />
+            </button>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
+                <UserCheck size={20} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold">Re-subscribe Contact</h2>
+                <p className="text-xs text-foreground/50">Remove from suppression list</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-foreground/80 mb-4">
+              Are you sure you want to remove <span className="font-semibold text-foreground">{resubscribeContact.email}</span> from the suppression list and restore their active status for campaigns?
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+              <Button 
+                variant="outline" 
+                onClick={() => setResubscribeContact(null)}
+                disabled={resubscribeLoading}
+              >
+                Cancel
+              </Button>
+              <button
+                onClick={handleConfirmResubscribe}
+                disabled={resubscribeLoading}
+                className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-emerald-600 hover:bg-emerald-700 text-white transition-colors disabled:opacity-50 shadow-sm"
+              >
+                {resubscribeLoading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Re-subscribing...</span>
+                  </>
+                ) : (
+                  <>
+                    <UserCheck size={16} />
+                    <span>Confirm Re-subscribe</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Add Contact Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card className="w-full max-w-md p-6 border border-border bg-background shadow-lg relative">
@@ -531,6 +853,7 @@ export default function DirectoryPage() {
         </div>
       )}
 
+      {/* Import CSV Modal */}
       {showImportModal && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card className="w-full max-w-md p-6 border border-border bg-background shadow-lg relative">

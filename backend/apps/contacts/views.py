@@ -91,6 +91,9 @@ class ContactViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         contact = serializer.save()
+        if UnsubscribedContact.objects.filter(email__iexact=contact.email).exists():
+            contact.is_subscribed = False
+            contact.save(update_fields=['is_subscribed'])
         default_list, _ = ContactList.objects.get_or_create(
             is_default=True,
             defaults={'name': 'All Contacts', 'description': 'Master list containing all contacts'}
@@ -386,6 +389,24 @@ class UnsubscribedContactViewSet(viewsets.ModelViewSet):
             qs = qs.filter(source=source)
         return qs
 
+    def create(self, request, *args, **kwargs):
+        email = request.data.get('email', '').strip().lower()
+        if email:
+            existing = UnsubscribedContact.objects.filter(email__iexact=email).first()
+            if existing:
+                if request.data.get('reason'):
+                    existing.reason = request.data.get('reason')
+                if request.data.get('first_name'):
+                    existing.first_name = request.data.get('first_name')
+                if request.data.get('last_name'):
+                    existing.last_name = request.data.get('last_name')
+                existing.source = request.data.get('source', existing.source)
+                existing.save()
+                Contact.objects.filter(email__iexact=email).update(is_subscribed=False)
+                serializer = self.get_serializer(existing)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         instance = serializer.save()
         # Automatically mark any existing contact as unsubscribed
@@ -398,6 +419,15 @@ class UnsubscribedContactViewSet(viewsets.ModelViewSet):
         # When removing from suppression (re-subscribing), update Contact.is_subscribed = True
         Contact.objects.filter(email__iexact=email).update(is_subscribed=True)
         return response
+
+    @action(detail=False, methods=['post'], url_path='resubscribe')
+    def resubscribe(self, request):
+        email = request.data.get('email', '').strip().lower()
+        if not email:
+            return Response({'error': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        deleted_count, _ = UnsubscribedContact.objects.filter(email__iexact=email).delete()
+        Contact.objects.filter(email__iexact=email).update(is_subscribed=True)
+        return Response({'success': True, 'message': f'{email} has been re-subscribed.', 'deleted_count': deleted_count})
 
     @action(detail=False, methods=['get'], url_path='summary')
     def summary(self, request):
