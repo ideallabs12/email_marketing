@@ -1111,6 +1111,227 @@ class PublicMasterLinkLeadsView(views.APIView):
         return Response({'data': data})
 
 
+def get_campaign_tracker_data(search):
+    from apps.contacts.models import Contact
+    from apps.campaigns.models import Campaign
+    from apps.tracking.models import CampaignRecipientStatus
+    from urllib.parse import urlparse
+
+    search = (search or '').strip()
+    if not search:
+        return {'query': '', 'found': False, 'total_contacts': 0, 'results': []}
+
+    contacts = list(Contact.objects.filter(email__icontains=search).prefetch_related('lists', 'batches')[:25])
+    matching_contact_ids = [c.id for c in contacts]
+
+    recipient_statuses_qs = list(CampaignRecipientStatus.objects.filter(
+        contact__email__icontains=search
+    ).select_related(
+        'contact',
+        'campaign',
+        'campaign__advance_campaign',
+        'campaign__target_list',
+        'campaign__template',
+    ).prefetch_related(
+        'campaign__target_batches',
+        'contact__batches',
+        'contact__lists'
+    ).order_by('-clicked_at', '-opened_at', '-sent_at', '-created_at'))
+
+    for rs in recipient_statuses_qs:
+        if rs.contact and rs.contact.id not in matching_contact_ids:
+            contacts.append(rs.contact)
+            matching_contact_ids.append(rs.contact.id)
+
+    if not contacts and not recipient_statuses_qs:
+        return {
+            'query': search,
+            'found': False,
+            'total_contacts': 0,
+            'results': []
+        }
+
+    contacts.sort(key=lambda c: 0 if c.email.lower() == search.lower() else (1 if c.email.lower().startswith(search.lower()) else 2))
+
+    rs_by_contact = {}
+    for rs in recipient_statuses_qs:
+        rs_by_contact.setdefault(rs.contact_id, []).append(rs)
+
+    results_by_contact = []
+
+    for c in contacts:
+        c_statuses = rs_by_contact.get(c.id, [])
+        c_lists = list(c.lists.all())
+        c_batches = list(c.batches.all())
+        c_list_names = [lst.name for lst in c_lists]
+        c_batch_names = [b.name for b in c_batches]
+
+        existing_campaign_ids = set()
+        campaign_items = []
+
+        for rs in c_statuses:
+            camp = rs.campaign
+            existing_campaign_ids.add(camp.id)
+
+            adv_name = camp.advance_campaign.name if camp.advance_campaign else camp.name
+            blast_name = camp.name
+
+            camp_batches = list(camp.target_batches.all())
+            camp_batch_names = [b.name for b in camp_batches]
+            intersect_batches = [b.name for b in camp_batches if b in c_batches]
+
+            if intersect_batches:
+                data_batch = ", ".join(intersect_batches)
+            elif camp_batch_names:
+                data_batch = ", ".join(camp_batch_names)
+            else:
+                contact_in_target_list_batches = [b.name for b in c_batches if camp.target_list and b.contact_list_id == camp.target_list.id]
+                if contact_in_target_list_batches:
+                    data_batch = ", ".join(contact_in_target_list_batches)
+                elif c_batch_names:
+                    data_batch = ", ".join(c_batch_names)
+                elif camp.target_list:
+                    data_batch = f"All Contacts in {camp.target_list.name}"
+                else:
+                    data_batch = "All Contacts"
+
+            links = []
+            for link in (rs.clicked_links or []):
+                try:
+                    domain = urlparse(link).netloc.replace('www.', '')
+                    domain = domain.split('.')[0] if domain else str(link)
+                    if domain and domain not in links:
+                        links.append(domain)
+                except Exception:
+                    if link and str(link) not in links:
+                        links.append(str(link))
+            links_str = ", ".join(links)
+
+            template_name = camp.template.name if camp.template else '—'
+            template_subject = camp.subject or (camp.template.subject if camp.template else '—')
+
+            campaign_items.append({
+                'campaign_id': camp.id,
+                'advance_campaign_name': adv_name,
+                'blast_name': blast_name,
+                'tracking_id': getattr(camp, 'tracking_id', '') or (getattr(camp.advance_campaign, 'tracking_id', '') if camp.advance_campaign else ''),
+                'share_token': str(camp.share_token) if getattr(camp, 'share_token', None) else '',
+                'data_batch': data_batch,
+                'contact_list_name': camp.target_list.name if camp.target_list else '—',
+                'template_name': template_name,
+                'template_subject': template_subject,
+                'delivery_status': rs.status,
+                'sent_at': rs.sent_at.isoformat() if rs.sent_at else (camp.sent_at.isoformat() if camp.sent_at else None),
+                'opened_at': rs.opened_at.isoformat() if rs.opened_at else None,
+                'clicked_at': rs.clicked_at.isoformat() if rs.clicked_at else None,
+                'links_clicked': links_str,
+                'error_message': rs.error_message or '',
+                'is_sent': True,
+            })
+
+        other_campaigns = Campaign.objects.filter(
+            target_list__in=c_lists
+        ).exclude(
+            id__in=existing_campaign_ids
+        ).select_related(
+            'advance_campaign', 'target_list', 'template'
+        ).prefetch_related('target_batches')
+
+        for oc in other_campaigns:
+            oc_batches = list(oc.target_batches.all())
+            oc_batch_names = [b.name for b in oc_batches]
+            intersect_batches = [b.name for b in oc_batches if b in c_batches]
+
+            if oc_batches and not intersect_batches:
+                continue
+
+            adv_name = oc.advance_campaign.name if oc.advance_campaign else oc.name
+            if intersect_batches:
+                data_batch = ", ".join(intersect_batches)
+            elif oc_batch_names:
+                data_batch = ", ".join(oc_batch_names)
+            else:
+                contact_in_target_list_batches = [b.name for b in c_batches if oc.target_list and b.contact_list_id == oc.target_list.id]
+                if contact_in_target_list_batches:
+                    data_batch = ", ".join(contact_in_target_list_batches)
+                elif c_batch_names:
+                    data_batch = ", ".join(c_batch_names)
+                elif oc.target_list:
+                    data_batch = f"All Contacts in {oc.target_list.name}"
+                else:
+                    data_batch = "All Contacts"
+
+            template_name = oc.template.name if oc.template else '—'
+            template_subject = oc.subject or (oc.template.subject if oc.template else '—')
+
+            campaign_items.append({
+                'campaign_id': oc.id,
+                'advance_campaign_name': adv_name,
+                'blast_name': oc.name,
+                'tracking_id': getattr(oc, 'tracking_id', '') or (getattr(oc.advance_campaign, 'tracking_id', '') if oc.advance_campaign else ''),
+                'share_token': str(oc.share_token) if getattr(oc, 'share_token', None) else '',
+                'data_batch': data_batch,
+                'contact_list_name': oc.target_list.name if oc.target_list else '—',
+                'template_name': template_name,
+                'template_subject': template_subject,
+                'delivery_status': oc.status,
+                'sent_at': oc.sent_at.isoformat() if oc.sent_at else None,
+                'opened_at': None,
+                'clicked_at': None,
+                'links_clicked': '',
+                'error_message': '',
+                'is_sent': oc.status == 'sent',
+            })
+
+        total_campaigns = len(campaign_items)
+        unique_advance_campaigns = len(set(ci['advance_campaign_name'] for ci in campaign_items if ci['advance_campaign_name']))
+        total_delivered = sum(1 for ci in campaign_items if ci['delivery_status'] == 'delivered')
+        total_opened = sum(1 for ci in campaign_items if ci['delivery_status'] in ['opened', 'clicked'] or ci.get('opened_at'))
+        total_clicked = sum(1 for ci in campaign_items if ci['delivery_status'] == 'clicked' or ci.get('clicked_at'))
+        total_bounced = sum(1 for ci in campaign_items if 'bounce' in ci['delivery_status'] or ci['delivery_status'] in ['failed', 'invalid_email', 'blocked'])
+
+        results_by_contact.append({
+            'contact': {
+                'id': c.id,
+                'email': c.email,
+                'speaker_name': f"{c.first_name} {c.last_name}".strip() or '—',
+                'first_name': c.first_name,
+                'last_name': c.last_name,
+                'is_subscribed': c.is_subscribed,
+                'lists': c_list_names,
+                'batches': c_batch_names,
+            },
+            'summary': {
+                'total_campaigns': total_campaigns,
+                'total_advance_campaigns': unique_advance_campaigns,
+                'total_delivered': total_delivered,
+                'total_opened': total_opened,
+                'total_clicked': total_clicked,
+                'total_bounced': total_bounced,
+            },
+            'campaigns': campaign_items,
+        })
+
+    return {
+        'query': search,
+        'found': len(results_by_contact) > 0,
+        'total_contacts': len(results_by_contact),
+        'results': results_by_contact,
+    }
+
+
+class CampaignTrackerView(views.APIView):
+    """Authenticated endpoint for in-app Campaign Tracker"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        search = (request.query_params.get('email') or request.query_params.get('search') or '').strip()
+        if not search:
+            return Response({'data': None, 'message': 'Please enter an email address to search.'})
+        data = get_campaign_tracker_data(search)
+        return Response({'data': data})
+
+
 class PublicMasterLinkCampaignTrackerView(views.APIView):
     permission_classes = [AllowAny]
 
@@ -1135,219 +1356,12 @@ class PublicMasterLinkCampaignTrackerView(views.APIView):
             if not matches:
                 return Response({'detail': 'password_required', 'has_password': True}, status=status.HTTP_401_UNAUTHORIZED)
 
-        from apps.contacts.models import Contact
-        from apps.campaigns.models import Campaign
-        from apps.tracking.models import CampaignRecipientStatus
-        from urllib.parse import urlparse
-
         search = (request.query_params.get('email') or request.query_params.get('search') or '').strip()
         if not search:
             return Response({'data': None, 'message': 'Please enter an email address to search.'})
 
-        # Find matching contacts
-        contacts = list(Contact.objects.filter(email__icontains=search).prefetch_related('lists', 'batches')[:25])
-        matching_contact_ids = [c.id for c in contacts]
-
-        recipient_statuses_qs = list(CampaignRecipientStatus.objects.filter(
-            contact__email__icontains=search
-        ).select_related(
-            'contact',
-            'campaign',
-            'campaign__advance_campaign',
-            'campaign__target_list',
-            'campaign__template',
-        ).prefetch_related(
-            'campaign__target_batches',
-            'contact__batches',
-            'contact__lists'
-        ).order_by('-clicked_at', '-opened_at', '-sent_at', '-created_at'))
-
-        for rs in recipient_statuses_qs:
-            if rs.contact and rs.contact.id not in matching_contact_ids:
-                contacts.append(rs.contact)
-                matching_contact_ids.append(rs.contact.id)
-
-        if not contacts and not recipient_statuses_qs:
-            return Response({
-                'data': {
-                    'query': search,
-                    'found': False,
-                    'total_contacts': 0,
-                    'results': []
-                }
-            })
-
-        # Prioritize exact match or prefix match
-        contacts.sort(key=lambda c: 0 if c.email.lower() == search.lower() else (1 if c.email.lower().startswith(search.lower()) else 2))
-
-        rs_by_contact = {}
-        for rs in recipient_statuses_qs:
-            rs_by_contact.setdefault(rs.contact_id, []).append(rs)
-
-        results_by_contact = []
-
-        for c in contacts:
-            c_statuses = rs_by_contact.get(c.id, [])
-            c_lists = list(c.lists.all())
-            c_batches = list(c.batches.all())
-            c_list_names = [lst.name for lst in c_lists]
-            c_batch_names = [b.name for b in c_batches]
-
-            existing_campaign_ids = set()
-            campaign_items = []
-
-            for rs in c_statuses:
-                camp = rs.campaign
-                existing_campaign_ids.add(camp.id)
-
-                adv_name = camp.advance_campaign.name if camp.advance_campaign else camp.name
-                blast_name = camp.name
-
-                camp_batches = list(camp.target_batches.all())
-                camp_batch_names = [b.name for b in camp_batches]
-                intersect_batches = [b.name for b in camp_batches if b in c_batches]
-
-                if intersect_batches:
-                    data_batch = ", ".join(intersect_batches)
-                elif camp_batch_names:
-                    data_batch = ", ".join(camp_batch_names)
-                else:
-                    contact_in_target_list_batches = [b.name for b in c_batches if camp.target_list and b.contact_list_id == camp.target_list.id]
-                    if contact_in_target_list_batches:
-                        data_batch = ", ".join(contact_in_target_list_batches)
-                    elif c_batch_names:
-                        data_batch = ", ".join(c_batch_names)
-                    elif camp.target_list:
-                        data_batch = f"All Contacts in {camp.target_list.name}"
-                    else:
-                        data_batch = "All Contacts"
-
-                links = []
-                for link in (rs.clicked_links or []):
-                    try:
-                        domain = urlparse(link).netloc.replace('www.', '')
-                        domain = domain.split('.')[0] if domain else str(link)
-                        if domain and domain not in links:
-                            links.append(domain)
-                    except Exception:
-                        if link and str(link) not in links:
-                            links.append(str(link))
-                links_str = ", ".join(links)
-
-                template_name = camp.template.name if camp.template else '—'
-                template_subject = camp.subject or (camp.template.subject if camp.template else '—')
-
-                campaign_items.append({
-                    'campaign_id': camp.id,
-                    'advance_campaign_name': adv_name,
-                    'blast_name': blast_name,
-                    'tracking_id': getattr(camp, 'tracking_id', '') or (getattr(camp.advance_campaign, 'tracking_id', '') if camp.advance_campaign else ''),
-                    'share_token': str(camp.share_token) if getattr(camp, 'share_token', None) else '',
-                    'data_batch': data_batch,
-                    'contact_list_name': camp.target_list.name if camp.target_list else '—',
-                    'template_name': template_name,
-                    'template_subject': template_subject,
-                    'delivery_status': rs.status,
-                    'sent_at': rs.sent_at.isoformat() if rs.sent_at else (camp.sent_at.isoformat() if camp.sent_at else None),
-                    'opened_at': rs.opened_at.isoformat() if rs.opened_at else None,
-                    'clicked_at': rs.clicked_at.isoformat() if rs.clicked_at else None,
-                    'links_clicked': links_str,
-                    'error_message': rs.error_message or '',
-                    'is_sent': True,
-                })
-
-            # Check if contact is targeted in other campaigns not yet sent/statused
-            other_campaigns = Campaign.objects.filter(
-                target_list__in=c_lists
-            ).exclude(
-                id__in=existing_campaign_ids
-            ).select_related(
-                'advance_campaign', 'target_list', 'template'
-            ).prefetch_related('target_batches')
-
-            for oc in other_campaigns:
-                oc_batches = list(oc.target_batches.all())
-                oc_batch_names = [b.name for b in oc_batches]
-                intersect_batches = [b.name for b in oc_batches if b in c_batches]
-
-                if oc_batches and not intersect_batches:
-                    continue
-
-                adv_name = oc.advance_campaign.name if oc.advance_campaign else oc.name
-                if intersect_batches:
-                    data_batch = ", ".join(intersect_batches)
-                elif oc_batch_names:
-                    data_batch = ", ".join(oc_batch_names)
-                else:
-                    contact_in_target_list_batches = [b.name for b in c_batches if oc.target_list and b.contact_list_id == oc.target_list.id]
-                    if contact_in_target_list_batches:
-                        data_batch = ", ".join(contact_in_target_list_batches)
-                    elif c_batch_names:
-                        data_batch = ", ".join(c_batch_names)
-                    elif oc.target_list:
-                        data_batch = f"All Contacts in {oc.target_list.name}"
-                    else:
-                        data_batch = "All Contacts"
-
-                template_name = oc.template.name if oc.template else '—'
-                template_subject = oc.subject or (oc.template.subject if oc.template else '—')
-
-                campaign_items.append({
-                    'campaign_id': oc.id,
-                    'advance_campaign_name': adv_name,
-                    'blast_name': oc.name,
-                    'tracking_id': getattr(oc, 'tracking_id', '') or (getattr(oc.advance_campaign, 'tracking_id', '') if oc.advance_campaign else ''),
-                    'share_token': str(oc.share_token) if getattr(oc, 'share_token', None) else '',
-                    'data_batch': data_batch,
-                    'contact_list_name': oc.target_list.name if oc.target_list else '—',
-                    'template_name': template_name,
-                    'template_subject': template_subject,
-                    'delivery_status': oc.status,
-                    'sent_at': oc.sent_at.isoformat() if oc.sent_at else None,
-                    'opened_at': None,
-                    'clicked_at': None,
-                    'links_clicked': '',
-                    'error_message': '',
-                    'is_sent': oc.status == 'sent',
-                })
-
-            total_campaigns = len(campaign_items)
-            unique_advance_campaigns = len(set(ci['advance_campaign_name'] for ci in campaign_items if ci['advance_campaign_name']))
-            total_delivered = sum(1 for ci in campaign_items if ci['delivery_status'] == 'delivered')
-            total_opened = sum(1 for ci in campaign_items if ci['delivery_status'] in ['opened', 'clicked'] or ci.get('opened_at'))
-            total_clicked = sum(1 for ci in campaign_items if ci['delivery_status'] == 'clicked' or ci.get('clicked_at'))
-            total_bounced = sum(1 for ci in campaign_items if 'bounce' in ci['delivery_status'] or ci['delivery_status'] in ['failed', 'invalid_email', 'blocked'])
-
-            results_by_contact.append({
-                'contact': {
-                    'id': c.id,
-                    'email': c.email,
-                    'speaker_name': f"{c.first_name} {c.last_name}".strip() or '—',
-                    'first_name': c.first_name,
-                    'last_name': c.last_name,
-                    'is_subscribed': c.is_subscribed,
-                    'lists': c_list_names,
-                    'batches': c_batch_names,
-                },
-                'summary': {
-                    'total_campaigns': total_campaigns,
-                    'total_advance_campaigns': unique_advance_campaigns,
-                    'total_delivered': total_delivered,
-                    'total_opened': total_opened,
-                    'total_clicked': total_clicked,
-                    'total_bounced': total_bounced,
-                },
-                'campaigns': campaign_items,
-            })
-
-        return Response({
-            'data': {
-                'query': search,
-                'found': len(results_by_contact) > 0,
-                'total_contacts': len(results_by_contact),
-                'results': results_by_contact,
-            }
-        })
+        data = get_campaign_tracker_data(search)
+        return Response({'data': data})
 
 
 class PublicUnsubscribeView(views.APIView):

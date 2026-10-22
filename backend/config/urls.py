@@ -22,7 +22,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 from apps.contacts.views import ContactViewSet, ContactListViewSet, IgnoredContactViewSet, ContactBatchViewSet, MutualContactViewSet, LeadViewSet, UnsubscribedContactViewSet
 from apps.templates.views import EmailTemplateViewSet
 from apps.campaigns.views import CampaignViewSet, SenderListView, AdvanceCampaignViewSet, PodcastSenderViewSet, GlobalLookupView
-from apps.tracking.views import CampaignPerformanceViewSet, CampaignAnalyticsViewSet, BrevoWebhookView, BouncedEmailViewSet, PublicCampaignAnalyticsView, MasterLinkSettingsView, PublicMasterLinkCampaignsView, PublicAdvanceCampaignView, PublicMasterLinkRecentsView, PublicMasterLinkContactsView, PublicMasterLinkLeadsView, PublicMasterLinkCampaignTrackerView, PublicUnsubscribeView
+from apps.tracking.views import CampaignPerformanceViewSet, CampaignAnalyticsViewSet, BrevoWebhookView, BouncedEmailViewSet, PublicCampaignAnalyticsView, MasterLinkSettingsView, PublicMasterLinkCampaignsView, PublicAdvanceCampaignView, PublicMasterLinkRecentsView, PublicMasterLinkContactsView, PublicMasterLinkLeadsView, PublicMasterLinkCampaignTrackerView, PublicUnsubscribeView, CampaignTrackerView
 
 def ensure_db_schema():
     from django.db import connection
@@ -129,6 +129,7 @@ urlpatterns = [
     path('api/v1/public/master-link/<uuid:token>/recents/', PublicMasterLinkRecentsView.as_view(), name='public-master-link-recents'),
     path('api/v1/public/master-link/<uuid:token>/contacts/', PublicMasterLinkContactsView.as_view(), name='public-master-link-contacts'),
     path('api/v1/public/master-link/<uuid:token>/leads/', PublicMasterLinkLeadsView.as_view(), name='public-master-link-leads'),
+    path('api/v1/campaign-tracker/', CampaignTrackerView.as_view(), name='campaign-tracker'),
     path('api/v1/public/master-link/<uuid:token>/campaign-tracker/', PublicMasterLinkCampaignTrackerView.as_view(), name='public-master-link-campaign-tracker'),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
