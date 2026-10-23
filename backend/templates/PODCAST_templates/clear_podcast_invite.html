@@ -82,7 +82,23 @@
             text-decoration: none;
         }
 
+        .hero-title,
+        .hero-title span,
+        .hero-title-text {
+            color: #FFFFFF !important;
+        }
+
+        .hero-sub,
+        .hero-sub span,
+        .hero-sub-text {
+            color: #C7D2FE !important;
+        }
+
         @media only screen and (max-width: 600px) {
+            .outer-cell {
+                padding: 12px 8px 20px 8px !important;
+            }
+
             .container {
                 width: 100% !important;
                 max-width: 100% !important;
@@ -169,6 +185,18 @@
             .t-gold {
                 color: #F5B942 !important;
             }
+
+            .hero-title,
+            .hero-title span,
+            .hero-title-text {
+                color: #FFFFFF !important;
+            }
+
+            .hero-sub,
+            .hero-sub span,
+            .hero-sub-text {
+                color: #E0E7FF !important;
+            }
         }
 
         [data-ogsc] body,
@@ -199,6 +227,18 @@
         [data-ogsc] .t-gold {
             color: #F5B942 !important;
         }
+
+        [data-ogsc] .hero-title,
+        [data-ogsc] .hero-title span,
+        [data-ogsc] .hero-title-text {
+            color: #FFFFFF !important;
+        }
+
+        [data-ogsc] .hero-sub,
+        [data-ogsc] .hero-sub span,
+        [data-ogsc] .hero-sub-text {
+            color: #E0E7FF !important;
+        }
     </style>
 </head>
 
@@ -212,7 +252,7 @@
     <table role="presentation" class="body-bg" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#070A12"
         style="background-color:#070A12; width:100%;">
         <tr>
-            <td align="center" style="padding:24px 12px;">
+            <td align="center" class="outer-cell" style="padding:20px 12px 24px 12px;">
 
                 <!--[if mso]><table role="presentation" align="center" width="600" border="0" cellpadding="0" cellspacing="0"><tr><td><![endif]-->
                 <table role="presentation" class="container card-bg" width="600" border="0" cellpadding="0"
@@ -222,27 +262,30 @@
                     <!-- HERO -->
                     <tr>
                         <td class="hero-pad fluid-pad" align="left" bgcolor="#1E1B4B"
-                            style="padding:44px 40px 38px 40px; background-color:#1E1B4B; background-image:linear-gradient(135deg,#0F172A 0%,#1E1B4B 50%,#312E81 100%); border-radius:16px 16px 0 0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                            style="padding:44px 40px 38px 40px; background-color:#1E1B4B; background-image:linear-gradient(135deg,#0F172A 0%,#1E1B4B 50%,#312E81 100%); border-radius:16px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
                             <p
                                 style="margin:0 0 12px 0; font-size:13px; line-height:18px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#F5B942;">
                                 A Personal Invitation</p>
                             <div class="hero-title"
-                                style="margin:0; font-size:38px; line-height:44px; font-weight:800; color:#FFFFFF; letter-spacing:-0.5px;">
-                                <span style="color:#FFFFFF !important; font-size:38px; line-height:44px; font-weight:800;">The Dr.&nbsp;P Podcast</span></div>
-                            <p style="margin:14px 0 0 0; font-size:17px; line-height:26px; color:#C7D2FE;">
-                                <span style="color:#C7D2FE !important;">Your story. Your pictures. Your voice. Your legacy.</span></p>
+                                style="margin:0; font-size:38px; line-height:44px; font-weight:800; color:#FFD27A; letter-spacing:-0.5px;">
+                                <span class="hero-title-text"
+                                    style="color:#FFD27A; font-size:38px; line-height:44px; font-weight:800;">The Dr.&nbsp;P Podcast</span>
+                            </div>
+                            <p class="hero-sub" style="margin:14px 0 0 0; font-size:17px; line-height:26px; color:#E0E7FF;">
+                                <span class="hero-sub-text"
+                                    style="color:#E0E7FF; font-size:17px; line-height:26px;">Your story. Your pictures. Your voice. Your legacy.</span>
+                            </p>
+                            <div style="margin-top:22px; width:72px; height:3px; line-height:3px; font-size:3px; background-color:#F5B942; background-image:linear-gradient(90deg,#F5B942 0%,#818CF8 100%); border-radius:3px;">&nbsp;</div>
                         </td>
                     </tr>
                     <tr>
-                        <td height="3" bgcolor="#F5B942"
-                            style="height:3px; line-height:3px; font-size:3px; background-color:#F5B942; background-image:linear-gradient(90deg,#6366F1 0%,#F5B942 50%,#6366F1 100%);">
-                            &nbsp;</td>
+                        <td height="16" style="height:16px; line-height:16px; font-size:16px;">&nbsp;</td>
                     </tr>
 
                     <!-- GREETING + INTRO -->
                     <tr>
                         <td class="fluid-pad"
-                            style="padding:36px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                            style="padding:28px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
                             <p class="t-main"
                                 style="margin:0 0 16px 0; font-size:17px; line-height:27px; font-weight:600; color:#F3F4F6;">
                                 {{ greeting }}</p>
