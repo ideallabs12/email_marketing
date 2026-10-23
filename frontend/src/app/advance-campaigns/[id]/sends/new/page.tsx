@@ -119,18 +119,11 @@ export default function NewSendPage() {
     return templates.find(t => String(t.id) === String(selectedTemplate));
   }, [templates, selectedTemplate]);
 
-  const isUniversalInvite = useMemo(() => {
+  const isSecondSeriesOrUniversal = useMemo(() => {
+    if (templateCategory === 'SECOND_SERIES') return true;
     const n = currentTemplate?.name?.toUpperCase() || '';
     return n.includes('UNIVERSAL_CONFERENCE_INVITE') || n.includes('SECOND_SERIES');
-  }, [currentTemplate]);
-
-  const isInviteMode = useMemo(() => {
-    return templateCategory === 'SECOND_SERIES' || 
-           templateCategory === 'INVITE' || 
-           isUniversalInvite || 
-           !!selectedConference || 
-           !!selectedCompany;
-  }, [templateCategory, isUniversalInvite, selectedConference, selectedCompany]);
+  }, [templateCategory, currentTemplate]);
 
   const handleCompanyChange = (company: string) => {
     setSelectedCompany(company);
@@ -205,8 +198,8 @@ export default function NewSendPage() {
       return;
     }
 
-    if (isUniversalInvite && !selectedConference) {
-      setCreateError('Please select a Company and Conference for the Universal Conference Invite template.');
+    if (isSecondSeriesOrUniversal && !selectedConference) {
+      setCreateError('Please select a Company and Conference for the Second Series / Universal Invite template.');
       return;
     }
 
@@ -314,26 +307,20 @@ export default function NewSendPage() {
             </select>
           </div>
 
-          {/* ── Conference & Company Selector (Placed right below template!) ── */}
-          {(isInviteMode || isUniversalInvite || conferences.length > 0) && (
-            <div className={`p-4 rounded-xl border transition-all space-y-4 ${
-              isUniversalInvite 
-                ? 'bg-primary/5 border-primary/40 shadow-sm' 
-                : 'bg-muted/40 border-border/80'
-            }`}>
+          {/* ── Conference & Company Selector (Only for Second Series / Universal Invite) ── */}
+          {isSecondSeriesOrUniversal && (
+            <div className="p-4 rounded-xl border transition-all space-y-4 bg-primary/5 border-primary/40 shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Building2 className={`w-4 h-4 ${isUniversalInvite ? 'text-primary' : 'text-foreground/70'}`} />
+                  <Building2 className="w-4 h-4 text-primary" />
                   <span className="text-xs font-semibold uppercase tracking-wider text-foreground/90">
                     Conference &amp; Brand Selection
                   </span>
                 </div>
-                {isUniversalInvite && (
-                  <span className="flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                    <Sparkles className="w-3 h-3" />
-                    Required for Universal Invite
-                  </span>
-                )}
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                  <Sparkles className="w-3 h-3" />
+                  Required for Second Series / Universal Invite
+                </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
