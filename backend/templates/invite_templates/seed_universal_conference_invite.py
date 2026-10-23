@@ -25,7 +25,7 @@ if not TEMPLATE_FILE.exists():
 html_content = TEMPLATE_FILE.read_text(encoding='utf-8')
 
 TEMPLATE_NAME = "UNIVERSAL_CONFERENCE_INVITE"
-SUBJECT       = "Distinguished Speaker Invitation — {{ conference_name|default:'International Leadership Summit' }}"
+SUBJECT       = "Speaker invitation: {{ conference_name }}"
 
 default_variables = {
     'greeting': 'Dear Colleague,',

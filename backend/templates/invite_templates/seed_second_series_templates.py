@@ -27,7 +27,7 @@ def seed():
         EmailTemplate.objects.update_or_create(
             name='SECOND_SERIES - Universal Conference Invite',
             defaults={
-                'subject': "Distinguished Speaker Invitation — {{ conference_name|default:'International Leadership Summit' }}",
+                'subject': "Speaker invitation: {{ conference_name }}",
                 'html_content': html_universal,
                 'body': '',
                 'variables': {
@@ -72,7 +72,7 @@ def seed():
         EmailTemplate.objects.update_or_create(
             name=name,
             defaults={
-                'subject': f"Distinguished Speaker Invitation from {company} — {{{{ conference_name }}}}",
+                'subject': "Speaker invitation: {{ conference_name }}",
                 'html_content': html,
                 'body': '',
                 'variables': {
