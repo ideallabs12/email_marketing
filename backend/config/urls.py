@@ -21,7 +21,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 from apps.contacts.views import ContactViewSet, ContactListViewSet, IgnoredContactViewSet, ContactBatchViewSet, MutualContactViewSet, LeadViewSet, UnsubscribedContactViewSet
 from apps.templates.views import EmailTemplateViewSet
-from apps.campaigns.views import CampaignViewSet, SenderListView, AdvanceCampaignViewSet, PodcastSenderViewSet, GlobalLookupView
+from apps.campaigns.views import CampaignViewSet, SenderListView, AdvanceCampaignViewSet, PodcastSenderViewSet, ConferenceViewSet, GlobalLookupView
 from apps.tracking.views import CampaignPerformanceViewSet, CampaignAnalyticsViewSet, BrevoWebhookView, BouncedEmailViewSet, PublicCampaignAnalyticsView, MasterLinkSettingsView, PublicMasterLinkCampaignsView, PublicAdvanceCampaignView, PublicMasterLinkRecentsView, PublicMasterLinkContactsView, PublicMasterLinkLeadsView, PublicMasterLinkCampaignTrackerView, PublicUnsubscribeView, CampaignTrackerView
 
 def ensure_db_schema():
@@ -107,6 +107,7 @@ router.register(r'leads', LeadViewSet, basename='lead')
 router.register(r'templates', EmailTemplateViewSet, basename='emailtemplate')
 router.register(r'campaigns', CampaignViewSet, basename='campaign')
 router.register(r'advance-campaigns', AdvanceCampaignViewSet, basename='advancecampaign')
+router.register(r'conferences', ConferenceViewSet, basename='conference')
 
 router.register(r'podcast-senders', PodcastSenderViewSet, basename='podcastsender')
 router.register(r'tracking', CampaignPerformanceViewSet, basename='campaignperformance')

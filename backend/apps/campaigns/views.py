@@ -4,10 +4,19 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from .models import Campaign, AdvanceCampaign, PodcastSender
-from .serializers import CampaignSerializer, AdvanceCampaignSerializer, PodcastSenderSerializer
+from .models import Campaign, AdvanceCampaign, PodcastSender, Conference
+from .serializers import CampaignSerializer, AdvanceCampaignSerializer, PodcastSenderSerializer, ConferenceSerializer
 from apps.contacts.models import ContactList, ContactBatch
+
+class ConferenceViewSet(viewsets.ModelViewSet):
+    serializer_class = ConferenceSerializer
+
+    def get_queryset(self):
+        qs = Conference.objects.all().order_by('company_name', 'conference_name')
+        company = self.request.query_params.get('company')
+        if company:
+            qs = qs.filter(company_name__iexact=company.strip())
+        return qs
 
 class PodcastSenderViewSet(viewsets.ModelViewSet):
     serializer_class = PodcastSenderSerializer

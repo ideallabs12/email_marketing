@@ -40,6 +40,24 @@ class AdvanceCampaign(models.Model):
     def __str__(self):
         return self.name
 
+class Conference(models.Model):
+    company_name = models.CharField(max_length=100, db_index=True)
+    conference_name = models.CharField(max_length=255)
+    date = models.CharField(max_length=120, help_text="e.g. March 8–11, 2027")
+    venue = models.CharField(max_length=255, help_text="e.g. Paris, France")
+    calendly_link = models.URLField(max_length=500, blank=True)
+    website_link = models.URLField(max_length=500, blank=True)
+    linkedin_link = models.URLField(max_length=500, blank=True)
+    theme = models.CharField(max_length=255, blank=True, help_text="e.g. Leading with Vision. Inspiring Global Influence")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['company_name', 'conference_name']
+
+    def __str__(self):
+        return f"{self.conference_name} ({self.company_name})"
+
 class Campaign(models.Model):
     STATUS_CHOICES = (
         ('draft', 'Draft'),
@@ -57,6 +75,7 @@ class Campaign(models.Model):
     target_batches = models.ManyToManyField('contacts.ContactBatch', blank=True, help_text="If selected, only send to these batches. Otherwise send to entire list.")
     advance_campaign = models.ForeignKey(AdvanceCampaign, on_delete=models.CASCADE, related_name='campaigns', null=True, blank=True)
     podcast_sender = models.ForeignKey(PodcastSender, on_delete=models.SET_NULL, null=True, blank=True, help_text="Sender details injected into Universal Podcast Template")
+    conference = models.ForeignKey(Conference, on_delete=models.SET_NULL, null=True, blank=True, help_text="Selected conference injected into templates")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     scheduled_at = models.DateTimeField(null=True, blank=True)
     sent_at = models.DateTimeField(null=True, blank=True)
