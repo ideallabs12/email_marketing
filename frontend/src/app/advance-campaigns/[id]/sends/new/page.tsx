@@ -120,11 +120,16 @@ export default function NewSendPage() {
   }, [templates, selectedTemplate]);
 
   const isUniversalInvite = useMemo(() => {
-    return currentTemplate?.name?.toUpperCase() === 'UNIVERSAL_CONFERENCE_INVITE';
+    const n = currentTemplate?.name?.toUpperCase() || '';
+    return n.includes('UNIVERSAL_CONFERENCE_INVITE') || n.includes('SECOND_SERIES');
   }, [currentTemplate]);
 
   const isInviteMode = useMemo(() => {
-    return templateCategory === 'INVITE' || isUniversalInvite || !!selectedConference || !!selectedCompany;
+    return templateCategory === 'SECOND_SERIES' || 
+           templateCategory === 'INVITE' || 
+           isUniversalInvite || 
+           !!selectedConference || 
+           !!selectedCompany;
   }, [templateCategory, isUniversalInvite, selectedConference, selectedCompany]);
 
   const handleCompanyChange = (company: string) => {
@@ -141,15 +146,34 @@ export default function NewSendPage() {
         setFromEmail(`${match.name} <${match.email}>`);
       }
     }
+
+    // Auto-select corresponding company template if available
+    if (company) {
+      const compTpl = templates.find(t => 
+        t.name.toUpperCase().includes('SECOND_SERIES') && 
+        t.name.toUpperCase().includes(company.toUpperCase())
+      );
+      if (compTpl) {
+        setSelectedTemplate(String(compTpl.id));
+      }
+    }
   };
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const cat = e.target.value;
     setTemplateCategory(cat);
     setSelectedTemplate('');
-    // Auto-select UNIVERSAL_CONFERENCE_INVITE when picking INVITE category
-    if (cat === 'INVITE') {
-      const uTpl = templates.find(t => t.name.toUpperCase() === 'UNIVERSAL_CONFERENCE_INVITE');
+    
+    if (cat === 'SECOND_SERIES') {
+      const uTpl = templates.find(t => 
+        t.name.toUpperCase().includes('SECOND_SERIES') || 
+        t.name.toUpperCase().includes('UNIVERSAL_CONFERENCE')
+      );
+      if (uTpl) {
+        setSelectedTemplate(String(uTpl.id));
+      }
+    } else if (cat === 'INVITE') {
+      const uTpl = templates.find(t => t.name.toUpperCase().includes('INVITE'));
       if (uTpl) {
         setSelectedTemplate(String(uTpl.id));
       }
@@ -157,9 +181,18 @@ export default function NewSendPage() {
   };
 
   const filteredTemplates = templates.filter(t => {
-    if (templateCategory === 'INVITE') return t.name.toLowerCase().includes('invite') && !t.name.toLowerCase().includes('podcast');
-    if (templateCategory === 'FOLLOWUP') return t.name.toLowerCase().includes('followup');
-    if (templateCategory === 'PODCAST') return t.name.toLowerCase().includes('podcast');
+    const tName = t.name.toLowerCase();
+    if (templateCategory === 'SECOND_SERIES') {
+      return tName.includes('second_series') || 
+             tName.includes('secondseries') || 
+             tName.includes('second series') || 
+             tName.includes('universal_conference');
+    }
+    if (templateCategory === 'INVITE') {
+      return tName.includes('invite') && !tName.includes('podcast');
+    }
+    if (templateCategory === 'FOLLOWUP') return tName.includes('followup');
+    if (templateCategory === 'PODCAST') return tName.includes('podcast');
     return true;
   });
 
@@ -257,6 +290,7 @@ export default function NewSendPage() {
               className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
             >
               <option value="">All Templates</option>
+              <option value="SECOND_SERIES">Second Series Templates</option>
               <option value="INVITE">Invite Templates</option>
               <option value="FOLLOWUP">Follow-up Templates</option>
               <option value="PODCAST">Podcast Templates</option>

@@ -239,6 +239,14 @@ def send_campaign_emails(self, campaign_id: int):
                         context.update(palette)
                         break
 
+            # If conference not set, derive company_name from sender/from_email
+            if not campaign.conference:
+                from_str = (campaign.from_email or '').upper().replace(' ', '').replace('-', '')
+                for key in COMPANY_PALETTES.keys():
+                    if key in from_str:
+                        context['company_name'] = key
+                        break
+
             # Brand color palette fallback if not yet resolved
             if 'accent_color' not in context or not context.get('accent_color'):
                 brand_str = (context.get('company_name') or campaign.from_email or '').upper().replace(' ', '').replace('-', '')
