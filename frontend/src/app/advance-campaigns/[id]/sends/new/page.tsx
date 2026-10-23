@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Card from '../../../../../components/Card';
 import Button from '../../../../../components/Button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { apiClient } from '../../../../../services/apiClient';
-import { AdvanceCampaign, EmailTemplate, ContactBatch } from '../../../../../types';
+import { AdvanceCampaign, EmailTemplate, ContactBatch, Conference } from '../../../../../types';
 
 export default function NewSendPage() {
   const router = useRouter();
@@ -18,7 +18,7 @@ export default function NewSendPage() {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [senders, setSenders] = useState<{name: string, email: string}[]>([]);
   const [batches, setBatches] = useState<ContactBatch[]>([]);
-
+  const [conferences, setConferences] = useState<Conference[]>([]);
 
   const [loading, setLoading] = useState(true);
 
@@ -28,6 +28,9 @@ export default function NewSendPage() {
   const [templateCategory, setTemplateCategory] = useState('');
   const [fromEmail, setFromEmail] = useState('');
 
+  // Company & Conference dynamic selection
+  const [selectedCompany, setSelectedCompany] = useState('');
+  const [selectedConference, setSelectedConference] = useState('');
 
   const [selectedBatches, setSelectedBatches] = useState<number[]>([]);
   const [createError, setCreateError] = useState('');
@@ -38,17 +41,15 @@ export default function NewSendPage() {
     async function loadData() {
       setLoading(true);
       try {
-        const [campaignRes, templatesRes, sendersRes] = await Promise.all([
+        const [campaignRes, templatesRes, sendersRes, conferencesRes] = await Promise.all([
           apiClient.get(`/api/v1/advance-campaigns/${id}/`),
           apiClient.get('/api/v1/templates/?limit=10000'),
           apiClient.get('/api/v1/senders/'),
-
-
+          apiClient.get('/api/v1/conferences/?limit=10000'),
         ]);
         setAdvCampaign(campaignRes);
         setTemplates(templatesRes.results || []);
-
-
+        setConferences(conferencesRes.results || conferencesRes || []);
         
         const sendersData = sendersRes || [];
         setSenders(sendersData);
@@ -94,6 +95,51 @@ export default function NewSendPage() {
     checkDuplicate();
   }, [advCampaign, selectedTemplate, fromEmail, selectedBatches]);
 
+  // Derived company list
+  const availableCompanies = useMemo(() => {
+    const set = new Set<string>();
+    conferences.forEach(c => {
+      if (c.company_name) set.add(c.company_name);
+    });
+    return Array.from(set).sort();
+  }, [conferences]);
+
+  // Conferences filtered by company
+  const filteredConferences = useMemo(() => {
+    if (!selectedCompany) return conferences;
+    return conferences.filter(c => c.company_name.toLowerCase() === selectedCompany.toLowerCase());
+  }, [conferences, selectedCompany]);
+
+  // Active conference details
+  const activeConference = useMemo(() => {
+    return conferences.find(c => String(c.id) === String(selectedConference));
+  }, [conferences, selectedConference]);
+
+  const handleCompanyChange = (company: string) => {
+    setSelectedCompany(company);
+    setSelectedConference('');
+
+    // Pre-select matching sender if available
+    if (company && senders.length > 0) {
+      const match = senders.find(s => 
+        s.name.toUpperCase().includes(company.toUpperCase()) || 
+        s.email.toUpperCase().includes(company.toUpperCase())
+      );
+      if (match) {
+        setFromEmail(`${match.name} <${match.email}>`);
+      }
+    }
+
+    // Auto-select UNIVERSAL_CONFERENCE_INVITE if not already selected
+    if (!selectedTemplate) {
+      const universalTpl = templates.find(t => t.name.toUpperCase() === 'UNIVERSAL_CONFERENCE_INVITE');
+      if (universalTpl) {
+        setSelectedTemplate(String(universalTpl.id));
+        setTemplateCategory('INVITE');
+      }
+    }
+  };
+
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setTemplateCategory(e.target.value);
     setSelectedTemplate('');
@@ -117,12 +163,11 @@ export default function NewSendPage() {
 
     setIsSubmitting(true);
     try {
-      // Auto-generate name based on Option 3
       const catName = templateCategory 
         ? templateCategory.charAt(0) + templateCategory.slice(1).toLowerCase() 
         : 'Blast';
       
-      const compName = fromEmail.split(' ')[0] || 'UnknownBrand';
+      const compName = selectedCompany || (fromEmail.split(' ')[0] || 'UnknownBrand');
 
       const dateStr = new Date().toLocaleDateString('en-US', { 
         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
@@ -138,7 +183,7 @@ export default function NewSendPage() {
         target_batches: selectedBatches,
         template: Number(selectedTemplate),
         advance_campaign: advCampaign.id,
-
+        conference: selectedConference ? Number(selectedConference) : null,
         status: 'draft',
       });
       router.push(`/advance-campaigns/${advCampaign.id}`);
@@ -171,6 +216,77 @@ export default function NewSendPage() {
               {createError}
             </div>
           )}
+
+          {/* ── Conference & Company Selector ── */}
+          <div className="p-4 bg-muted/40 rounded-xl border border-border/80 space-y-4">
+            <div className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-primary" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-foreground/80">Conference Selection (Dynamic Invite)</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Company dropdown */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold text-foreground/60">Company / Brand</label>
+                <select
+                  value={selectedCompany}
+                  onChange={e => handleCompanyChange(e.target.value)}
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                >
+                  <option value="">-- All Companies --</option>
+                  {availableCompanies.map(comp => (
+                    <option key={comp} value={comp}>{comp}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Conference dropdown */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold text-foreground/60">Conference</label>
+                <select
+                  value={selectedConference}
+                  onChange={e => setSelectedConference(e.target.value)}
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                >
+                  <option value="">
+                    {selectedCompany ? `-- Select Conference for ${selectedCompany} --` : '-- Select Conference --'}
+                  </option>
+                  {filteredConferences.map(conf => (
+                    <option key={conf.id} value={conf.id}>
+                      {conf.conference_name} ({conf.venue})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Conference Details Card Preview */}
+            {activeConference && (
+              <div className="p-3 rounded-lg bg-background border border-primary/20 text-xs space-y-2 mt-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-foreground text-sm">{activeConference.conference_name}</span>
+                  <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium text-[10px]">
+                    {activeConference.company_name}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 text-foreground/70">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-foreground/50" />
+                    {activeConference.date}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-foreground/50" />
+                    {activeConference.venue}
+                  </span>
+                </div>
+                {activeConference.theme && (
+                  <p className="text-foreground/60 italic text-[11px]">
+                    &ldquo;{activeConference.theme}&rdquo;
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Sender Email</label>
@@ -212,14 +328,12 @@ export default function NewSendPage() {
             >
               <option value="">-- Select Template --</option>
               {filteredTemplates.map(t => (
-                <option key={t.id} value={t.id}>{t.name}</option>
+                <option key={t.id} value={t.id}>
+                  {t.name === 'UNIVERSAL_CONFERENCE_INVITE' ? '✨ UNIVERSAL_CONFERENCE_INVITE (Dynamic Brand Themes)' : t.name}
+                </option>
               ))}
             </select>
           </div>
-
-
-
-
 
           <div className="space-y-3">
             <div>

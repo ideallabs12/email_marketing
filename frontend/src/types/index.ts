@@ -57,6 +57,7 @@ export interface Campaign {
   target_list: number;
   target_batches?: number[];
   advance_campaign?: number | null;
+  conference?: number | null;
   status: 'draft' | 'scheduled' | 'sending' | 'sent' | 'failed';
   from_email: string;
   scheduled_at: string | null;
@@ -65,6 +66,20 @@ export interface Campaign {
   tracking_id?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface Conference {
+  id: number;
+  company_name: string;
+  conference_name: string;
+  date: string;
+  venue: string;
+  calendly_link?: string;
+  website_link?: string;
+  linkedin_link?: string;
+  theme?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface AdvanceCampaign {
