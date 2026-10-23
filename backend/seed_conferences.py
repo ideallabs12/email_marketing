@@ -106,6 +106,18 @@ conferences_data = [
         'theme': 'Amplifying Voices That Change The World',
     },
 
+    # ── WYNXTALKS ───────────────────────────────────────────────────────
+    {
+        'company_name': 'WYNXTALKS',
+        'conference_name': 'WynxTalks International Leadership Summit 2027',
+        'date': 'July 14–16, 2027',
+        'venue': 'Berlin, Germany',
+        'calendly_link': 'https://calendly.com/wynxtalks',
+        'website_link': 'https://www.wynxtalks.org',
+        'linkedin_link': 'https://www.linkedin.com/company/wynxtalks/',
+        'theme': 'Empowering Global Voices & Creative Leadership',
+    },
+
     # ── SIGNATURE ───────────────────────────────────────────────────────
     {
         'company_name': 'SIGNATURE',

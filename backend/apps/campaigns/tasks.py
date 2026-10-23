@@ -42,6 +42,82 @@ def render_template(template_str, context):
     return result
 
 
+COMPANY_PALETTES = {
+    'NEXT': {
+        'gradient_start': '#05070F',
+        'gradient_mid': '#0A1A3A',
+        'gradient_end': '#1E2A78',
+        'company_tag_color': '#67E8F9',
+        'subtitle_color': '#E0F2FE',
+        'accent_color': '#22D3EE',
+        'button_text_color': '#04202B',
+    },
+    'PROSUMMITS': {
+        'gradient_start': '#060B16',
+        'gradient_mid': '#0F1A33',
+        'gradient_end': '#1B2A52',
+        'company_tag_color': '#FBBF24',
+        'subtitle_color': '#E2E8F0',
+        'accent_color': '#F59E0B',
+        'button_text_color': '#1A1005',
+    },
+    'ICON': {
+        'gradient_start': '#0B3A66',
+        'gradient_mid': '#1F6FB5',
+        'gradient_end': '#3B8FD0',
+        'company_tag_color': '#BAE6FD',
+        'subtitle_color': '#F0F9FF',
+        'accent_color': '#7DD3FC',
+        'button_text_color': '#082F49',
+    },
+    'WYNXTALKS': {
+        'gradient_start': '#12080F',
+        'gradient_mid': '#3A1030',
+        'gradient_end': '#7A1F5C',
+        'company_tag_color': '#F9A8D4',
+        'subtitle_color': '#E5E7EB',
+        'accent_color': '#F472B6',
+        'button_text_color': '#2A0A1E',
+    },
+    'WYN': {
+        'gradient_start': '#0F2E6B',
+        'gradient_mid': '#1B6FB0',
+        'gradient_end': '#2E9BD6',
+        'company_tag_color': '#A5F3FC',
+        'subtitle_color': '#FFFFFF',
+        'accent_color': '#2BB5C8',
+        'button_text_color': '#062033',
+    },
+    'IDIAS': {
+        'gradient_start': '#7C2D12',
+        'gradient_mid': '#C2410C',
+        'gradient_end': '#EA580C',
+        'company_tag_color': '#FED7AA',
+        'subtitle_color': '#FFF7ED',
+        'accent_color': '#F97316',
+        'button_text_color': '#1F0A02',
+    },
+    'VOICETALKS': {
+        'gradient_start': '#050509',
+        'gradient_mid': '#2A1048',
+        'gradient_end': '#5B21B6',
+        'company_tag_color': '#E879F9',
+        'subtitle_color': '#E5E7EB',
+        'accent_color': '#C026D3',
+        'button_text_color': '#FFFFFF',
+    },
+    'SIGNATURE': {
+        'gradient_start': '#0A0E1A',
+        'gradient_mid': '#1A243B',
+        'gradient_end': '#2A3A5E',
+        'company_tag_color': '#93C5FD',
+        'subtitle_color': '#E2E8F0',
+        'accent_color': '#3B82F6',
+        'button_text_color': '#FFFFFF',
+    },
+}
+
+
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def send_campaign_emails(self, campaign_id: int):
     """Send a campaign and retain a per-recipient delivery record."""
@@ -49,7 +125,7 @@ def send_campaign_emails(self, campaign_id: int):
     from apps.tracking.models import CampaignPerformance, CampaignRecipientStatus
 
     try:
-        campaign = Campaign.objects.select_related('template', 'target_list', 'podcast_sender').get(id=campaign_id)
+        campaign = Campaign.objects.select_related('template', 'target_list', 'podcast_sender', 'conference').get(id=campaign_id)
     except Campaign.DoesNotExist:
         logger.error("Campaign %s not found.", campaign_id)
         return
@@ -142,9 +218,38 @@ def send_campaign_emails(self, campaign_id: int):
                     'physical_address': sender.physical_address,
                     'current_year': str(timezone.now().year),
                 })
-            
 
-            
+            # Inject Conference fields if selected
+            if campaign.conference:
+                conf = campaign.conference
+                context.update({
+                    'company_name': conf.company_name,
+                    'conference_name': conf.conference_name,
+                    'conference_date': conf.date,
+                    'conference_venue': conf.venue,
+                    'conference_theme': conf.theme or '',
+                    'conference_website': conf.website_link or '',
+                    'scheduling_link': conf.calendly_link or context.get('scheduling_link', ''),
+                    'linkedin_url': conf.linkedin_link or context.get('linkedin_url', ''),
+                    'website_url': conf.website_link or context.get('website_url', ''),
+                })
+                conf_co = conf.company_name.upper().replace(' ', '').replace('-', '')
+                for key, palette in COMPANY_PALETTES.items():
+                    if key in conf_co:
+                        context.update(palette)
+                        break
+
+            # Brand color palette fallback if not yet resolved
+            if 'accent_color' not in context or not context.get('accent_color'):
+                brand_str = (context.get('company_name') or campaign.from_email or '').upper().replace(' ', '').replace('-', '')
+                for key, palette in COMPANY_PALETTES.items():
+                    if key in brand_str:
+                        context.update(palette)
+                        break
+
+            if 'current_year' not in context:
+                context['current_year'] = str(timezone.now().year)
+
             from django.core import signing
 
             base_url = 'https://outreach.idealab-vizag.com'
