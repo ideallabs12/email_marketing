@@ -4,7 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Card from '../../../../../components/Card';
 import Button from '../../../../../components/Button';
-import { ArrowLeft, Building2, Calendar, MapPin } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, MapPin, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { apiClient } from '../../../../../services/apiClient';
 import { AdvanceCampaign, EmailTemplate, ContactBatch, Conference } from '../../../../../types';
@@ -115,6 +115,18 @@ export default function NewSendPage() {
     return conferences.find(c => String(c.id) === String(selectedConference));
   }, [conferences, selectedConference]);
 
+  const currentTemplate = useMemo(() => {
+    return templates.find(t => String(t.id) === String(selectedTemplate));
+  }, [templates, selectedTemplate]);
+
+  const isUniversalInvite = useMemo(() => {
+    return currentTemplate?.name?.toUpperCase() === 'UNIVERSAL_CONFERENCE_INVITE';
+  }, [currentTemplate]);
+
+  const isInviteMode = useMemo(() => {
+    return templateCategory === 'INVITE' || isUniversalInvite || !!selectedConference || !!selectedCompany;
+  }, [templateCategory, isUniversalInvite, selectedConference, selectedCompany]);
+
   const handleCompanyChange = (company: string) => {
     setSelectedCompany(company);
     setSelectedConference('');
@@ -129,20 +141,19 @@ export default function NewSendPage() {
         setFromEmail(`${match.name} <${match.email}>`);
       }
     }
-
-    // Auto-select UNIVERSAL_CONFERENCE_INVITE if not already selected
-    if (!selectedTemplate) {
-      const universalTpl = templates.find(t => t.name.toUpperCase() === 'UNIVERSAL_CONFERENCE_INVITE');
-      if (universalTpl) {
-        setSelectedTemplate(String(universalTpl.id));
-        setTemplateCategory('INVITE');
-      }
-    }
   };
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setTemplateCategory(e.target.value);
+    const cat = e.target.value;
+    setTemplateCategory(cat);
     setSelectedTemplate('');
+    // Auto-select UNIVERSAL_CONFERENCE_INVITE when picking INVITE category
+    if (cat === 'INVITE') {
+      const uTpl = templates.find(t => t.name.toUpperCase() === 'UNIVERSAL_CONFERENCE_INVITE');
+      if (uTpl) {
+        setSelectedTemplate(String(uTpl.id));
+      }
+    }
   };
 
   const filteredTemplates = templates.filter(t => {
@@ -158,6 +169,11 @@ export default function NewSendPage() {
 
     if (!selectedTemplate || !advCampaign) {
       setCreateError('Please fill in all required fields.');
+      return;
+    }
+
+    if (isUniversalInvite && !selectedConference) {
+      setCreateError('Please select a Company and Conference for the Universal Conference Invite template.');
       return;
     }
 
@@ -217,77 +233,6 @@ export default function NewSendPage() {
             </div>
           )}
 
-          {/* ── Conference & Company Selector ── */}
-          <div className="p-4 bg-muted/40 rounded-xl border border-border/80 space-y-4">
-            <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-primary" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-foreground/80">Conference Selection (Dynamic Invite)</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Company dropdown */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-foreground/60">Company / Brand</label>
-                <select
-                  value={selectedCompany}
-                  onChange={e => handleCompanyChange(e.target.value)}
-                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-                >
-                  <option value="">-- All Companies --</option>
-                  {availableCompanies.map(comp => (
-                    <option key={comp} value={comp}>{comp}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Conference dropdown */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-foreground/60">Conference</label>
-                <select
-                  value={selectedConference}
-                  onChange={e => setSelectedConference(e.target.value)}
-                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-                >
-                  <option value="">
-                    {selectedCompany ? `-- Select Conference for ${selectedCompany} --` : '-- Select Conference --'}
-                  </option>
-                  {filteredConferences.map(conf => (
-                    <option key={conf.id} value={conf.id}>
-                      {conf.conference_name} ({conf.venue})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Conference Details Card Preview */}
-            {activeConference && (
-              <div className="p-3 rounded-lg bg-background border border-primary/20 text-xs space-y-2 mt-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-foreground text-sm">{activeConference.conference_name}</span>
-                  <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium text-[10px]">
-                    {activeConference.company_name}
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center gap-3 text-foreground/70">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-foreground/50" />
-                    {activeConference.date}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-foreground/50" />
-                    {activeConference.venue}
-                  </span>
-                </div>
-                {activeConference.theme && (
-                  <p className="text-foreground/60 italic text-[11px]">
-                    &ldquo;{activeConference.theme}&rdquo;
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Sender Email</label>
             <select
@@ -334,6 +279,93 @@ export default function NewSendPage() {
               ))}
             </select>
           </div>
+
+          {/* ── Conference & Company Selector (Placed right below template!) ── */}
+          {(isInviteMode || isUniversalInvite || conferences.length > 0) && (
+            <div className={`p-4 rounded-xl border transition-all space-y-4 ${
+              isUniversalInvite 
+                ? 'bg-primary/5 border-primary/40 shadow-sm' 
+                : 'bg-muted/40 border-border/80'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Building2 className={`w-4 h-4 ${isUniversalInvite ? 'text-primary' : 'text-foreground/70'}`} />
+                  <span className="text-xs font-semibold uppercase tracking-wider text-foreground/90">
+                    Conference &amp; Brand Selection
+                  </span>
+                </div>
+                {isUniversalInvite && (
+                  <span className="flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                    <Sparkles className="w-3 h-3" />
+                    Required for Universal Invite
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Company dropdown */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-foreground/70">1. Select Company / Brand</label>
+                  <select
+                    value={selectedCompany}
+                    onChange={e => handleCompanyChange(e.target.value)}
+                    className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                  >
+                    <option value="">-- Choose Company --</option>
+                    {availableCompanies.map(comp => (
+                      <option key={comp} value={comp}>{comp}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Conference dropdown */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-foreground/70">2. Select Conference</label>
+                  <select
+                    value={selectedConference}
+                    onChange={e => setSelectedConference(e.target.value)}
+                    className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                  >
+                    <option value="">
+                      {selectedCompany ? `-- Select Conference for ${selectedCompany} --` : '-- Select Conference --'}
+                    </option>
+                    {filteredConferences.map(conf => (
+                      <option key={conf.id} value={conf.id}>
+                        {conf.conference_name} ({conf.venue})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Conference Details Card Preview */}
+              {activeConference && (
+                <div className="p-3 rounded-lg bg-background border border-primary/20 text-xs space-y-2 mt-2 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-foreground text-sm">{activeConference.conference_name}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium text-[10px]">
+                      {activeConference.company_name}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 text-foreground/70">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5 text-foreground/50" />
+                      {activeConference.date}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-foreground/50" />
+                      {activeConference.venue}
+                    </span>
+                  </div>
+                  {activeConference.theme && (
+                    <p className="text-foreground/60 italic text-[11px]">
+                      &ldquo;{activeConference.theme}&rdquo;
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="space-y-3">
             <div>
