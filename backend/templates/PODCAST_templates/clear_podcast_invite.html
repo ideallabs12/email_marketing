@@ -49,6 +49,7 @@
             margin: 0;
             padding: 0;
             background-color: #070A12;
+            background-image: linear-gradient(#070A12, #070A12);
         }
 
         a {
@@ -82,10 +83,44 @@
             text-decoration: none;
         }
 
+        /* Prevent Gmail from inverting hero text */
+        .hero-title {
+            color: #FFFFFF !important;
+            -webkit-text-fill-color: #FFFFFF !important;
+            text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9) !important;
+        }
+
+        .hero-label {
+            color: #F5B942 !important;
+            -webkit-text-fill-color: #F5B942 !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+        }
+
+        .hero-sub {
+            color: #C7D2FE !important;
+            -webkit-text-fill-color: #C7D2FE !important;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85) !important;
+        }
+
         @media only screen and (max-width: 600px) {
+            .outer-cell {
+                padding: 0 !important;
+            }
+
             .container {
                 width: 100% !important;
                 max-width: 100% !important;
+                border-radius: 0 !important;
+            }
+
+            .hero-pad {
+                border-radius: 0 !important;
+                padding-top: 34px !important;
+                padding-bottom: 30px !important;
+            }
+
+            .footer-pad {
+                border-radius: 0 !important;
             }
 
             .fluid-pad {
@@ -212,24 +247,25 @@
     <table role="presentation" class="body-bg" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#070A12"
         style="background-color:#070A12; width:100%;">
         <tr>
-            <td align="center" style="padding:24px 12px;">
+            <td class="outer-cell" align="center" style="padding:24px 0;">
 
                 <!--[if mso]><table role="presentation" align="center" width="600" border="0" cellpadding="0" cellspacing="0"><tr><td><![endif]-->
                 <table role="presentation" class="container card-bg" width="600" border="0" cellpadding="0"
                     cellspacing="0" bgcolor="#0B0F19"
-                    style="width:100%; max-width:600px; background-color:#0B0F19; border-radius:16px;">
+                    style="width:100%; max-width:600px; background-color:#0B0F19; background-image:linear-gradient(#0B0F19, #0B0F19); border-radius:16px; overflow:hidden;">
 
                     <!-- HERO -->
                     <tr>
                         <td class="hero-pad fluid-pad" align="left" bgcolor="#1E1B4B"
                             style="padding:44px 40px 38px 40px; background-color:#1E1B4B; background-image:linear-gradient(135deg,#0F172A 0%,#1E1B4B 50%,#312E81 100%); border-radius:16px 16px 0 0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                            <p
-                                style="margin:0 0 12px 0; font-size:14px; line-height:20px; font-weight:600; color:#F5B942;">
-                                An invitation for {{ first_name }}</p>
+                            <p class="hero-label"
+                                style="margin:0 0 12px 0; font-size:13px; line-height:18px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#F5B942 !important; -webkit-text-fill-color:#F5B942 !important; text-shadow:0 1px 2px rgba(0,0,0,0.85);">
+                                A Personal Invitation</p>
                             <h1 class="hero-title"
-                                style="margin:0; font-size:42px; line-height:48px; font-weight:800; color:#FFFFFF; letter-spacing:-0.5px;">
+                                style="margin:0; font-size:42px; line-height:48px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; text-shadow:0 1px 6px rgba(0,0,0,0.9); letter-spacing:-0.5px;">
                                 The Dr.&nbsp;P Podcast</h1>
-                            <p style="margin:14px 0 0 0; font-size:17px; line-height:26px; color:#C7D2FE;">Your story.
+                            <p class="hero-sub"
+                                style="margin:14px 0 0 0; font-size:17px; line-height:26px; color:#C7D2FE !important; -webkit-text-fill-color:#C7D2FE !important; text-shadow:0 1px 3px rgba(0,0,0,0.85);">Your story.
                                 Your pictures. Your voice. Your legacy.</p>
                         </td>
                     </tr>
@@ -245,7 +281,7 @@
                             style="padding:36px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
                             <p class="t-main"
                                 style="margin:0 0 16px 0; font-size:17px; line-height:27px; font-weight:600; color:#F3F4F6;">
-                                Dear {{ first_name }},</p>
+                                {{ greeting }}</p>
                             <p class="t-body"
                                 style="margin:0 0 20px 0; font-size:16px; line-height:26px; color:#CBD5E1;">I hope you
                                 are doing well.</p>
@@ -564,7 +600,7 @@
                             style="height:1px; line-height:1px; font-size:1px; background-color:#1F2937;">&nbsp;</td>
                     </tr>
                     <tr>
-                        <td class="fluid-pad" align="center" bgcolor="#080B14"
+                        <td class="fluid-pad footer-pad" align="center" bgcolor="#080B14"
                             style="padding:26px 40px 30px 40px; background-color:#080B14; border-radius:0 0 16px 16px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
                             <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center">
                                 <tr>
