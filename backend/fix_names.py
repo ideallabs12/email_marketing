@@ -11,12 +11,12 @@ for blast in blasts:
     cat_name = 'Blast'
     if template and template.name:
         name_lower = template.name.lower()
-        if 'invite' in name_lower:
+        if 'podcast' in name_lower:
+            cat_name = 'Podcast'
+        elif 'invite' in name_lower:
             cat_name = 'Invite'
         elif 'followup' in name_lower:
             cat_name = 'Followup'
-        elif 'podcast' in name_lower:
-            cat_name = 'Podcast'
             
     brand_name = 'UnknownBrand'
     if blast.podcast_sender:

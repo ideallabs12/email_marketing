@@ -7,7 +7,7 @@ import {
   Loader2, Sparkles, X
 } from 'lucide-react';
 import { apiClient } from '@/services/apiClient';
-import { getLinkBadgeStyle } from '@/utils/linkStyles';
+import { getLinkBadgeStyle, formatLinkName } from '@/utils/linkStyles';
 import Link from 'next/link';
 
 export interface TrackerCampaignItem {
@@ -587,7 +587,7 @@ function CampaignTrackerContent() {
                                       key={li}
                                       className={`px-1.5 py-0.5 text-[10px] rounded border break-all ${getLinkBadgeStyle(trimmed)}`}
                                     >
-                                      {trimmed}
+                                      {formatLinkName(trimmed)}
                                     </span>
                                   );
                                 })}
@@ -719,7 +719,7 @@ function CampaignTrackerContent() {
                                             key={li}
                                             className={`px-1.5 py-0.2 text-[10px] rounded border ${getLinkBadgeStyle(trimmed)}`}
                                           >
-                                            {trimmed}
+                                            {formatLinkName(trimmed)}
                                           </span>
                                         );
                                       })}

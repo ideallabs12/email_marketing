@@ -36,6 +36,22 @@ def format_campaign_target(campaign):
         target_display = targeted_batch
     return list_name, targeted_batch, target_display
 
+def extract_link_domain(link):
+    if not link:
+        return ""
+    link_str = str(link).strip()
+    link_lower = link_str.lower()
+    if "unsubscribe" in link_lower or "outreach.idealab-vizag.com" in link_lower:
+        return "unsubscribe"
+    try:
+        domain = urlparse(link_str).netloc.replace('www.', '')
+        domain = domain.split('.')[0] if domain else link_str
+        if domain.lower() == 'outreach':
+            return 'unsubscribe'
+        return domain
+    except Exception:
+        return link_str
+
 class PublicAdvanceCampaignView(views.APIView):
     permission_classes = [AllowAny]
 
@@ -216,14 +232,9 @@ class PublicAdvanceCampaignView(views.APIView):
                     status_val = item.status
                     links = []
                     for link in item.clicked_links:
-                        try:
-                            domain = urlparse(link).netloc.replace('www.', '')
-                            domain = domain.split('.')[0] if domain else str(link)
-                            if domain and domain not in links:
-                                links.append(domain)
-                        except Exception:
-                            if link and str(link) not in links:
-                                links.append(str(link))
+                        domain = extract_link_domain(link)
+                        if domain and domain not in links:
+                            links.append(domain)
                     links_str = ", ".join(links)
                     opened_at = item.opened_at.isoformat() if item.opened_at else None
                     clicked_at = item.clicked_at.isoformat() if item.clicked_at else None
@@ -344,14 +355,9 @@ class PublicCampaignAnalyticsView(views.APIView):
                 status_val = item.status
                 links = []
                 for link in item.clicked_links:
-                    try:
-                        domain = urlparse(link).netloc.replace('www.', '')
-                        domain = domain.split('.')[0] if domain else str(link)
-                        if domain and domain not in links:
-                            links.append(domain)
-                    except Exception:
-                        if link and str(link) not in links:
-                            links.append(str(link))
+                    domain = extract_link_domain(link)
+                    if domain and domain not in links:
+                        links.append(domain)
                 links_str = ", ".join(links)
                 opened_at = item.opened_at.isoformat() if item.opened_at else None
                 clicked_at = item.clicked_at.isoformat() if item.clicked_at else None
@@ -577,15 +583,9 @@ class CampaignAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
                 status = item.status
                 links = []
                 for link in item.clicked_links:
-                    try:
-                        domain = urlparse(link).netloc
-                        domain = domain.replace('www.', '')
-                        domain = domain.split('.')[0] if domain else str(link)
-                        if domain and domain not in links:
-                            links.append(domain)
-                    except Exception:
-                        if link and str(link) not in links:
-                            links.append(str(link))
+                    domain = extract_link_domain(link)
+                    if domain and domain not in links:
+                        links.append(domain)
                 links_str = ", ".join(links)
             else:
                 status = 'pending'
@@ -970,14 +970,9 @@ class PublicMasterLinkRecentsView(views.APIView):
 
             links = []
             for link in item.clicked_links:
-                try:
-                    domain = urlparse(link).netloc.replace('www.', '')
-                    domain = domain.split('.')[0] if domain else str(link)
-                    if domain and domain not in links:
-                        links.append(domain)
-                except Exception:
-                    if link and str(link) not in links:
-                        links.append(str(link))
+                domain = extract_link_domain(link)
+                if domain and domain not in links:
+                    links.append(domain)
             links_str = ", ".join(links)
 
             data.append({
@@ -1197,14 +1192,9 @@ def get_campaign_tracker_data(search):
 
             links = []
             for link in (rs.clicked_links or []):
-                try:
-                    domain = urlparse(link).netloc.replace('www.', '')
-                    domain = domain.split('.')[0] if domain else str(link)
-                    if domain and domain not in links:
-                        links.append(domain)
-                except Exception:
-                    if link and str(link) not in links:
-                        links.append(str(link))
+                domain = extract_link_domain(link)
+                if domain and domain not in links:
+                    links.append(domain)
             links_str = ", ".join(links)
 
             template_name = camp.template.name if camp.template else '—'

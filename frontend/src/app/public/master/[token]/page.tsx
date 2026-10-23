@@ -6,7 +6,7 @@ import {
   Lock, Eye, EyeOff, Loader2, ExternalLink, Mail, Clock, Layers, X, Copy, Check, Sparkles
 } from 'lucide-react';
 import { getCampaignUrl } from '@/utils/slug';
-import { getLinkBadgeStyle } from '@/utils/linkStyles';
+import { getLinkBadgeStyle, formatLinkName } from '@/utils/linkStyles';
 
 interface BlastSummary {
   id: number;
@@ -1054,7 +1054,7 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                                       key={li}
                                       className={`px-1.5 py-0.5 text-[10px] rounded border break-all ${getLinkBadgeStyle(trimmed)}`}
                                     >
-                                      {trimmed}
+                                      {formatLinkName(trimmed)}
                                     </span>
                                   );
                                 })}
@@ -1139,7 +1139,7 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                                         key={li}
                                         className={`px-2 py-0.5 text-[10px] rounded-md border break-all shadow-xs transition-colors ${getLinkBadgeStyle(trimmed)}`}
                                       >
-                                        {trimmed}
+                                        {formatLinkName(trimmed)}
                                       </span>
                                     );
                                   })}
@@ -1305,7 +1305,7 @@ export default function MasterLinkPage({ params }: { params: Promise<{ token: st
                                       key={li}
                                       className={`px-2 py-0.5 text-[10px] rounded-md border break-all shadow-xs transition-colors ${getLinkBadgeStyle(trimmed)}`}
                                     >
-                                      {trimmed}
+                                      {formatLinkName(trimmed)}
                                     </span>
                                   );
                                 })}

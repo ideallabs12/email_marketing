@@ -17,7 +17,7 @@ import {
   Copy,
   Check
 } from 'lucide-react';
-import { getLinkBadgeStyle } from '@/utils/linkStyles';
+import { getLinkBadgeStyle, formatLinkName } from '@/utils/linkStyles';
 
 interface BlastItem {
   id: number;
@@ -669,7 +669,7 @@ export default function PublicCampaignAnalyticsPage({ params }: { params: Promis
                                     key={i}
                                     className={`px-2 py-0.5 text-[10px] rounded-md border break-all shadow-xs transition-colors ${getLinkBadgeStyle(trimmed)}`}
                                   >
-                                    {trimmed}
+                                    {formatLinkName(trimmed)}
                                   </span>
                                 );
                               })}
