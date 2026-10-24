@@ -1,16 +1,18 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml"
+  xmlns:o="urn:schemas-microsoft-com:office:office">
+
 <head>
-<meta charset="utf-8">
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="x-apple-disable-message-reformatting">
-<meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
-<meta name="color-scheme" content="light dark">
-<meta name="supported-color-schemes" content="light dark">
-<title>Speaker invitation from {{ company_name }}</title>
-<!--[if mso]>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Speaker invitation from {{ company_name }}</title>
+  <!--[if mso]>
 <noscript>
 <xml>
   <o:OfficeDocumentSettings>
@@ -23,278 +25,499 @@
   table { border-collapse: collapse !important; }
 </style>
 <![endif]-->
-<style type="text/css">
-  html, body { margin: 0 !important; padding: 0 !important; width: 100% !important; }
-  * { -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
-  table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; }
-  body { margin: 0; padding: 0; background-color: #F3F4F6; }
-  a { text-decoration: none; }
-  a[x-apple-data-detectors], .unstyle-auto-detected-links a, .aBn {
-    border-bottom: 0 !important; cursor: default !important; color: inherit !important;
-    text-decoration: none !important; font-size: inherit !important; font-family: inherit !important;
-    font-weight: inherit !important; line-height: inherit !important;
-  }
-  u + #body a { color: inherit; text-decoration: none; font-size: inherit; font-family: inherit; font-weight: inherit; line-height: inherit; }
-  #MessageViewBody a { color: inherit; text-decoration: none; }
+  <style type="text/css">
+    html,
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+    }
 
-  @media only screen and (max-width: 600px) {
-    .outer-cell { padding: 12px 8px 20px 8px !important; }
-    .container { width: 100% !important; max-width: 100% !important; }
-    .fluid-pad { padding-left: 20px !important; padding-right: 20px !important; }
-    .stack { display: block !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
-    .stack-gap { padding-right: 0 !important; padding-left: 0 !important; padding-bottom: 12px !important; }
-    .hero-title { font-size: 30px !important; line-height: 36px !important; }
-    .hero-pad { padding-top: 34px !important; padding-bottom: 30px !important; }
-    .btn-wrap { width: 100% !important; }
-    .btn-link { display: block !important; width: 100% !important; box-sizing: border-box !important; padding-left: 12px !important; padding-right: 12px !important; }
-  }
+    * {
+      -ms-text-size-adjust: 100%;
+      -webkit-text-size-adjust: 100%;
+    }
 
-  @media (prefers-color-scheme: dark) {
-    body, .body-bg { background-color: #0B0F19 !important; }
-    .body-card { background-color: #151B2B !important; }
-    .panel { background-color: #1C2438 !important; border-color: #2C3752 !important; }
-    .t-main { color: #F3F4F6 !important; }
-    .t-body { color: #D1D5DB !important; }
-    .t-muted { color: #9CA3AF !important; }
-  }
-  [data-ogsc] body, [data-ogsc] .body-bg { background-color: #0B0F19 !important; }
-  [data-ogsc] .body-card { background-color: #151B2B !important; }
-  [data-ogsc] .panel { background-color: #1C2438 !important; }
-  [data-ogsc] .t-main { color: #F3F4F6 !important; }
-  [data-ogsc] .t-body { color: #D1D5DB !important; }
-  [data-ogsc] .t-muted { color: #9CA3AF !important; }
-</style>
+    table,
+    td {
+      mso-table-lspace: 0pt;
+      mso-table-rspace: 0pt;
+      border-collapse: collapse;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #F3F4F6;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    a[x-apple-data-detectors],
+    .unstyle-auto-detected-links a,
+    .aBn {
+      border-bottom: 0 !important;
+      cursor: default !important;
+      color: inherit !important;
+      text-decoration: none !important;
+      font-size: inherit !important;
+      font-family: inherit !important;
+      font-weight: inherit !important;
+      line-height: inherit !important;
+    }
+
+    u+#body a {
+      color: inherit;
+      text-decoration: none;
+      font-size: inherit;
+      font-family: inherit;
+      font-weight: inherit;
+      line-height: inherit;
+    }
+
+    #MessageViewBody a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    @media only screen and (max-width: 600px) {
+      .outer-cell {
+        padding: 12px 8px 20px 8px !important;
+      }
+
+      .container {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+
+      .fluid-pad {
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+      }
+
+      .stack {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+      }
+
+      .stack-gap {
+        padding-right: 0 !important;
+        padding-left: 0 !important;
+        padding-bottom: 12px !important;
+      }
+
+      .hero-title {
+        font-size: 30px !important;
+        line-height: 36px !important;
+      }
+
+      .hero-pad {
+        padding-top: 34px !important;
+        padding-bottom: 30px !important;
+      }
+
+      .btn-wrap {
+        width: 100% !important;
+      }
+
+      .btn-link {
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+
+      body,
+      .body-bg {
+        background-color: #0B0F19 !important;
+      }
+
+      .body-card {
+        background-color: #151B2B !important;
+      }
+
+      .panel {
+        background-color: #1C2438 !important;
+        border-color: #2C3752 !important;
+      }
+
+      .t-main {
+        color: #F3F4F6 !important;
+      }
+
+      .t-body {
+        color: #D1D5DB !important;
+      }
+
+      .t-muted {
+        color: #9CA3AF !important;
+      }
+    }
+
+    [data-ogsc] body,
+    [data-ogsc] .body-bg {
+      background-color: #0B0F19 !important;
+    }
+
+    [data-ogsc] .body-card {
+      background-color: #151B2B !important;
+    }
+
+    [data-ogsc] .panel {
+      background-color: #1C2438 !important;
+    }
+
+    [data-ogsc] .t-main {
+      color: #F3F4F6 !important;
+    }
+
+    [data-ogsc] .t-body {
+      color: #D1D5DB !important;
+    }
+
+    [data-ogsc] .t-muted {
+      color: #9CA3AF !important;
+    }
+  </style>
 </head>
 
 <body id="body" class="body-bg" style="margin:0; padding:0; background-color:#F3F4F6;">
 
-<!-- Preheader -->
-<div style="display:none; max-height:0; overflow:hidden; mso-hide:all;">
-  An invitation to speak at {{ conference_name }} in {{ conference_venue }}, {{ conference_date }}.
-</div>
+  <!-- Preheader -->
+  <div style="display:none; max-height:0; overflow:hidden; mso-hide:all;">
+    An invitation to speak at {{ conference_name }} in {{ conference_venue }}, {{ conference_date }}.
+  </div>
 
-<table role="presentation" class="body-bg" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#F3F4F6" style="background-color:#F3F4F6; width:100%;">
-<tr>
-<td align="center" class="outer-cell" style="padding:24px 12px 28px 12px;">
-
-  <!--[if mso]><table role="presentation" align="center" width="600" border="0" cellpadding="0" cellspacing="0"><tr><td><![endif]-->
-  <table role="presentation" class="container" width="600" border="0" cellpadding="0" cellspacing="0" style="width:100%; max-width:600px;">
-
-    <!-- ================= HERO CARD (standalone, 16px on all corners) ================= -->
+  <table role="presentation" class="body-bg" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#F3F4F6"
+    style="background-color:#F3F4F6; width:100%;">
     <tr>
-      <td class="hero-pad fluid-pad" align="left" bgcolor="{{ gradient_mid|default:'#0A1A3A' }}" style="padding:44px 40px 38px 40px; background-color:{{ gradient_mid|default:'#0A1A3A' }}; background-image:linear-gradient(135deg,{{ gradient_start|default:'#05070F' }} 0%,{{ gradient_mid|default:'#0A1A3A' }} 50%,{{ gradient_end|default:'#1E2A78' }} 100%); border-radius:16px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+      <td align="center" class="outer-cell" style="padding:24px 12px 28px 12px;">
 
-        <p style="margin:0 0 12px 0; font-size:14px; line-height:20px; font-weight:700; color:{{ company_tag_color|default:'#67E8F9' }};">
-          <span style="color:{{ company_tag_color|default:'#67E8F9' }}; background-image:linear-gradient({{ company_tag_color|default:'#67E8F9' }},{{ company_tag_color|default:'#67E8F9' }}); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">{{ company_name }}</span>
-        </p>
+        <!--[if mso]><table role="presentation" align="center" width="600" border="0" cellpadding="0" cellspacing="0"><tr><td><![endif]-->
+        <table role="presentation" class="container" width="600" border="0" cellpadding="0" cellspacing="0"
+          style="width:100%; max-width:600px;">
 
-        <h1 class="hero-title" style="margin:0; font-size:36px; line-height:42px; font-weight:800; color:#FFFFFF; letter-spacing:-0.5px;">
-          <span style="color:#FFFFFF; background-image:linear-gradient(#FFFFFF,#FFFFFF); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">Distinguished Speaker Invitation</span>
-        </h1>
-
-        <p style="margin:14px 0 0 0; font-size:17px; line-height:26px; color:{{ subtitle_color|default:'#E0F2FE' }};">
-          <span style="color:{{ subtitle_color|default:'#E0F2FE' }}; background-image:linear-gradient({{ subtitle_color|default:'#E0F2FE' }},{{ subtitle_color|default:'#E0F2FE' }}); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">{{ conference_venue }} &middot; {{ conference_date }}</span>
-        </p>
-
-        <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin-top:22px;">
-          <tr><td width="72" height="3" bgcolor="{{ accent_color|default:'#22D3EE' }}" style="width:72px; height:3px; line-height:3px; font-size:3px; background-color:{{ accent_color|default:'#22D3EE' }}; border-radius:3px;">&nbsp;</td></tr>
-        </table>
-      </td>
-    </tr>
-
-    <!-- breathing room -->
-    <tr><td height="16" style="height:16px; line-height:16px; font-size:16px;">&nbsp;</td></tr>
-
-    <!-- ================= BODY CARD ================= -->
-    <tr>
-      <td class="body-card" bgcolor="#FFFFFF" style="background-color:#FFFFFF; border-radius:16px;">
-        <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
-
-          <!-- Greeting -->
+          <!-- ================= HERO CARD (standalone, 16px on all corners) ================= -->
           <tr>
-            <td class="fluid-pad" style="padding:36px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-              <p class="t-main" style="margin:0 0 16px 0; font-size:17px; line-height:27px; font-weight:600; color:#111827;">Dear {{ first_name }},</p>
-              <p class="t-body" style="margin:0 0 16px 0; font-size:16px; line-height:26px; color:#374151;">Greetings from {{ company_name }}.</p>
-              <p class="t-body" style="margin:0; font-size:16px; line-height:26px; color:#374151;">
-                We are delighted to invite you to join us as a <strong class="t-main" style="color:#111827;">Distinguished Speaker</strong> at our upcoming {{ conference_name }} in {{ conference_venue }} on {{ conference_date }}.
+            <td class="hero-pad fluid-pad" align="left" bgcolor="{{ gradient_mid|default:'#0A1A3A' }}"
+              style="padding:44px 40px 38px 40px; background-color:{{ gradient_mid|default:'#0A1A3A' }}; background-image:linear-gradient(135deg,{{ gradient_start|default:'#05070F' }} 0%,{{ gradient_mid|default:'#0A1A3A' }} 50%,{{ gradient_end|default:'#1E2A78' }} 100%); border-radius:16px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+
+              <p
+                style="margin:0 0 12px 0; font-size:14px; line-height:20px; font-weight:700; color:{{ company_tag_color|default:'#67E8F9' }};">
+                <span
+                  style="color:{{ company_tag_color|default:'#67E8F9' }}; background-image:linear-gradient({{ company_tag_color|default:'#67E8F9' }},{{ company_tag_color|default:'#67E8F9' }}); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">{{
+                  company_name }}</span>
               </p>
+
+              <h1 class="hero-title"
+                style="margin:0; font-size:36px; line-height:42px; font-weight:800; color:#FFFFFF; letter-spacing:-0.5px;">
+                <span
+                  style="color:#FFFFFF; background-image:linear-gradient(#FFFFFF,#FFFFFF); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">Distinguished
+                  Speaker Invitation</span>
+              </h1>
+
+              <p
+                style="margin:14px 0 0 0; font-size:17px; line-height:26px; color:{{ subtitle_color|default:'#E0F2FE' }};">
+                <span
+                  style="color:{{ subtitle_color|default:'#E0F2FE' }}; background-image:linear-gradient({{ subtitle_color|default:'#E0F2FE' }},{{ subtitle_color|default:'#E0F2FE' }}); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">{{
+                  conference_venue }} &middot; {{ conference_date }}</span>
+              </p>
+
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin-top:22px;">
+                <tr>
+                  <td width="72" height="3" bgcolor="{{ accent_color|default:'#22D3EE' }}"
+                    style="width:72px; height:3px; line-height:3px; font-size:3px; background-color:{{ accent_color|default:'#22D3EE' }}; border-radius:3px;">
+                    &nbsp;</td>
+                </tr>
+              </table>
             </td>
           </tr>
 
-          <!-- Event snapshot card -->
+          <!-- breathing room -->
           <tr>
-            <td class="fluid-pad" style="padding:24px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-              <table role="presentation" class="panel" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#F9FAFB" style="background-color:#F9FAFB; border:1px solid #E5E7EB; border-top:4px solid {{ accent_color|default:'#22D3EE' }}; border-radius:12px;">
+            <td height="16" style="height:16px; line-height:16px; font-size:16px;">&nbsp;</td>
+          </tr>
+
+          <!-- ================= BODY CARD ================= -->
+          <tr>
+            <td class="body-card" bgcolor="#FFFFFF" style="background-color:#FFFFFF; border-radius:16px;">
+              <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+
+                <!-- Greeting -->
                 <tr>
-                  <td style="padding:22px 22px 8px 22px;">
-                    <div class="t-main" style="font-size:20px; line-height:28px; font-weight:800; color:#111827;">{{ conference_name }}</div>
+                  <td class="fluid-pad"
+                    style="padding:36px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                    <p class="t-main"
+                      style="margin:0 0 16px 0; font-size:17px; line-height:27px; font-weight:600; color:#111827;">Dear
+                      {{ first_name }},</p>
+                    <p class="t-body" style="margin:0 0 16px 0; font-size:16px; line-height:26px; color:#374151;">
+                      Greetings from {{ company_name }}.</p>
+                    <p class="t-body" style="margin:0; font-size:16px; line-height:26px; color:#374151;">
+                      We are delighted to invite you to join us as a <strong class="t-main"
+                        style="color:#111827;">Distinguished Speaker</strong> at our upcoming {{ conference_name }} in
+                      {{ conference_venue }} on {{ conference_date }}.
+                    </p>
                   </td>
                 </tr>
+
+                <!-- Event snapshot card -->
                 <tr>
-                  <td style="padding:10px 22px 4px 22px;">
-                    <!-- Highlighted Date & Location Box -->
-                    <table role="presentation" class="panel" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-left:4px solid {{ accent_color|default:'#0891B2' }}; border-radius:10px;">
+                  <td class="fluid-pad"
+                    style="padding:24px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                    <table role="presentation" class="panel" width="100%" border="0" cellpadding="0" cellspacing="0"
+                      bgcolor="#F9FAFB"
+                      style="background-color:#F9FAFB; border:1px solid #E5E7EB; border-top:4px solid {{ accent_color|default:'#22D3EE' }}; border-radius:12px;">
                       <tr>
-                        <td style="padding:14px 18px;">
-                          <div style="font-size:11px; line-height:16px; font-weight:800; letter-spacing:0.8px; text-transform:uppercase; color:{{ brand_color|default:'#0891B2' }};">&#128197; Date &amp; Location</div>
-                          <div class="t-main" style="margin-top:6px; font-size:16px; line-height:24px; font-weight:700; color:#111827;">
-                            <span>{{ conference_date }}</span>
-                            <span style="display:inline-block; margin:0 6px; font-weight:400; color:#9CA3AF;">&bull;</span>
-                            <span style="display:inline-block; color:#1F2937;" class="t-main">&#128205; {{ conference_venue }}</span>
+                        <td style="padding:22px 22px 8px 22px;">
+                          <div class="t-main" style="font-size:20px; line-height:28px; font-weight:800; color:#111827;">
+                            {{ conference_name }}</div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:10px 22px 4px 22px;">
+                          <!-- Two Column Date & Location -->
+                          <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td class="stack stack-gap" width="50%" valign="top" style="width:50%; padding:0 6px 0 0;">
+                                <table role="presentation" class="panel" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-left:4px solid {{ accent_color|default:'#0891B2' }}; border-radius:10px;">
+                                  <tr>
+                                    <td style="padding:12px 16px;">
+                                      <div style="font-size:11px; line-height:15px; font-weight:800; letter-spacing:0.8px; text-transform:uppercase; color:{{ brand_color|default:'#0891B2' }};">&#128197; Date</div>
+                                      <div class="t-main" style="margin-top:4px; font-size:15px; line-height:22px; font-weight:700; color:#111827;">{{ conference_date }}</div>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                              <td class="stack" width="50%" valign="top" style="width:50%; padding:0 0 0 6px;">
+                                <table role="presentation" class="panel" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-left:4px solid {{ accent_color|default:'#0891B2' }}; border-radius:10px;">
+                                  <tr>
+                                    <td style="padding:12px 16px;">
+                                      <div style="font-size:11px; line-height:15px; font-weight:800; letter-spacing:0.8px; text-transform:uppercase; color:{{ brand_color|default:'#0891B2' }};">&#128205; Location</div>
+                                      <div class="t-main" style="margin-top:4px; font-size:15px; line-height:22px; font-weight:700; color:#111827;">{{ conference_venue }}</div>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:14px 22px 0 22px;">
+                          <div class="t-muted" style="font-size:12px; line-height:16px; font-weight:800; letter-spacing:0.8px; text-transform:uppercase; color:#6B7280;">Theme</div>
+                          <div class="t-main" style="margin-top:4px; font-size:15px; line-height:23px; font-weight:600; color:#1F2937;">&ldquo;{{ conference_theme }}&rdquo;</div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:14px 22px 22px 22px;">
+                          <div class="t-muted" style="font-size:12px; line-height:16px; font-weight:800; letter-spacing:0.8px; text-transform:uppercase; color:#6B7280;">Official Website</div>
+                          <div style="margin-top:8px;">
+                            <a href="{{ conference_website }}" target="_blank"
+                              style="display:inline-block; padding:10px 24px; font-size:14px; line-height:18px; font-weight:700; color:{{ button_text_color|default:'#04202B' }}; background-color:{{ accent_color|default:'#22D3EE' }}; text-decoration:none; border-radius:8px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Visit Event Website &rarr;</a>
                           </div>
                         </td>
                       </tr>
                     </table>
                   </td>
                 </tr>
+
+                <!-- Summit description + benefits intro -->
                 <tr>
-                  <td style="padding:14px 22px 0 22px;">
-                    <div class="t-muted" style="font-size:13px; line-height:18px; font-weight:700; color:#6B7280;">Theme</div>
-                    <div class="t-body" style="margin-top:2px; font-size:16px; line-height:24px; color:#374151;">{{ conference_theme }}</div>
+                  <td class="fluid-pad"
+                    style="padding:24px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                    <p class="t-body" style="margin:0 0 16px 0; font-size:16px; line-height:26px; color:#374151;">
+                      Our summits bring together women leaders, entrepreneurs, executives, educators, coaches,
+                      researchers, wellness professionals, and changemakers from around the world to share knowledge,
+                      inspire innovation, and build meaningful connections.
+                    </p>
+                    <p class="t-body" style="margin:0; font-size:16px; line-height:26px; color:#374151;">
+                      As a speaker, you would have the opportunity to share your expertise and connect with an
+                      international audience. Speakers may also be considered for:
+                    </p>
                   </td>
                 </tr>
+
+                <!-- 4 value blocks -->
                 <tr>
-                  <td style="padding:14px 22px 22px 22px;">
-                    <div class="t-muted" style="font-size:13px; line-height:18px; font-weight:700; color:#6B7280;">Website</div>
-                    <div style="margin-top:8px;">
-                      <a href="{{ conference_website }}" target="_blank" style="display:inline-block; padding:10px 24px; font-size:14px; line-height:18px; font-weight:700; color:{{ button_text_color|default:'#04202B' }}; background-color:{{ accent_color|default:'#22D3EE' }}; text-decoration:none; border-radius:8px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Visit Us &rarr;</a>
-                    </div>
+                  <td class="fluid-pad"
+                    style="padding:18px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                    <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td class="stack stack-gap" width="50%" valign="top" style="width:50%; padding:0 6px 12px 0;">
+                          <table role="presentation" class="panel" width="100%" border="0" cellpadding="0"
+                            cellspacing="0" bgcolor="#FFFFFF"
+                            style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-top:3px solid {{ accent_color|default:'#22D3EE' }}; border-radius:12px;">
+                            <tr>
+                              <td style="padding:16px 16px 18px 16px;">
+                                <div class="t-main"
+                                  style="margin-top:6px; font-size:16px; line-height:22px; font-weight:700; color:#111827;">
+                                  Leadership Recognition</div>
+                                <div class="t-muted"
+                                  style="margin-top:4px; font-size:14px; line-height:21px; color:#6B7280;">Consideration
+                                  for the Global Women Leadership Awards.</div>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                        <td class="stack stack-gap" width="50%" valign="top" style="width:50%; padding:0 0 12px 6px;">
+                          <table role="presentation" class="panel" width="100%" border="0" cellpadding="0"
+                            cellspacing="0" bgcolor="#FFFFFF"
+                            style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-top:3px solid {{ accent_color|default:'#22D3EE' }}; border-radius:12px;">
+                            <tr>
+                              <td style="padding:16px 16px 18px 16px;">
+                                <div class="t-main"
+                                  style="margin-top:6px; font-size:16px; line-height:22px; font-weight:700; color:#111827;">
+                                  Media Coverage</div>
+                                <div class="t-muted"
+                                  style="margin-top:4px; font-size:14px; line-height:21px; color:#6B7280;">Selected
+                                  sessions may be included in our event media coverage.</div>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="stack stack-gap" width="50%" valign="top" style="width:50%; padding:0 6px 0 0;">
+                          <table role="presentation" class="panel" width="100%" border="0" cellpadding="0"
+                            cellspacing="0" bgcolor="#FFFFFF"
+                            style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-top:3px solid {{ accent_color|default:'#22D3EE' }}; border-radius:12px;">
+                            <tr>
+                              <td style="padding:16px 16px 18px 16px;">
+                                <div class="t-main"
+                                  style="margin-top:6px; font-size:16px; line-height:22px; font-weight:700; color:#111827;">
+                                  Magazine Feature</div>
+                                <div class="t-muted"
+                                  style="margin-top:4px; font-size:14px; line-height:21px; color:#6B7280;">An
+                                  opportunity to share your story in our publication.</div>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                        <td class="stack" width="50%" valign="top" style="width:50%; padding:0 0 0 6px;">
+                          <table role="presentation" class="panel" width="100%" border="0" cellpadding="0"
+                            cellspacing="0" bgcolor="#FFFFFF"
+                            style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-top:3px solid {{ accent_color|default:'#22D3EE' }}; border-radius:12px;">
+                            <tr>
+                              <td style="padding:16px 16px 18px 16px;">
+                                <div class="t-main"
+                                  style="margin-top:6px; font-size:16px; line-height:22px; font-weight:700; color:#111827;">
+                                  Podcast Conversation</div>
+                                <div class="t-muted"
+                                  style="margin-top:4px; font-size:14px; line-height:21px; color:#6B7280;">Selected
+                                  speakers are invited to a podcast conversation with Dr. P.</div>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
-              </table>
-            </td>
-          </tr>
 
-          <!-- Summit description + benefits intro -->
-          <tr>
-            <td class="fluid-pad" style="padding:24px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-              <p class="t-body" style="margin:0 0 16px 0; font-size:16px; line-height:26px; color:#374151;">
-                Our summits bring together women leaders, entrepreneurs, executives, educators, coaches, researchers, wellness professionals, and changemakers from around the world to share knowledge, inspire innovation, and build meaningful connections.
-              </p>
-              <p class="t-body" style="margin:0; font-size:16px; line-height:26px; color:#374151;">
-                As a speaker, you would have the opportunity to share your expertise and connect with an international audience. Speakers may also be considered for:
-              </p>
-            </td>
-          </tr>
-
-          <!-- 4 value blocks -->
-          <tr>
-            <td class="fluid-pad" style="padding:18px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-              <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+                <!-- Belief + schedule -->
                 <tr>
-                  <td class="stack stack-gap" width="50%" valign="top" style="width:50%; padding:0 6px 12px 0;">
-                    <table role="presentation" class="panel" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-top:3px solid {{ accent_color|default:'#22D3EE' }}; border-radius:12px;">
-                      <tr><td style="padding:16px 16px 18px 16px;">
-                        <div class="t-main" style="margin-top:6px; font-size:16px; line-height:22px; font-weight:700; color:#111827;">Leadership Recognition</div>
-                        <div class="t-muted" style="margin-top:4px; font-size:14px; line-height:21px; color:#6B7280;">Consideration for the Global Women Leadership Awards.</div>
-                      </td></tr>
-                    </table>
-                  </td>
-                  <td class="stack stack-gap" width="50%" valign="top" style="width:50%; padding:0 0 12px 6px;">
-                    <table role="presentation" class="panel" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-top:3px solid {{ accent_color|default:'#22D3EE' }}; border-radius:12px;">
-                      <tr><td style="padding:16px 16px 18px 16px;">
-                        <div class="t-main" style="margin-top:6px; font-size:16px; line-height:22px; font-weight:700; color:#111827;">Media Coverage</div>
-                        <div class="t-muted" style="margin-top:4px; font-size:14px; line-height:21px; color:#6B7280;">Selected sessions may be included in our event media coverage.</div>
-                      </td></tr>
-                    </table>
+                  <td class="fluid-pad"
+                    style="padding:26px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                    <p class="t-body" style="margin:0 0 16px 0; font-size:16px; line-height:26px; color:#374151;">
+                      We believe your experience and insights would be a valuable addition to our global community.
+                    </p>
+                    <p class="t-main"
+                      style="margin:0; font-size:16px; line-height:26px; font-weight:700; color:#111827;">Schedule a
+                      Meeting:</p>
                   </td>
                 </tr>
-                <tr>
-                  <td class="stack stack-gap" width="50%" valign="top" style="width:50%; padding:0 6px 0 0;">
-                    <table role="presentation" class="panel" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-top:3px solid {{ accent_color|default:'#22D3EE' }}; border-radius:12px;">
-                      <tr><td style="padding:16px 16px 18px 16px;">
-                        <div class="t-main" style="margin-top:6px; font-size:16px; line-height:22px; font-weight:700; color:#111827;">Magazine Feature</div>
-                        <div class="t-muted" style="margin-top:4px; font-size:14px; line-height:21px; color:#6B7280;">An opportunity to share your story in our publication.</div>
-                      </td></tr>
-                    </table>
-                  </td>
-                  <td class="stack" width="50%" valign="top" style="width:50%; padding:0 0 0 6px;">
-                    <table role="presentation" class="panel" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-top:3px solid {{ accent_color|default:'#22D3EE' }}; border-radius:12px;">
-                      <tr><td style="padding:16px 16px 18px 16px;">
-                        <div class="t-main" style="margin-top:6px; font-size:16px; line-height:22px; font-weight:700; color:#111827;">Podcast Conversation</div>
-                        <div class="t-muted" style="margin-top:4px; font-size:14px; line-height:21px; color:#6B7280;">Selected speakers are invited to a podcast conversation with Dr. P.</div>
-                      </td></tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
 
-          <!-- Belief + schedule -->
-          <tr>
-            <td class="fluid-pad" style="padding:26px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-              <p class="t-body" style="margin:0 0 16px 0; font-size:16px; line-height:26px; color:#374151;">
-                We believe your experience and insights would be a valuable addition to our global community.
-              </p>
-              <p class="t-main" style="margin:0; font-size:16px; line-height:26px; font-weight:700; color:#111827;">Schedule a Meeting:</p>
-            </td>
-          </tr>
-
-          <!-- CTA -->
-          <tr>
-            <td class="fluid-pad" align="left" style="padding:14px 40px 4px 40px;">
-              <table role="presentation" class="btn-wrap" border="0" cellpadding="0" cellspacing="0">
+                <!-- CTA -->
                 <tr>
-                  <td align="center" bgcolor="{{ accent_color|default:'#22D3EE' }}" style="border-radius:999px; background-color:{{ accent_color|default:'#22D3EE' }};">
-                    <!--[if mso]>
+                  <td class="fluid-pad" align="left" style="padding:14px 40px 4px 40px;">
+                    <table role="presentation" class="btn-wrap" border="0" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td align="center" bgcolor="{{ accent_color|default:'#22D3EE' }}"
+                          style="border-radius:999px; background-color:{{ accent_color|default:'#22D3EE' }};">
+                          <!--[if mso]>
                     <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ scheduling_link }}" style="height:52px; v-text-anchor:middle; width:260px;" arcsize="50%" stroke="f" fillcolor="{{ accent_color|default:'#22D3EE' }}">
                       <w:anchorlock/>
                       <center style="color:{{ button_text_color|default:'#04202B' }}; font-family:Arial,sans-serif; font-size:16px; font-weight:bold;">Schedule a Meeting</center>
                     </v:roundrect>
                     <![endif]-->
-                    <!--[if !mso]><!-- -->
-                    <a class="btn-link" href="{{ scheduling_link }}" target="_blank" style="display:inline-block; padding:16px 44px; font-size:16px; line-height:20px; font-weight:700; color:{{ button_text_color|default:'#04202B' }}; text-decoration:none; border-radius:999px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Schedule a Meeting</a>
-                    <!--<![endif]-->
+                          <!--[if !mso]><!-- -->
+                          <a class="btn-link" href="{{ scheduling_link }}" target="_blank"
+                            style="display:inline-block; padding:16px 44px; font-size:16px; line-height:20px; font-weight:700; color:{{ button_text_color|default:'#04202B' }}; text-decoration:none; border-radius:999px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Schedule
+                            a Meeting</a>
+                          <!--<![endif]-->
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
+
+                <!-- Closing + signature -->
+                <tr>
+                  <td class="fluid-pad"
+                    style="padding:26px 40px 38px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                    <p class="t-body" style="margin:0 0 18px 0; font-size:16px; line-height:26px; color:#374151;">
+                      We would be honored to have you join us and look forward to hearing from you.
+                    </p>
+                    <p class="t-body" style="margin:0; font-size:16px; line-height:26px; color:#374151;">Warm regards,
+                    </p>
+                    <p class="t-main"
+                      style="margin:4px 0 0 0; font-size:17px; line-height:26px; font-weight:700; color:#111827;">{{
+                      company_name }}</p>
+                  </td>
+                </tr>
+
               </table>
             </td>
           </tr>
 
-          <!-- Closing + signature -->
+          <!-- ================= FOOTER ================= -->
           <tr>
-            <td class="fluid-pad" style="padding:26px 40px 38px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-              <p class="t-body" style="margin:0 0 18px 0; font-size:16px; line-height:26px; color:#374151;">
-                We would be honored to have you join us and look forward to hearing from you.
+            <td class="fluid-pad" align="center"
+              style="padding:24px 24px 0 24px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+              <p class="t-main"
+                style="margin:0 0 10px 0; font-size:14px; line-height:20px; font-weight:700; color:#374151; text-align:center;">
+                {{ company_name }}</p>
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center">
+                <tr>
+                  <td align="center" style="padding:0 5px 8px 5px;">
+                    <a href="{{ linkedin_url }}" target="_blank"
+                      style="display:inline-block; padding:8px 16px; font-size:13px; line-height:16px; font-weight:600; color:#1D4ED8; text-decoration:none; border:1px solid #D1D5DB; border-radius:999px;">LinkedIn</a>
+                  </td>
+                  <td align="center" style="padding:0 5px 8px 5px;">
+                    <a href="{{ website_url }}" target="_blank"
+                      style="display:inline-block; padding:8px 16px; font-size:13px; line-height:16px; font-weight:600; color:#1D4ED8; text-decoration:none; border:1px solid #D1D5DB; border-radius:999px;">Website</a>
+                  </td>
+                </tr>
+              </table>
+              <p class="t-muted"
+                style="margin:10px 0 0 0; font-size:12px; line-height:19px; color:#6B7280; text-align:center;">{{
+                physical_address }}</p>
+              <p class="t-muted"
+                style="margin:6px 0 0 0; font-size:12px; line-height:19px; color:#6B7280; text-align:center;">
+                If you would rather not receive these invitations, <a href="{{ unsubscribe_url }}"
+                  style="color:#4B5563; text-decoration:underline;">unsubscribe here</a>.
               </p>
-              <p class="t-body" style="margin:0; font-size:16px; line-height:26px; color:#374151;">Warm regards,</p>
-              <p class="t-main" style="margin:4px 0 0 0; font-size:17px; line-height:26px; font-weight:700; color:#111827;">{{ company_name }}</p>
+              <p class="t-muted"
+                style="margin:6px 0 0 0; font-size:12px; line-height:19px; color:#9CA3AF; text-align:center;">&copy; {{
+                current_year }} {{ company_name }}</p>
             </td>
           </tr>
 
         </table>
+        <!--[if mso]></td></tr></table><![endif]-->
+
       </td>
     </tr>
-
-    <!-- ================= FOOTER ================= -->
-    <tr>
-      <td class="fluid-pad" align="center" style="padding:24px 24px 0 24px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-        <p class="t-main" style="margin:0 0 10px 0; font-size:14px; line-height:20px; font-weight:700; color:#374151; text-align:center;">{{ company_name }}</p>
-        <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center">
-          <tr>
-            <td align="center" style="padding:0 5px 8px 5px;">
-              <a href="{{ linkedin_url }}" target="_blank" style="display:inline-block; padding:8px 16px; font-size:13px; line-height:16px; font-weight:600; color:#1D4ED8; text-decoration:none; border:1px solid #D1D5DB; border-radius:999px;">LinkedIn</a>
-            </td>
-            <td align="center" style="padding:0 5px 8px 5px;">
-              <a href="{{ website_url }}" target="_blank" style="display:inline-block; padding:8px 16px; font-size:13px; line-height:16px; font-weight:600; color:#1D4ED8; text-decoration:none; border:1px solid #D1D5DB; border-radius:999px;">Website</a>
-            </td>
-          </tr>
-        </table>
-        <p class="t-muted" style="margin:10px 0 0 0; font-size:12px; line-height:19px; color:#6B7280; text-align:center;">{{ physical_address }}</p>
-        <p class="t-muted" style="margin:6px 0 0 0; font-size:12px; line-height:19px; color:#6B7280; text-align:center;">
-          If you would rather not receive these invitations, <a href="{{ unsubscribe_url }}" style="color:#4B5563; text-decoration:underline;">unsubscribe here</a>.
-        </p>
-        <p class="t-muted" style="margin:6px 0 0 0; font-size:12px; line-height:19px; color:#9CA3AF; text-align:center;">&copy; {{ current_year }} {{ company_name }}</p>
-      </td>
-    </tr>
-
   </table>
-  <!--[if mso]></td></tr></table><![endif]-->
-
-</td>
-</tr>
-</table>
 
 </body>
+
 </html>
