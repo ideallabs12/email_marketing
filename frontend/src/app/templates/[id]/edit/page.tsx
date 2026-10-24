@@ -120,7 +120,61 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
       html = html + body;
     }
 
+    // Company-specific link fallbacks so links are always functional in preview & PDF
+    const templateName = (template.name || '').toUpperCase();
+    let defaultCompany = 'WYN';
+    if (templateName.includes('WYNXTALKS')) defaultCompany = 'WYNXTALKS';
+    else if (templateName.includes('VOICETALKS')) defaultCompany = 'VOICETALKS';
+    else if (templateName.includes('NEXT')) defaultCompany = 'NEXT';
+    else if (templateName.includes('PROSUMMITS')) defaultCompany = 'PROSUMMITS';
+    else if (templateName.includes('ICON')) defaultCompany = 'ICON';
+    else if (templateName.includes('IDIAS')) defaultCompany = 'IDiAS';
+
+    const companyLinkDefaults: Record<string, { website: string; linkedin: string; calendly: string }> = {
+      WYNXTALKS: {
+        website: 'https://www.wynxtalks.com',
+        linkedin: 'https://www.linkedin.com/company/wynxtalks/',
+        calendly: 'https://calendly.com/wynxtalks/15min',
+      },
+      VOICETALKS: {
+        website: 'https://voicetalks.org',
+        linkedin: 'https://www.linkedin.com/company/voicetalks',
+        calendly: 'https://calendly.com/voicetalks',
+      },
+      NEXT: {
+        website: 'https://nextpremierconferences.com',
+        linkedin: 'https://www.linkedin.com/company/next-premier-conferences/',
+        calendly: 'https://calendly.com/nextpremierconferences/30min',
+      },
+      PROSUMMITS: {
+        website: 'https://prosummits.org',
+        linkedin: 'https://www.linkedin.com/company/prosummits/',
+        calendly: 'https://calendly.com/prosummits',
+      },
+      ICON: {
+        website: 'https://iconglobalconferences.com',
+        linkedin: 'https://www.linkedin.com/company/icon-global-conferences/',
+        calendly: 'https://calendly.com/iconglobalc',
+      },
+      IDiAS: {
+        website: 'https://idiasglobalconferences.com',
+        linkedin: 'https://www.linkedin.com/company/idias-global-conferences/',
+        calendly: 'https://calendly.com/idiasglobalconferences',
+      },
+      WYN: {
+        website: 'https://wynconferences.com',
+        linkedin: 'https://www.linkedin.com/company/wyn-conferences/',
+        calendly: 'https://calendly.com/wynconferences',
+      },
+    };
+
+    const compUrls = companyLinkDefaults[defaultCompany] || companyLinkDefaults.WYN;
+
     const context: Record<string, string> = {
+      conference_website: compUrls.website,
+      website_url: compUrls.website,
+      linkedin_url: compUrls.linkedin,
+      scheduling_link: compUrls.calendly,
       ...templateVariables,
       first_name: testFirstName || 'Sarah',
       last_name: testLastName || 'Mitchell',
@@ -165,6 +219,14 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
         }
       } catch {
         // continue
+      }
+
+      if (iframe.contentWindow) {
+        try {
+          iframe.contentWindow.scrollTo(0, 0);
+        } catch {
+          // continue
+        }
       }
 
       await new Promise((r) => setTimeout(r, 100));
@@ -259,6 +321,57 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
         });
 
         pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+
+        // Embed clickable hyperlinks so team can click and verify links in the PDF
+        try {
+          const bodyRect = doc.body.getBoundingClientRect();
+          const scaleX = bodyRect.width > 0 ? (emailCanvas.width / scale) / bodyRect.width : 1;
+          const scaleY = bodyRect.height > 0 ? (emailCanvas.height / scale) / bodyRect.height : 1;
+          const headerOffset = 44; // header height in unscaled px
+
+          const anchorElements = doc.querySelectorAll<HTMLAnchorElement>('a[href]');
+          anchorElements.forEach((anchor) => {
+            const rawHref = (anchor.getAttribute('href') || anchor.href || '').trim();
+            if (!rawHref || rawHref === '#' || rawHref.toLowerCase().startsWith('javascript:')) {
+              return;
+            }
+
+            let targetUrl = rawHref;
+            if (targetUrl.startsWith('//')) {
+              targetUrl = 'https:' + targetUrl;
+            } else if (/^www\./i.test(targetUrl)) {
+              targetUrl = 'https://' + targetUrl;
+            } else if (!/^[a-z]+:/i.test(targetUrl) && targetUrl.includes('.') && !targetUrl.startsWith('/')) {
+              targetUrl = 'https://' + targetUrl;
+            }
+
+            // Get rects for this link (handles multiline text and inline buttons)
+            const rects = Array.from(anchor.getClientRects());
+            const clientRects = rects.length > 0 ? rects : [anchor.getBoundingClientRect()];
+
+            clientRects.forEach((rect) => {
+              if (rect.width <= 0 || rect.height <= 0) return;
+
+              const pdfX = (rect.left - bodyRect.left) * scaleX;
+              const pdfY = headerOffset + (rect.top - bodyRect.top) * scaleY;
+              const pdfW = rect.width * scaleX;
+              const pdfH = rect.height * scaleY;
+
+              if (pdfX < 0 || pdfY < 0 || pdfX >= pdfWidth || pdfY >= pdfHeight) return;
+
+              pdf.link(
+                pdfX,
+                pdfY,
+                Math.min(pdfW, pdfWidth - pdfX),
+                Math.min(pdfH, pdfHeight - pdfY),
+                { url: targetUrl }
+              );
+            });
+          });
+        } catch (linkErr) {
+          console.warn('Could not embed all links in PDF:', linkErr);
+        }
+
         pdf.save(`${filename}.pdf`);
       }
     } catch (err) {
