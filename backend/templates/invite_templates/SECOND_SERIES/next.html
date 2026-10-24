@@ -13,18 +13,18 @@
   <meta name="supported-color-schemes" content="light dark">
   <title>Speaker invitation from {{ company_name }}</title>
   <!--[if mso]>
-  <noscript>
-  <xml>
-    <o:OfficeDocumentSettings>
-      <o:PixelsPerInch>96</o:PixelsPerInch>
-    </o:OfficeDocumentSettings>
-  </xml>
-  </noscript>
-  <style type="text/css">
-    table, td, div, p, a, span, h1, h2, h3 { font-family: Arial, Helvetica, sans-serif !important; }
-    table { border-collapse: collapse !important; }
-  </style>
-  <![endif]-->
+<noscript>
+<xml>
+  <o:OfficeDocumentSettings>
+    <o:PixelsPerInch>96</o:PixelsPerInch>
+  </o:OfficeDocumentSettings>
+</xml>
+</noscript>
+<style type="text/css">
+  table, td, div, p, a, span, h1, h2, h3 { font-family: Arial, Helvetica, sans-serif !important; }
+  table { border-collapse: collapse !important; }
+</style>
+<![endif]-->
   <style type="text/css">
     html,
     body {
@@ -142,6 +142,7 @@
 
       .body-card {
         background-color: #151B2B !important;
+        border-color: #2C3752 !important;
       }
 
       .panel {
@@ -208,25 +209,40 @@
           <!-- ================= HERO CARD (standalone, 16px on all corners) ================= -->
           <tr>
             <td class="hero-pad fluid-pad" align="left" bgcolor="#0A1A3A"
-              style="padding:44px 40px 38px 40px; background-color:#0A1A3A; background-image:linear-gradient(135deg,#05070F 0%,#0A1A3A 50%,#1E2A78 100%); border-radius:16px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+              style="padding:46px 40px 40px 40px; background-color:#0A1A3A; background-image:radial-gradient(circle at 90% 0%,rgba(34,211,238,0.32) 0%,rgba(34,211,238,0) 55%),linear-gradient(135deg,#05070F 0%,#0A1A3A 50%,#1E2A78 100%); border-radius:16px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
 
-              <p style="margin:0 0 12px 0; font-size:14px; line-height:20px; font-weight:700; color:#67E8F9;">
-                {{ company_name }}
-              </p>
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td bgcolor="#0A1A3A"
+                    style="padding:6px 14px; background-color:#0A1A3A; background-image:linear-gradient(rgba(255,255,255,0.12),rgba(255,255,255,0.12)); border:1px solid #22D3EE; border-radius:999px; font-size:13px; line-height:18px; font-weight:700; color:#67E8F9;">
+                    <span
+                      style="color:#67E8F9; background-image:linear-gradient(#67E8F9,#67E8F9); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">{{
+                      company_name }}</span>
+                  </td>
+                </tr>
+              </table>
 
               <h1 class="hero-title"
-                style="margin:0; font-size:36px; line-height:42px; font-weight:800; color:#FFFFFF; letter-spacing:-0.5px;">
-                Distinguished Speaker Invitation
+                style="margin:20px 0 0 0; font-size:38px; line-height:44px; font-weight:800; color:#FFFFFF; letter-spacing:-0.5px;">
+                <span
+                  style="color:#FFFFFF; background-image:linear-gradient(#FFFFFF,#FFFFFF); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">Distinguished
+                  Speaker Invitation</span>
               </h1>
 
               <p style="margin:14px 0 0 0; font-size:17px; line-height:26px; color:#E0F2FE;">
-                {{ conference_venue }} &middot; {{ conference_date }}
+                <span
+                  style="color:#E0F2FE; background-image:linear-gradient(#E0F2FE,#E0F2FE); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">{{
+                  conference_venue }} &middot; {{ conference_date }}</span>
               </p>
 
-              <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin-top:22px;">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin-top:24px;">
                 <tr>
                   <td width="72" height="3" bgcolor="#22D3EE"
-                    style="width:72px; height:3px; line-height:3px; font-size:3px; background-color:#22D3EE; border-radius:3px;">
+                    style="width:72px; height:3px; line-height:3px; font-size:3px; background-color:#22D3EE; background-image:linear-gradient(90deg,#22D3EE 0%,#67E8F9 100%); border-radius:3px;">
+                    &nbsp;</td>
+                  <td width="8" style="width:8px; font-size:3px; line-height:3px;">&nbsp;</td>
+                  <td width="8" height="3" bgcolor="#67E8F9"
+                    style="width:8px; height:3px; line-height:3px; font-size:3px; background-color:#67E8F9; border-radius:3px;">
                     &nbsp;</td>
                 </tr>
               </table>
@@ -240,19 +256,20 @@
 
           <!-- ================= BODY CARD ================= -->
           <tr>
-            <td class="body-card" bgcolor="#FFFFFF" style="background-color:#FFFFFF; border-radius:16px;">
+            <td class="body-card" bgcolor="#FFFFFF"
+              style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-radius:16px;">
               <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
 
                 <!-- Greeting -->
                 <tr>
                   <td class="fluid-pad"
-                    style="padding:36px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                    style="padding:38px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
                     <p class="t-main"
-                      style="margin:0 0 16px 0; font-size:17px; line-height:27px; font-weight:600; color:#111827;">Dear
+                      style="margin:0 0 16px 0; font-size:18px; line-height:28px; font-weight:700; color:#111827;">Dear
                       {{ first_name }},</p>
-                    <p class="t-body" style="margin:0 0 16px 0; font-size:16px; line-height:26px; color:#374151;">
+                    <p class="t-body" style="margin:0 0 16px 0; font-size:16px; line-height:27px; color:#374151;">
                       Greetings from {{ company_name }}.</p>
-                    <p class="t-body" style="margin:0; font-size:16px; line-height:26px; color:#374151;">
+                    <p class="t-body" style="margin:0; font-size:16px; line-height:27px; color:#374151;">
                       We are delighted to invite you to join us as a <strong class="t-main"
                         style="color:#111827;">Distinguished Speaker</strong> at our upcoming {{ conference_name }} in
                       {{ conference_venue }} on {{ conference_date }}.
@@ -263,19 +280,18 @@
                 <!-- Event snapshot card -->
                 <tr>
                   <td class="fluid-pad"
-                    style="padding:24px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                    style="padding:26px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
                     <table role="presentation" class="panel" width="100%" border="0" cellpadding="0" cellspacing="0"
                       bgcolor="#F9FAFB"
-                      style="background-color:#F9FAFB; border:1px solid #E5E7EB; border-top:4px solid #22D3EE; border-radius:12px;">
+                      style="background-color:#F9FAFB; border:1px solid #E5E7EB; border-top:4px solid #22D3EE; border-radius:12px; box-shadow:0 6px 18px rgba(17,24,39,0.07);">
                       <tr>
                         <td style="padding:22px 22px 8px 22px;">
-                          <div class="t-main" style="font-size:20px; line-height:28px; font-weight:800; color:#111827;">
+                          <div class="t-main" style="font-size:21px; line-height:29px; font-weight:800; color:#111827;">
                             {{ conference_name }}</div>
                         </td>
                       </tr>
                       <tr>
                         <td style="padding:10px 22px 4px 22px;">
-                          <!-- Highlighted Date & Location Box -->
                           <table role="presentation" class="panel" width="100%" border="0" cellpadding="0"
                             cellspacing="0" bgcolor="#FFFFFF"
                             style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-left:4px solid #0891B2; border-radius:10px;">
@@ -289,8 +305,7 @@
                                   <span>{{ conference_date }}</span>
                                   <span
                                     style="display:inline-block; margin:0 6px; font-weight:400; color:#9CA3AF;">&bull;</span>
-                                  <span style="display:inline-block; color:#1F2937;" class="t-main">&#128205; {{
-                                    conference_venue }}</span>
+                                  <span style="display:inline-block;">&#128205; {{ conference_venue }}</span>
                                 </div>
                               </td>
                             </tr>
@@ -298,20 +313,25 @@
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding:14px 22px 0 22px;">
+                        <td style="padding:16px 22px 0 22px;">
                           <div class="t-muted"
-                            style="font-size:13px; line-height:18px; font-weight:700; color:#6B7280;">Theme</div>
-                          <div class="t-body" style="margin-top:2px; font-size:16px; line-height:24px; color:#374151;">
-                            {{ conference_theme }}</div>
+                            style="font-size:12px; line-height:16px; font-weight:800; letter-spacing:0.8px; text-transform:uppercase; color:#6B7280;">
+                            Theme</div>
+                          <div class="t-main"
+                            style="margin-top:4px; font-size:16px; line-height:24px; font-weight:600; color:#1F2937;">
+                            &ldquo;{{ conference_theme }}&rdquo;</div>
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding:14px 22px 22px 22px;">
+                        <td style="padding:16px 22px 22px 22px;">
                           <div class="t-muted"
-                            style="font-size:13px; line-height:18px; font-weight:700; color:#6B7280;">Website</div>
-                          <div style="margin-top:8px;"><a href="{{ conference_website }}" target="_blank"
+                            style="font-size:12px; line-height:16px; font-weight:800; letter-spacing:0.8px; text-transform:uppercase; color:#6B7280;">
+                            Official Website</div>
+                          <div style="margin-top:8px;">
+                            <a href="{{ conference_website }}" target="_blank"
                               style="display:inline-block; padding:10px 24px; font-size:14px; line-height:18px; font-weight:700; color:#04202B; background-color:#22D3EE; text-decoration:none; border-radius:8px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Visit
-                              Us &rarr;</a></div>
+                              us &rarr;</a>
+                          </div>
                         </td>
                       </tr>
                     </table>
@@ -321,15 +341,15 @@
                 <!-- Summit description + benefits intro -->
                 <tr>
                   <td class="fluid-pad"
-                    style="padding:24px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                    <p class="t-body" style="margin:0 0 16px 0; font-size:16px; line-height:26px; color:#374151;">
+                    style="padding:26px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                    <p class="t-body" style="margin:0 0 16px 0; font-size:16px; line-height:27px; color:#374151;">
                       Our summits bring together women leaders, entrepreneurs, executives, educators, coaches,
                       researchers, wellness professionals, and changemakers from around the world to share knowledge,
                       inspire innovation, and build meaningful connections.
                     </p>
-                    <p class="t-body" style="margin:0; font-size:16px; line-height:26px; color:#374151;">
-                      As a speaker, you would have the opportunity to share your expertise and connect with an
-                      international audience. Speakers may also be considered for:
+                    <p class="t-body" style="margin:0; font-size:16px; line-height:27px; color:#374151;">
+                      As a speaker, you would be able to share your expertise and connect with an international
+                      audience. Speakers may also be considered for:
                     </p>
                   </td>
                 </tr>
@@ -343,11 +363,18 @@
                         <td class="stack stack-gap" width="50%" valign="top" style="width:50%; padding:0 6px 12px 0;">
                           <table role="presentation" class="panel" width="100%" border="0" cellpadding="0"
                             cellspacing="0" bgcolor="#FFFFFF"
-                            style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-top:3px solid #22D3EE; border-radius:12px;">
+                            style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-top:3px solid #22D3EE; border-radius:12px; box-shadow:0 4px 12px rgba(17,24,39,0.05);">
                             <tr>
                               <td style="padding:16px 16px 18px 16px;">
+                                <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                  <tr>
+                                    <td width="30" height="30" align="center" bgcolor="#22D3EE"
+                                      style="width:30px; height:30px; background-color:#22D3EE; border-radius:8px; font-size:12px; line-height:30px; font-weight:800; color:#04202B;">
+                                      01</td>
+                                  </tr>
+                                </table>
                                 <div class="t-main"
-                                  style="margin-top:6px; font-size:16px; line-height:22px; font-weight:700; color:#111827;">
+                                  style="margin-top:10px; font-size:16px; line-height:22px; font-weight:700; color:#111827;">
                                   Leadership Recognition</div>
                                 <div class="t-muted"
                                   style="margin-top:4px; font-size:14px; line-height:21px; color:#6B7280;">Consideration
@@ -359,15 +386,22 @@
                         <td class="stack stack-gap" width="50%" valign="top" style="width:50%; padding:0 0 12px 6px;">
                           <table role="presentation" class="panel" width="100%" border="0" cellpadding="0"
                             cellspacing="0" bgcolor="#FFFFFF"
-                            style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-top:3px solid #22D3EE; border-radius:12px;">
+                            style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-top:3px solid #22D3EE; border-radius:12px; box-shadow:0 4px 12px rgba(17,24,39,0.05);">
                             <tr>
                               <td style="padding:16px 16px 18px 16px;">
+                                <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                  <tr>
+                                    <td width="30" height="30" align="center" bgcolor="#22D3EE"
+                                      style="width:30px; height:30px; background-color:#22D3EE; border-radius:8px; font-size:12px; line-height:30px; font-weight:800; color:#04202B;">
+                                      02</td>
+                                  </tr>
+                                </table>
                                 <div class="t-main"
-                                  style="margin-top:6px; font-size:16px; line-height:22px; font-weight:700; color:#111827;">
+                                  style="margin-top:10px; font-size:16px; line-height:22px; font-weight:700; color:#111827;">
                                   Media Coverage</div>
                                 <div class="t-muted"
-                                  style="margin-top:4px; font-size:14px; line-height:21px; color:#6B7280;">Selected
-                                  sessions may be included in our event media coverage.</div>
+                                  style="margin-top:4px; font-size:14px; line-height:21px; color:#6B7280;">Some sessions
+                                  may be included in our event media coverage.</div>
                               </td>
                             </tr>
                           </table>
@@ -377,15 +411,22 @@
                         <td class="stack stack-gap" width="50%" valign="top" style="width:50%; padding:0 6px 0 0;">
                           <table role="presentation" class="panel" width="100%" border="0" cellpadding="0"
                             cellspacing="0" bgcolor="#FFFFFF"
-                            style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-top:3px solid #22D3EE; border-radius:12px;">
+                            style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-top:3px solid #22D3EE; border-radius:12px; box-shadow:0 4px 12px rgba(17,24,39,0.05);">
                             <tr>
                               <td style="padding:16px 16px 18px 16px;">
+                                <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                  <tr>
+                                    <td width="30" height="30" align="center" bgcolor="#22D3EE"
+                                      style="width:30px; height:30px; background-color:#22D3EE; border-radius:8px; font-size:12px; line-height:30px; font-weight:800; color:#04202B;">
+                                      03</td>
+                                  </tr>
+                                </table>
                                 <div class="t-main"
-                                  style="margin-top:6px; font-size:16px; line-height:22px; font-weight:700; color:#111827;">
+                                  style="margin-top:10px; font-size:16px; line-height:22px; font-weight:700; color:#111827;">
                                   Magazine Feature</div>
                                 <div class="t-muted"
-                                  style="margin-top:4px; font-size:14px; line-height:21px; color:#6B7280;">An
-                                  opportunity to share your story in our publication.</div>
+                                  style="margin-top:4px; font-size:14px; line-height:21px; color:#6B7280;">A chance to
+                                  share your story in our publication.</div>
                               </td>
                             </tr>
                           </table>
@@ -393,15 +434,22 @@
                         <td class="stack" width="50%" valign="top" style="width:50%; padding:0 0 0 6px;">
                           <table role="presentation" class="panel" width="100%" border="0" cellpadding="0"
                             cellspacing="0" bgcolor="#FFFFFF"
-                            style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-top:3px solid #22D3EE; border-radius:12px;">
+                            style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-top:3px solid #22D3EE; border-radius:12px; box-shadow:0 4px 12px rgba(17,24,39,0.05);">
                             <tr>
                               <td style="padding:16px 16px 18px 16px;">
+                                <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                  <tr>
+                                    <td width="30" height="30" align="center" bgcolor="#22D3EE"
+                                      style="width:30px; height:30px; background-color:#22D3EE; border-radius:8px; font-size:12px; line-height:30px; font-weight:800; color:#04202B;">
+                                      04</td>
+                                  </tr>
+                                </table>
                                 <div class="t-main"
-                                  style="margin-top:6px; font-size:16px; line-height:22px; font-weight:700; color:#111827;">
+                                  style="margin-top:10px; font-size:16px; line-height:22px; font-weight:700; color:#111827;">
                                   Podcast Conversation</div>
                                 <div class="t-muted"
-                                  style="margin-top:4px; font-size:14px; line-height:21px; color:#6B7280;">Selected
-                                  speakers are invited to a podcast conversation with Dr. P.</div>
+                                  style="margin-top:4px; font-size:14px; line-height:21px; color:#6B7280;">Some speakers
+                                  are invited to a podcast conversation with Dr. P.</div>
                               </td>
                             </tr>
                           </table>
@@ -411,11 +459,24 @@
                   </td>
                 </tr>
 
+                <!-- Divider -->
+                <tr>
+                  <td class="fluid-pad" style="padding:28px 40px 0 40px;">
+                    <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td height="1" bgcolor="#E5E7EB"
+                          style="height:1px; line-height:1px; font-size:1px; background-color:#E5E7EB; background-image:linear-gradient(90deg,#E5E7EB 0%,#22D3EE 50%,#E5E7EB 100%);">
+                          &nbsp;</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
                 <!-- Belief + schedule -->
                 <tr>
                   <td class="fluid-pad"
-                    style="padding:26px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                    <p class="t-body" style="margin:0 0 16px 0; font-size:16px; line-height:26px; color:#374151;">
+                    style="padding:24px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                    <p class="t-body" style="margin:0 0 16px 0; font-size:16px; line-height:27px; color:#374151;">
                       We believe your experience and insights would be a valuable addition to our global community.
                     </p>
                     <p class="t-main"
@@ -429,35 +490,40 @@
                   <td class="fluid-pad" align="left" style="padding:14px 40px 4px 40px;">
                     <table role="presentation" class="btn-wrap" border="0" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td align="center" bgcolor="#22D3EE" style="border-radius:999px; background-color:#22D3EE;">
+                        <td align="center" bgcolor="#22D3EE"
+                          style="border-radius:999px; background-color:#22D3EE; box-shadow:0 8px 20px rgba(34,211,238,0.35);">
                           <!--[if mso]>
-                      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ scheduling_link }}" style="height:52px; v-text-anchor:middle; width:260px;" arcsize="50%" stroke="f" fillcolor="#22D3EE">
-                        <w:anchorlock/>
-                        <center style="color:#04202B; font-family:Arial,sans-serif; font-size:16px; font-weight:bold;">Schedule a Meeting</center>
-                      </v:roundrect>
-                      <![endif]-->
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ scheduling_link }}" style="height:52px; v-text-anchor:middle; width:260px;" arcsize="50%" stroke="f" fillcolor="#22D3EE">
+                      <w:anchorlock/>
+                      <center style="color:#04202B; font-family:Arial,sans-serif; font-size:16px; font-weight:bold;">Schedule a Meeting</center>
+                    </v:roundrect>
+                    <![endif]-->
                           <!--[if !mso]><!-- -->
                           <a class="btn-link" href="{{ scheduling_link }}" target="_blank"
                             style="display:inline-block; padding:16px 44px; font-size:16px; line-height:20px; font-weight:700; color:#04202B; text-decoration:none; border-radius:999px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Schedule
-                            a Meeting</a>
+                            a Meeting &rarr;</a>
                           <!--<![endif]-->
                         </td>
                       </tr>
                     </table>
+                    <p class="t-muted" style="margin:12px 0 0 0; font-size:13px; line-height:20px; color:#6B7280;">
+                      Prefer email? Simply reply to this message with any questions.</p>
                   </td>
                 </tr>
 
                 <!-- Closing + signature -->
                 <tr>
                   <td class="fluid-pad"
-                    style="padding:26px 40px 38px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                    <p class="t-body" style="margin:0 0 18px 0; font-size:16px; line-height:26px; color:#374151;">
+                    style="padding:24px 40px 40px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                    <p class="t-body" style="margin:0 0 18px 0; font-size:16px; line-height:27px; color:#374151;">
                       We would be honored to have you join us and look forward to hearing from you.
                     </p>
                     <p class="t-body" style="margin:0; font-size:16px; line-height:26px; color:#374151;">Warm regards,
                     </p>
                     <p class="t-main"
                       style="margin:4px 0 0 0; font-size:17px; line-height:26px; font-weight:700; color:#111827;">{{
+                      sender_name }}</p>
+                    <p class="t-muted" style="margin:0; font-size:15px; line-height:24px; color:#6B7280;">{{
                       company_name }}</p>
                   </td>
                 </tr>
