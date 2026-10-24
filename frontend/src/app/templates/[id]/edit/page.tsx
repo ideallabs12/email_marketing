@@ -178,6 +178,25 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
         logging: false,
         windowWidth: doc.documentElement.scrollWidth || (previewDevice === 'desktop' ? 640 : 390),
         windowHeight: doc.documentElement.scrollHeight || 1200,
+        onclone: (clonedDoc) => {
+          // Neutralize -webkit-background-clip: text which canvas renderers draw as solid opaque blocks
+          const elements = clonedDoc.querySelectorAll<HTMLElement>('*');
+          elements.forEach((el) => {
+            const styleAttr = el.getAttribute('style') || '';
+            if (
+              styleAttr.includes('background-clip') ||
+              styleAttr.includes('-webkit-background-clip') ||
+              styleAttr.includes('-webkit-text-fill-color')
+            ) {
+              const fallbackColor = el.style.color || '#FFFFFF';
+              el.style.setProperty('-webkit-text-fill-color', fallbackColor, 'important');
+              el.style.setProperty('color', fallbackColor, 'important');
+              el.style.setProperty('-webkit-background-clip', 'border-box', 'important');
+              el.style.setProperty('background-clip', 'border-box', 'important');
+              el.style.setProperty('background-image', 'none', 'important');
+            }
+          });
+        },
       });
 
       // Combine with clean email header (Subject + Recipient)
