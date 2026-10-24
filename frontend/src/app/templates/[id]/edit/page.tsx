@@ -29,9 +29,9 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
   const [success, setSuccess] = useState('');
   const [viewMode, setViewMode] = useState<'edit' | 'view'>('view');
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
-  const [testFirstName, setTestFirstName] = useState('Nithin');
-  const [testLastName, setTestLastName] = useState('Varma');
-  const [testEmail, setTestEmail] = useState('nithin.varma@example.com');
+  const [testFirstName, setTestFirstName] = useState('Sarah');
+  const [testLastName, setTestLastName] = useState('Mitchell');
+  const [testEmail, setTestEmail] = useState('sarah.mitchell@example.com');
   const [templateVariables, setTemplateVariables] = useState<Record<string, string>>({});
   const [detectedVariables, setDetectedVariables] = useState<string[]>([]);
 
@@ -122,9 +122,9 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
 
     const context: Record<string, string> = {
       ...templateVariables,
-      first_name: testFirstName || 'Nithin',
-      last_name: testLastName || 'Varma',
-      email: testEmail || 'nithin.varma@example.com',
+      first_name: testFirstName || 'Sarah',
+      last_name: testLastName || 'Mitchell',
+      email: testEmail || 'sarah.mitchell@example.com',
       subject: subject,
     };
 
@@ -199,8 +199,8 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
         },
       });
 
-      // Combine with clean email header (Subject + Recipient)
-      const headerHeight = 64 * scale;
+      // Combine with clean email header (Subject only)
+      const headerHeight = 44 * scale;
       const combinedCanvas = document.createElement('canvas');
       combinedCanvas.width = emailCanvas.width;
       combinedCanvas.height = emailCanvas.height + headerHeight;
@@ -221,15 +221,15 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
         ctx.stroke();
 
         // Subject text
-        ctx.fillStyle = '#111827';
-        ctx.font = `bold ${13 * scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-        const subjText = subject || '(No Subject)';
-        ctx.fillText(subjText, 16 * scale, 26 * scale);
+        ctx.fillStyle = '#4B5563';
+        ctx.font = `bold ${12 * scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+        ctx.fillText('Subject: ', 16 * scale, 27 * scale);
 
-        // To text
-        ctx.fillStyle = '#6b7280';
-        ctx.font = `${11 * scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-        ctx.fillText(`To: ${testFirstName} ${testLastName} <${testEmail}>`, 16 * scale, 48 * scale);
+        const prefixWidth = ctx.measureText('Subject: ').width;
+        ctx.fillStyle = '#111827';
+        ctx.font = `600 ${12 * scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+        const subjText = subject || '(No Subject)';
+        ctx.fillText(subjText, 16 * scale + prefixWidth, 27 * scale);
 
         // Draw email body canvas below header
         ctx.drawImage(emailCanvas, 0, headerHeight);
@@ -565,16 +565,14 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
                   style={{
                     background: '#f8f9fa',
                     borderBottom: '1px solid #e2e4e7',
-                    padding: '10px 16px',
-                    fontSize: previewDevice === 'mobile' ? 11 : 12,
+                    padding: '12px 16px',
+                    fontSize: previewDevice === 'mobile' ? 12 : 13,
                   }}
                 >
-                  <div style={{ fontWeight: 700, color: '#111', marginBottom: 2 }}>
+                  <span style={{ fontWeight: 700, color: '#4B5563', marginRight: 6 }}>Subject:</span>
+                  <span style={{ fontWeight: 600, color: '#111827' }}>
                     {subject || '(No Subject)'}
-                  </div>
-                  <div style={{ color: '#666' }}>
-                    To: {testFirstName} {testLastName} &lt;{testEmail}&gt;
-                  </div>
+                  </span>
                 </div>
 
                 <iframe
