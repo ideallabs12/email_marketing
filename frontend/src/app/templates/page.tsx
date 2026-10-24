@@ -8,7 +8,7 @@ import { FileText, Edit, Folder, ArrowLeft, Mic } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 import { EmailTemplate } from '../../types';
 
-type Category = 'INVITE' | 'FOLLOWUP' | 'PODCAST' | null;
+type Category = 'SECOND_SERIES' | 'INVITE' | 'FOLLOWUP' | 'PODCAST' | null;
 
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
@@ -29,7 +29,15 @@ export default function TemplatesPage() {
     loadTemplates();
   }, []);
 
-  const inviteTemplates  = templates.filter(t => t.name.toLowerCase().includes('invite') && !t.name.toLowerCase().includes('podcast'));
+  const secondSeriesTemplates = templates.filter(t => {
+    const n = t.name.toLowerCase();
+    return n.includes('second_series') || n.includes('second series') || n.includes('secondseries') || n.includes('universal_conference');
+  });
+  const inviteTemplates  = templates.filter(t => 
+    t.name.toLowerCase().includes('invite') && 
+    !t.name.toLowerCase().includes('podcast') && 
+    !secondSeriesTemplates.some(s => s.id === t.id)
+  );
   const followupTemplates = templates.filter(t => t.name.toLowerCase().includes('followup'));
   const podcastTemplates  = templates.filter(t => t.name.toLowerCase().includes('podcast'));
 
@@ -52,7 +60,16 @@ export default function TemplatesPage() {
 
     if (!selectedCategory) {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+          <Card 
+            className="flex flex-col items-center justify-center py-16 cursor-pointer hover:border-primary/50 transition-colors"
+            onClick={() => setSelectedCategory('SECOND_SERIES')}
+          >
+            <Folder size={48} className="text-primary mb-4" />
+            <h3 className="font-bold text-xl">Second Series</h3>
+            <p className="text-sm text-foreground/50 mt-2">{secondSeriesTemplates.length} templates</p>
+          </Card>
+
           <Card 
             className="flex flex-col items-center justify-center py-16 cursor-pointer hover:border-primary/50 transition-colors"
             onClick={() => setSelectedCategory('INVITE')}
@@ -84,14 +101,16 @@ export default function TemplatesPage() {
     }
 
     const currentTemplates =
-      selectedCategory === 'INVITE'   ? inviteTemplates  :
-      selectedCategory === 'FOLLOWUP' ? followupTemplates :
-                                        podcastTemplates;
+      selectedCategory === 'SECOND_SERIES' ? secondSeriesTemplates :
+      selectedCategory === 'INVITE'        ? inviteTemplates        :
+      selectedCategory === 'FOLLOWUP'      ? followupTemplates      :
+                                             podcastTemplates;
 
     const categoryTitle =
-      selectedCategory === 'INVITE'   ? 'Invite Templates'   :
-      selectedCategory === 'FOLLOWUP' ? 'Follow-up Templates' :
-                                        'Podcast Templates';
+      selectedCategory === 'SECOND_SERIES' ? 'Second Series Templates' :
+      selectedCategory === 'INVITE'        ? 'Invite Templates'        :
+      selectedCategory === 'FOLLOWUP'      ? 'Follow-up Templates'     :
+                                             'Podcast Templates';
 
     return (
       <>
