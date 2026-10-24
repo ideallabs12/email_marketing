@@ -1,13 +1,15 @@
 'use client';
 
-import React, { use, useEffect, useState } from 'react';
+import React, { use, useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Card from '../../../../components/Card';
 import Button from '../../../../components/Button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, FileDown, Image as ImageIcon, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { apiClient } from '../../../../services/apiClient';
 import { EmailTemplate } from '../../../../types';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 interface EditTemplateProps {
   params: Promise<{ id: string }>;
@@ -22,6 +24,7 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
   const [body, setBody] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState<'jpeg' | 'pdf' | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [viewMode, setViewMode] = useState<'edit' | 'view'>('view');
@@ -31,6 +34,8 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
   const [testEmail, setTestEmail] = useState('nithin.varma@example.com');
   const [templateVariables, setTemplateVariables] = useState<Record<string, string>>({});
   const [detectedVariables, setDetectedVariables] = useState<string[]>([]);
+
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     async function loadTemplate() {
@@ -133,6 +138,118 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
     return html;
   };
 
+  const handleDownload = async (format: 'jpeg' | 'pdf') => {
+    if (!template || exporting) return;
+    setExporting(format);
+
+    try {
+      if (viewMode === 'edit') {
+        setViewMode('view');
+        await new Promise((r) => setTimeout(r, 350));
+      }
+
+      const iframe = iframeRef.current;
+      if (!iframe) {
+        throw new Error('Preview iframe not found');
+      }
+
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!doc || !doc.body) {
+        throw new Error('Preview document body not accessible');
+      }
+
+      // Wait for any web fonts inside the iframe to finish loading
+      try {
+        if (doc.fonts) {
+          await doc.fonts.ready;
+        }
+      } catch {
+        // continue
+      }
+
+      await new Promise((r) => setTimeout(r, 100));
+
+      const scale = 2; // High-resolution retina quality
+      const emailCanvas = await html2canvas(doc.body, {
+        useCORS: true,
+        allowTaint: true,
+        scale,
+        backgroundColor: '#F3F4F6',
+        logging: false,
+        windowWidth: doc.documentElement.scrollWidth || (previewDevice === 'desktop' ? 640 : 390),
+        windowHeight: doc.documentElement.scrollHeight || 1200,
+      });
+
+      // Combine with clean email header (Subject + Recipient)
+      const headerHeight = 64 * scale;
+      const combinedCanvas = document.createElement('canvas');
+      combinedCanvas.width = emailCanvas.width;
+      combinedCanvas.height = emailCanvas.height + headerHeight;
+      const ctx = combinedCanvas.getContext('2d');
+
+      let finalCanvas = emailCanvas;
+      if (ctx) {
+        // Draw header background
+        ctx.fillStyle = '#f8f9fa';
+        ctx.fillRect(0, 0, combinedCanvas.width, headerHeight);
+
+        // Header bottom border
+        ctx.strokeStyle = '#e2e4e7';
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(0, headerHeight);
+        ctx.lineTo(combinedCanvas.width, headerHeight);
+        ctx.stroke();
+
+        // Subject text
+        ctx.fillStyle = '#111827';
+        ctx.font = `bold ${13 * scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+        const subjText = subject || '(No Subject)';
+        ctx.fillText(subjText, 16 * scale, 26 * scale);
+
+        // To text
+        ctx.fillStyle = '#6b7280';
+        ctx.font = `${11 * scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+        ctx.fillText(`To: ${testFirstName} ${testLastName} <${testEmail}>`, 16 * scale, 48 * scale);
+
+        // Draw email body canvas below header
+        ctx.drawImage(emailCanvas, 0, headerHeight);
+        finalCanvas = combinedCanvas;
+      }
+
+      const cleanName = (template.name || 'template').toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+      const filename = `${cleanName}_${previewDevice}`;
+
+      if (format === 'jpeg') {
+        const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.95);
+        const link = document.createElement('a');
+        link.download = `${filename}.jpg`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        const imgData = finalCanvas.toDataURL('image/jpeg', 0.95);
+        const pdfWidth = finalCanvas.width / scale;
+        const pdfHeight = finalCanvas.height / scale;
+
+        const pdf = new jsPDF({
+          orientation: pdfWidth > pdfHeight ? 'landscape' : 'portrait',
+          unit: 'px',
+          format: [pdfWidth, pdfHeight],
+        });
+
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`${filename}.pdf`);
+      }
+    } catch (err) {
+      console.error('Failed to export template:', err);
+      alert('Could not generate export. Please make sure the template preview is visible.');
+    } finally {
+      setExporting(null);
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-12 text-foreground/50">Loading template editor...</div>;
   }
@@ -148,20 +265,54 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center space-x-4 mb-6">
-        <Link href="/templates" className="text-foreground/50 hover:text-foreground">
-          <ArrowLeft size={20} />
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Edit Template</h1>
-          <p className="text-foreground/50 mt-1 text-sm">{template.name}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+        <div className="flex items-center space-x-4">
+          <Link href="/templates" className="text-foreground/50 hover:text-foreground">
+            <ArrowLeft size={20} />
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Edit Template</h1>
+            <p className="text-foreground/50 mt-1 text-sm">{template.name}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handleDownload('jpeg')}
+            disabled={exporting !== null}
+            className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-md border border-border bg-background hover:bg-foreground/5 transition-all text-foreground shadow-sm disabled:opacity-50 cursor-pointer"
+            title="Download high-resolution JPEG"
+          >
+            {exporting === 'jpeg' ? (
+              <Loader2 size={15} className="animate-spin text-primary" />
+            ) : (
+              <ImageIcon size={15} className="text-primary" />
+            )}
+            <span>{exporting === 'jpeg' ? 'Exporting JPEG...' : 'Download JPEG'}</span>
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => handleDownload('pdf')}
+            disabled={exporting !== null}
+            className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-md border border-border bg-background hover:bg-foreground/5 transition-all text-foreground shadow-sm disabled:opacity-50 cursor-pointer"
+            title="Download PDF document"
+          >
+            {exporting === 'pdf' ? (
+              <Loader2 size={15} className="animate-spin text-primary" />
+            ) : (
+              <FileDown size={15} className="text-primary" />
+            )}
+            <span>{exporting === 'pdf' ? 'Exporting PDF...' : 'Download PDF'}</span>
+          </button>
         </div>
       </div>
 
       <div className="flex space-x-2 mb-6 border-b border-border pb-2">
         <button
           onClick={() => setViewMode('edit')}
-          className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+          className={`px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer ${
             viewMode === 'edit'
               ? 'bg-foreground text-background'
               : 'text-foreground/70 hover:bg-foreground/10'
@@ -171,7 +322,7 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
         </button>
         <button
           onClick={() => setViewMode('view')}
-          className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+          className={`px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer ${
             viewMode === 'view'
               ? 'bg-foreground text-background'
               : 'text-foreground/70 hover:bg-foreground/10'
@@ -228,7 +379,7 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
                         const snippet = `\n<br><br>\n<div style="background-color: #f8fafc; padding: 24px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0; margin-top: 30px;">\n  <h3 style="margin-top: 0; color: #0f172a; font-size: 18px;">Contact Us</h3>\n  <p style="color: #475569; font-size: 14px; margin-bottom: 8px;">Have questions? We're here to help.</p>\n  <p style="margin: 4px 0; font-size: 14px;"><strong>Email:</strong> <a href="mailto:global@signaturetalks.org" style="color: #2563eb; text-decoration: none;">global@signaturetalks.org</a></p>\n  <p style="margin: 4px 0; font-size: 14px;"><strong>Website:</strong> <a href="https://signaturetalks.org" style="color: #2563eb; text-decoration: none;">signaturetalks.org</a></p>\n</div>\n`;
                         setBody(prev => prev + snippet);
                       }}
-                      className="text-[11px] px-2.5 py-1.5 bg-foreground/5 hover:bg-foreground/10 border border-border rounded font-medium text-foreground/70 transition-colors flex items-center"
+                      className="text-[11px] px-2.5 py-1.5 bg-foreground/5 hover:bg-foreground/10 border border-border rounded font-medium text-foreground/70 transition-colors flex items-center cursor-pointer"
                     >
                       + Add Contact Us Section
                     </button>
@@ -324,13 +475,36 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
           </div>
         ) : (
           <div className="flex flex-col min-h-[600px] pb-12">
-            <div className="flex justify-end mb-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleDownload('jpeg')}
+                  disabled={exporting !== null}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border border-border bg-background hover:bg-foreground/5 transition-all text-foreground shadow-sm disabled:opacity-50 cursor-pointer"
+                  title="Download high-resolution JPEG of current view"
+                >
+                  {exporting === 'jpeg' ? <Loader2 size={14} className="animate-spin text-primary" /> : <ImageIcon size={14} className="text-primary" />}
+                  {exporting === 'jpeg' ? 'Generating JPEG...' : 'Download JPEG'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDownload('pdf')}
+                  disabled={exporting !== null}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border border-border bg-background hover:bg-foreground/5 transition-all text-foreground shadow-sm disabled:opacity-50 cursor-pointer"
+                  title="Download PDF document of current view"
+                >
+                  {exporting === 'pdf' ? <Loader2 size={14} className="animate-spin text-primary" /> : <FileDown size={14} className="text-primary" />}
+                  {exporting === 'pdf' ? 'Generating PDF...' : 'Download PDF'}
+                </button>
+              </div>
+
               <div className="flex items-center gap-2 bg-foreground/5 border border-border rounded-lg p-1">
                 {(['desktop', 'mobile'] as const).map((d) => (
                   <button
                     key={d}
                     onClick={() => setPreviewDevice(d)}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
                       previewDevice === d
                         ? 'bg-foreground text-background shadow-sm'
                         : 'text-foreground hover:bg-foreground/10 opacity-70'
@@ -385,6 +559,7 @@ export default function EditTemplatePage({ params }: EditTemplateProps) {
                 </div>
 
                 <iframe
+                  ref={iframeRef}
                   title="Template Preview"
                   srcDoc={getPreviewHtml()}
                   onLoad={(e) => {
