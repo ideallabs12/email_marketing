@@ -252,10 +252,25 @@ class CampaignViewSet(viewsets.ModelViewSet):
         campaign.save()
 
         # Trigger the async Celery task
-        from .tasks import send_campaign_emails
-        send_campaign_emails.delay(campaign.id)
+        try:
+            from .tasks import send_campaign_emails
+            send_campaign_emails.delay(campaign.id)
+        except Exception as e:
+            campaign.status = 'failed'
+            campaign.save()
+            return Response(
+                {'error': f"Failed to queue campaign emails: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         return Response({'status': 'Campaign queued for sending.'})
+
+    @action(detail=True, methods=['post'], url_path='reset-status')
+    def reset_status(self, request, pk=None):
+        campaign = self.get_object()
+        campaign.status = 'draft'
+        campaign.save(update_fields=['status'])
+        return Response({'status': 'Campaign reset to draft.', 'campaign_id': campaign.id})
 
     @action(detail=True, methods=['post'], url_path='convert-to-advanced')
     def convert_to_advanced(self, request, pk=None):
