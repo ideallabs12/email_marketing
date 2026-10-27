@@ -109,13 +109,13 @@ conferences_data = [
     # ── WYNXTALKS ───────────────────────────────────────────────────────
     {
         'company_name': 'WYNXTALKS',
-        'conference_name': 'WynxTalks International Leadership Summit 2027',
-        'date': 'July 14–16, 2027',
-        'venue': 'Berlin, Germany',
-        'calendly_link': 'https://calendly.com/wynxtalks',
+        'conference_name': "International Women's Day Conclave: A Global Movement for Women's Empowerment & Mental Wellbeing",
+        'date': 'March 08-12, 2027',
+        'venue': 'Paris, France',
+        'calendly_link': 'https://calendly.com/wynxtalks/15min',
         'website_link': 'https://www.wynxtalks.org',
         'linkedin_link': 'https://www.linkedin.com/company/wynxtalks/',
-        'theme': 'Empowering Global Voices & Creative Leadership',
+        'theme': 'Empowering Voices, Breaking Barriers, Shaping the Future',
     },
 
     # ── SIGNATURE ───────────────────────────────────────────────────────
@@ -133,6 +133,14 @@ conferences_data = [
 
 def seed_conferences():
     print(f"Seeding {len(conferences_data)} conferences into Conference table...")
+    
+    # Remove old WYNXTALKS conferences that do not match the new conference
+    deleted_count, _ = Conference.objects.filter(company_name='WYNXTALKS').exclude(
+        conference_name="International Women's Day Conclave: A Global Movement for Women's Empowerment & Mental Wellbeing"
+    ).delete()
+    if deleted_count > 0:
+        print(f"  [Removed] {deleted_count} outdated WYNXTALKS conference(s)")
+
     for item in conferences_data:
         obj, created = Conference.objects.update_or_create(
             company_name=item['company_name'],
