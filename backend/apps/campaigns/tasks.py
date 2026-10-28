@@ -284,7 +284,8 @@ def send_campaign_emails(self, campaign_id: int):
             })
 
             html_content = render_template(layout_template, context)
-            text_content = strip_tags(html_content)
+            clean_html_for_text = re.sub(r'<(style|script)[^>]*>[\s\S]*?</\1>', '', html_content, flags=re.IGNORECASE)
+            text_content = re.sub(r'\n{3,}', '\n\n', strip_tags(clean_html_for_text)).strip()
 
             from_email = campaign.from_email
 
