@@ -58,6 +58,7 @@ def seed():
         'WYN': 'wyn.html',
         'WYNXTALKS': 'wynxtalks.html',
         'VOICETALKS': 'voicetalks.html',
+        'SIGNATURE': 'signature.html',
     }
 
     # Company-specific details for realistic previews and links
@@ -120,6 +121,17 @@ def seed():
             'linkedin_url': 'https://www.linkedin.com/company/voicetalks',
             'scheduling_link': 'https://calendly.com/voicetalks',
         },
+        'SIGNATURE': {
+            'conference_name': 'USA Signature Global Leadership Summit 2027',
+            'conference_theme': 'Executive Excellence and Global Impact',
+            'conference_date': 'September 15–17, 2027',
+            'conference_venue': 'Albany, New York, USA',
+            'conference_website': 'https://signaturetalks.org',
+            'website_url': 'https://signaturetalks.org',
+            'linkedin_url': 'https://www.linkedin.com/company/signature-global-conferences',
+            'scheduling_link': 'https://calendly.com/usasignatureglobalconferences',
+            'physical_address': 'Parklane West, Menands, Albany, New York 12204, US',
+        },
     }
 
     for company, file_name in company_files.items():
@@ -150,7 +162,7 @@ def seed():
                     'website_url': details.get('website_url', 'https://wynconferences.com'),
                     'linkedin_url': details.get('linkedin_url', 'https://www.linkedin.com/company/wyn-conferences/'),
                     'scheduling_link': details.get('scheduling_link', 'https://calendly.com'),
-                    'physical_address': 'BLVD Heights, Dubai Opera District, Dubai, United Arab Emirates',
+                    'physical_address': details.get('physical_address', 'BLVD Heights, Dubai Opera District, Dubai, United Arab Emirates'),
                     'current_year': '2027',
                     'unsubscribe_url': '#',
                 }

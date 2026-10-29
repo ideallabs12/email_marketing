@@ -18,8 +18,8 @@ brands = [
     },
     {
         'name': 'SIGNATURE',
-        'website_url': '',
-        'linkedin_url': '',
+        'website_url': 'https://signaturetalks.org',
+        'linkedin_url': 'https://www.linkedin.com/company/signature-global-conferences',
         'scheduling_link': 'https://calendly.com/usasignatureglobalconferences',
         'physical_address': 'Parklane West, Menands, Albany, New York 12204, US'
     },

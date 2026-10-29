@@ -125,8 +125,8 @@ conferences_data = [
         'date': 'September 15–17, 2027',
         'venue': 'Albany, New York, USA',
         'calendly_link': 'https://calendly.com/usasignatureglobalconferences',
-        'website_link': '',
-        'linkedin_link': '',
+        'website_link': 'https://signaturetalks.org',
+        'linkedin_link': 'https://www.linkedin.com/company/signature-global-conferences',
         'theme': 'Executive Excellence and Global Impact',
     },
 ]

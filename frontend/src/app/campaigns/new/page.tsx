@@ -9,6 +9,94 @@ import Link from 'next/link';
 import { apiClient } from '../../../services/apiClient';
 import { ContactList, EmailTemplate, ContactBatch, Conference } from '../../../types';
 
+// Helper to map sender string (e.g., "VOICETALKS <info@voicetalks.org>") to canonical company code
+function getCompanyFromSender(senderStr: string): string {
+  const s = (senderStr || '').toUpperCase();
+  if (s.includes('WYNXTALKS') || s.includes('WYNX')) return 'WYNXTALKS';
+  if (s.includes('WYNCONFERENCES') || s.includes('@WYNCONFERENCES') || s.includes('WYN')) return 'WYN';
+  if (s.includes('SIGNATURE') || s.includes('SGC')) return 'SIGNATURE';
+  if (s.includes('VOICETALKS') || s.includes('VOICE')) return 'VOICETALKS';
+  if (s.includes('ICON')) return 'ICON';
+  if (s.includes('IDIAS')) return 'IDiAS';
+  if (s.includes('NEXT')) return 'NEXT';
+  if (s.includes('PROSUMMITS')) return 'PROSUMMITS';
+  return '';
+}
+
+function findMatchingTemplateId(
+  templates: EmailTemplate[],
+  category: string,
+  company: string
+): string {
+  if (!category || !templates.length) return '';
+  const compUpper = (company || '').toUpperCase();
+
+  // Filter templates belonging to this category first
+  const catTemplates = templates.filter(t => {
+    const tName = t.name.toLowerCase();
+    if (category === 'SECOND_SERIES') {
+      return (
+        tName.includes('second_series') ||
+        tName.includes('secondseries') ||
+        tName.includes('second series') ||
+        tName.includes('universal_conference')
+      );
+    }
+    if (category === 'INVITE') {
+      return (
+        tName.includes('invite') &&
+        !tName.includes('podcast') &&
+        !tName.includes('second_series') &&
+        !tName.includes('universal_conference')
+      );
+    }
+    if (category === 'FOLLOWUP') return tName.includes('followup');
+    if (category === 'PODCAST') return tName.includes('podcast');
+    return true;
+  });
+
+  if (!compUpper) {
+    return catTemplates[0] ? String(catTemplates[0].id) : '';
+  }
+
+  // Exact brand matching inside the category
+  const matchByBrand = (t: EmailTemplate) => {
+    const n = t.name.toUpperCase();
+    if (compUpper === 'WYN') {
+      // Match WYN but NOT WYNXTALKS
+      return (n.includes(' - WYN') || n.startsWith('WYN_') || n.endsWith('_WYN')) && !n.includes('WYNX');
+    }
+    if (compUpper === 'SIGNATURE') {
+      return n.includes('SIGNATURE') || n.includes('SGC');
+    }
+    return n.includes(compUpper);
+  };
+
+  if (category === 'SECOND_SERIES') {
+    const exact = catTemplates.find(t => t.name.toUpperCase().includes('SECOND_SERIES') && matchByBrand(t));
+    if (exact) return String(exact.id);
+    const universal = catTemplates.find(t =>
+      t.name.toUpperCase().includes('UNIVERSAL_CONFERENCE_INVITE') ||
+      t.name.toUpperCase().includes('UNIVERSAL CONFERENCE INVITE')
+    );
+    return universal ? String(universal.id) : (catTemplates[0] ? String(catTemplates[0].id) : '');
+  }
+
+  if (category === 'INVITE' || category === 'FOLLOWUP') {
+    const exact = catTemplates.find(matchByBrand);
+    return exact ? String(exact.id) : '';
+  }
+
+  if (category === 'PODCAST') {
+    const exact = catTemplates.find(matchByBrand);
+    if (exact) return String(exact.id);
+    const universal = catTemplates.find(t => t.name.toUpperCase().includes('UNIVERSAL_PODCAST'));
+    return universal ? String(universal.id) : (catTemplates[0] ? String(catTemplates[0].id) : '');
+  }
+
+  return '';
+}
+
 export default function NewCampaignPage() {
   const router = useRouter();
   
@@ -47,15 +135,26 @@ export default function NewCampaignPage() {
           apiClient.get('/api/v1/senders/'),
           apiClient.get('/api/v1/conferences/?limit=10000'),
         ]);
+        const templatesData = templatesRes.results || [];
+        const conferencesData: Conference[] = conferencesRes.results || conferencesRes || [];
         setLists(listsRes.results || []);
         setBatches(batchesRes.results || []);
-        setTemplates(templatesRes.results || []);
-        setConferences(conferencesRes.results || conferencesRes || []);
+        setTemplates(templatesData);
+        setConferences(conferencesData);
         
         const sendersData = sendersRes || [];
         setSenders(sendersData);
         if (sendersData.length > 0) {
-          setFromEmail(`${sendersData[0].name} <${sendersData[0].email}>`);
+          const initialSender = `${sendersData[0].name} <${sendersData[0].email}>`;
+          setFromEmail(initialSender);
+          const comp = getCompanyFromSender(initialSender);
+          setSelectedCompany(comp);
+          const compConfs = comp
+            ? conferencesData.filter(c => c.company_name.toLowerCase() === comp.toLowerCase())
+            : [];
+          if (compConfs.length === 1) {
+            setSelectedConference(String(compConfs[0].id));
+          }
         }
       } catch (err) {
         console.error('Failed to load form data:', err);
@@ -118,52 +217,37 @@ export default function NewCampaignPage() {
     return n.includes('UNIVERSAL_CONFERENCE_INVITE') || n.includes('SECOND_SERIES');
   }, [templateCategory, currentTemplate]);
 
-  const handleCompanyChange = (company: string) => {
-    setSelectedCompany(company);
-    setSelectedConference('');
+  const handleSenderChange = (newFromEmail: string) => {
+    setFromEmail(newFromEmail);
+    const comp = getCompanyFromSender(newFromEmail);
+    setSelectedCompany(comp);
 
-    // Pre-select matching sender if available
-    if (company && senders.length > 0) {
-      const match = senders.find(s => 
-        s.name.toUpperCase().includes(company.toUpperCase()) || 
-        s.email.toUpperCase().includes(company.toUpperCase())
-      );
-      if (match) {
-        setFromEmail(`${match.name} <${match.email}>`);
-      }
+    // Filter conferences for this sender's company and auto-select if only 1
+    const compConfs = comp
+      ? conferences.filter(c => c.company_name.toLowerCase() === comp.toLowerCase())
+      : [];
+    if (compConfs.length === 1) {
+      setSelectedConference(String(compConfs[0].id));
+    } else {
+      setSelectedConference('');
     }
 
-    // Auto-select corresponding company template if available
-    if (company) {
-      const compTpl = templates.find(t => 
-        t.name.toUpperCase().includes('SECOND_SERIES') && 
-        t.name.toUpperCase().includes(company.toUpperCase())
-      );
-      if (compTpl) {
-        setSelectedTemplate(String(compTpl.id));
-      }
+    // Auto-select matching template if category is already chosen
+    if (templateCategory) {
+      const matchedId = findMatchingTemplateId(templates, templateCategory, comp);
+      setSelectedTemplate(matchedId);
     }
   };
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const cat = e.target.value;
     setTemplateCategory(cat);
-    setSelectedTemplate('');
-    
-    if (cat === 'SECOND_SERIES') {
-      const uTpl = templates.find(t => 
-        t.name.toUpperCase().includes('SECOND_SERIES') || 
-        t.name.toUpperCase().includes('UNIVERSAL_CONFERENCE')
-      );
-      if (uTpl) {
-        setSelectedTemplate(String(uTpl.id));
-      }
-    } else if (cat === 'INVITE') {
-      const uTpl = templates.find(t => t.name.toUpperCase().includes('INVITE'));
-      if (uTpl) {
-        setSelectedTemplate(String(uTpl.id));
-      }
+    const comp = selectedCompany || getCompanyFromSender(fromEmail);
+    if (comp && !selectedCompany) {
+      setSelectedCompany(comp);
     }
+    const matchedId = findMatchingTemplateId(templates, cat, comp);
+    setSelectedTemplate(matchedId);
   };
 
   const filteredTemplates = templates.filter(t => {
@@ -192,7 +276,7 @@ export default function NewCampaignPage() {
     }
 
     if (isSecondSeriesOrUniversal && !selectedConference) {
-      setCreateError('Please select a Company and Conference for the Second Series / Universal Invite template.');
+      setCreateError('Please select a Conference for the Second Series / Universal Invite template.');
       return;
     }
 
@@ -255,7 +339,7 @@ export default function NewCampaignPage() {
             <label className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Sender Email</label>
             <select
               value={fromEmail}
-              onChange={e => setFromEmail(e.target.value)}
+              onChange={e => handleSenderChange(e.target.value)}
               className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
               required
             >
@@ -299,14 +383,14 @@ export default function NewCampaignPage() {
             </select>
           </div>
 
-          {/* ── Conference & Company Selector (Only for Second Series / Universal Invite) ── */}
+          {/* ── Conference Selector (Only for Second Series / Universal Invite) ── */}
           {isSecondSeriesOrUniversal && (
             <div className="p-4 rounded-xl border transition-all space-y-4 bg-primary/5 border-primary/40 shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Building2 className="w-4 h-4 text-primary" />
                   <span className="text-xs font-semibold uppercase tracking-wider text-foreground/90">
-                    Conference &amp; Brand Selection
+                    Conference Selection {selectedCompany ? `(${selectedCompany})` : ''}
                   </span>
                 </div>
                 <span className="flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
@@ -315,40 +399,22 @@ export default function NewCampaignPage() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Company dropdown */}
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-foreground/70">1. Select Company / Brand</label>
-                  <select
-                    value={selectedCompany}
-                    onChange={e => handleCompanyChange(e.target.value)}
-                    className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-                  >
-                    <option value="">-- Choose Company --</option>
-                    {availableCompanies.map(comp => (
-                      <option key={comp} value={comp}>{comp}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Conference dropdown */}
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-foreground/70">2. Select Conference</label>
-                  <select
-                    value={selectedConference}
-                    onChange={e => setSelectedConference(e.target.value)}
-                    className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-                  >
-                    <option value="">
-                      {selectedCompany ? `-- Select Conference for ${selectedCompany} --` : '-- Select Conference --'}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold text-foreground/70">Select Conference</label>
+                <select
+                  value={selectedConference}
+                  onChange={e => setSelectedConference(e.target.value)}
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                >
+                  <option value="">
+                    {selectedCompany ? `-- Select Conference for ${selectedCompany} --` : '-- Select Conference --'}
+                  </option>
+                  {filteredConferences.map(conf => (
+                    <option key={conf.id} value={conf.id}>
+                      {conf.conference_name} ({conf.venue})
                     </option>
-                    {filteredConferences.map(conf => (
-                      <option key={conf.id} value={conf.id}>
-                        {conf.conference_name} ({conf.venue})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                  ))}
+                </select>
               </div>
 
               {/* Conference Details Card Preview */}
