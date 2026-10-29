@@ -297,10 +297,11 @@ def send_campaign_emails(self, campaign_id: int):
                 body=text_content,
                 from_email=from_email,
                 to=[contact.email],
+                reply_to=[from_email],
                 headers={
                     'X-Mailin-Tag': f'campaign-{campaign.id}',
-                    'List-Unsubscribe': f'<{header_unsubscribe_url}>',
-                    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+                    'X-Priority': '3',
+                    'Importance': 'Normal',
                 },
             )
             email.attach_alternative(html_content, 'text/html')
