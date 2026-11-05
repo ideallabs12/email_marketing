@@ -221,7 +221,7 @@
 
               <p
                 style="margin:0 0 16px 0; font-size:14px; line-height:20px; font-weight:700; color:#A5F3FC; letter-spacing:0.5px; text-transform:uppercase;">
-                {{ company_name }}
+                {{ company_name|default:'WYN Conferences' }}
               </p>
 
               <h1 class="hero-title"
@@ -234,7 +234,7 @@
               <p style="margin:14px 0 0 0; font-size:17px; line-height:26px; color:#FFFFFF;">
                 <span
                   style="color:#FFFFFF; background-image:linear-gradient(#FFFFFF,#FFFFFF); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">{{
-                  conference_venue }} &middot; {{ conference_date }}</span>
+                  conference_venue|default:'Paris, France' }} &middot; {{ conference_date|default:'March 08–11, 2027' }}</span>
               </p>
 
               <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin-top:24px;">
@@ -269,16 +269,17 @@
                     <p class="t-main"
                       style="margin:0 0 16px 0; font-size:18px; line-height:28px; font-weight:700; color:#111827;">Dear
                       {{ first_name }},</p>
-                    <p class="t-body" style="margin:0 0 16px 0; font-size:16px; line-height:27px; color:#374151;">
-                      Greetings from {{ company_name }}.</p>
+                    <p class="t-main" style="margin:0 0 16px 0; font-size:16px; line-height:27px; font-weight:700; color:#111827;">
+                      Greetings from {{ company_name|default:'WYN Conferences' }}! &#127757;&#10024;</p>
                     <p class="t-body" style="margin:0 0 16px 0; font-size:16px; line-height:27px; color:#374151;">
                       Your remarkable achievements, inspiring leadership, and commitment to empowering others reflect
                       the true spirit of global influence.
                     </p>
                     <p class="t-body" style="margin:0; font-size:16px; line-height:27px; color:#374151;">
                       We would be honored to welcome you as a <strong class="t-main"
-                        style="color:#111827;">Distinguished Speaker</strong> at the {{ conference_name }}, taking place
-                      on {{ conference_date }} in {{ conference_venue }}.
+                        style="color:#111827;">Distinguished Speaker</strong> at the <strong class="t-main"
+                        style="color:#111827;">{{ conference_name|default:'NextGen Women Global Summit 2027' }}</strong>, taking place
+                      from <strong class="t-main" style="color:#111827;">{{ conference_date|default:'March 08–11, 2027' }}</strong> in <strong class="t-main" style="color:#111827;">{{ conference_venue|default:'Paris, France' }}</strong>.
                     </p>
                   </td>
                 </tr>
@@ -296,7 +297,7 @@
                             style="font-size:12px; line-height:16px; font-weight:800; letter-spacing:0.8px; text-transform:uppercase; color:#0284C7;">
                             Scope of the Summit</div>
                           <div class="t-body" style="margin-top:8px; font-size:16px; line-height:27px; color:#374151;">
-                            The {{ conference_name }} is an international platform connecting women leaders,
+                            The <strong class="t-main" style="color:#111827;">{{ conference_name|default:'NextGen Women Global Summit 2027' }}</strong> is an international platform connecting women leaders,
                             entrepreneurs, innovators, and changemakers to inspire collaboration, celebrate
                             achievements, and empower the next generation of women to create global impact.
                           </div>
@@ -310,10 +311,9 @@
                 <tr>
                   <td class="fluid-pad"
                     style="padding:28px 40px 0 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                    <div class="t-main" style="font-size:20px; line-height:28px; font-weight:800; color:#111827;">Your
-                      Speaker Experience</div>
+                    <div class="t-main" style="font-size:20px; line-height:28px; font-weight:800; color:#111827;">&#10024; An Unforgettable Speaker Experience Awaits You</div>
                     <div class="t-muted" style="margin-top:2px; font-size:15px; line-height:22px; color:#6B7280;">{{
-                      conference_venue }} &ndash; {{ conference_date }}</div>
+                      conference_venue|default:'Paris, France' }} &ndash; {{ conference_date|default:'March 08–11, 2027' }}</div>
                   </td>
                 </tr>
 
@@ -483,8 +483,7 @@
                                   Magazine Features</div>
                                 <div class="t-muted"
                                   style="margin-top:4px; font-size:14px; line-height:21px; color:#6B7280;">Share your
-                                  story, achievements, and insights with a global audience through <strong
-                                    class="t-main" style="color:#111827;">WINSPIRE Magazine</strong>.</div>
+                                  inspiring story, achievements, and insights with a global audience through <a href="https://www.winspire.live/" target="_blank" style="color:#0284C7; font-weight:700; text-decoration:underline;">WINSPIRE Magazine</a>.</div>
                               </td>
                             </tr>
                           </table>
@@ -504,12 +503,11 @@
                                 </table>
                                 <div class="t-main"
                                   style="margin-top:10px; font-size:16px; line-height:22px; font-weight:700; color:#111827;">
-                                  Journal Publication</div>
+                                  Publishing Opportunity</div>
                                 <div class="t-muted"
                                   style="margin-top:4px; font-size:14px; line-height:21px; color:#6B7280;">Your
                                   conference talk may also be considered for publication in the <strong class="t-main"
-                                    style="color:#111827;">PeerCite Journal of Women Leadership</strong> (ISSN
-                                  3067-4182).</div>
+                                    style="color:#111827;">PeerCite Journal of Women Leadership</strong> (ISSN No. 3067-4182): <a href="https://www.peercite.org" target="_blank" style="color:#0284C7; font-weight:700; text-decoration:underline;">www.peercite.org</a>.</div>
                               </td>
                             </tr>
                           </table>
@@ -537,11 +535,9 @@
                   <td class="fluid-pad"
                     style="padding:24px 40px 4px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
                     <div class="t-main"
-                      style="margin:0 0 10px 0; font-size:20px; line-height:28px; font-weight:800; color:#111827;">Next
-                      Steps</div>
+                      style="margin:0 0 10px 0; font-size:20px; line-height:28px; font-weight:800; color:#111827;">Secure Your Spot &amp; Learn More</div>
                     <p class="t-body" style="margin:0; font-size:16px; line-height:27px; color:#374151;">
-                      Please schedule a call with our team to discuss speaking at the summit and the event details,
-                      using the link below:
+                      Please schedule a call with our team to discuss the speaking opportunity and event details using the link below:
                     </p>
                   </td>
                 </tr>
@@ -554,13 +550,13 @@
                         <td align="center" bgcolor="#2BB5C8"
                           style="border-radius:999px; background-color:#2BB5C8; box-shadow:0 8px 20px rgba(43,181,200,0.35);">
                           <!--[if mso]>
-                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ scheduling_link }}" style="height:52px; v-text-anchor:middle; width:260px;" arcsize="50%" stroke="f" fillcolor="#2BB5C8">
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ scheduling_link|default:'https://calendly.com/wynconferences' }}" style="height:52px; v-text-anchor:middle; width:260px;" arcsize="50%" stroke="f" fillcolor="#2BB5C8">
                       <w:anchorlock/>
                       <center style="color:#062033; font-family:Arial,sans-serif; font-size:16px; font-weight:bold;">Schedule a Call</center>
                     </v:roundrect>
                     <![endif]-->
                           <!--[if !mso]><!-- -->
-                          <a class="btn-link" href="{{ scheduling_link }}" target="_blank"
+                          <a class="btn-link" href="{{ scheduling_link|default:'https://calendly.com/wynconferences' }}" target="_blank"
                             style="display:inline-block; padding:16px 44px; font-size:16px; line-height:20px; font-weight:700; color:#062033; text-decoration:none; border-radius:999px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Schedule
                             a Call &rarr;</a>
                           <!--<![endif]-->
@@ -568,8 +564,7 @@
                       </tr>
                     </table>
                     <p class="t-muted" style="margin:12px 0 0 0; font-size:14px; line-height:22px; color:#6B7280;">
-                      Prefer email? You can simply reply to this message directly or reach us at <strong class="t-main"
-                        style="color:#111827;">womenhood@wynconferences.com</strong>.
+                      Prefer email? Reach us directly at <a href="mailto:womenhood@wynconferences.com" style="color:#0284C7; font-weight:700; text-decoration:none;">womenhood@wynconferences.com</a>.
                     </p>
                   </td>
                 </tr>
@@ -580,7 +575,7 @@
                     style="padding:24px 40px 40px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
                     <p class="t-body" style="margin:0 0 16px 0; font-size:16px; line-height:27px; color:#374151;">
                       We would be truly honored to showcase your voice, expertise, and leadership at this international
-                      platform in {{ conference_venue }}.
+                      platform in {{ conference_venue|default:'Paris, France' }}.
                     </p>
                     <p class="t-body" style="margin:0 0 16px 0; font-size:16px; line-height:27px; color:#374151;">
                       Kindly confirm your interest at your earliest convenience, and we will be happy to share the
@@ -588,16 +583,16 @@
                       information.
                     </p>
                     <p class="t-body" style="margin:0 0 18px 0; font-size:16px; line-height:27px; color:#374151;">
-                      We look forward to welcoming you to {{ conference_venue }} for an inspiring experience of
+                      We look forward to welcoming you to {{ conference_venue|default:'Paris, France' }} for an inspiring experience of
                       leadership, collaboration, innovation, and global impact.
                     </p>
                     <p class="t-body" style="margin:0; font-size:16px; line-height:26px; color:#374151;">Warm regards,
                     </p>
                     <p class="t-main"
                       style="margin:4px 0 0 0; font-size:17px; line-height:26px; font-weight:700; color:#111827;">{{
-                      sender_name }}</p>
+                      sender_name|default:'Organizing Committee' }}</p>
                     <p class="t-muted" style="margin:0; font-size:15px; line-height:24px; color:#6B7280;">{{
-                      company_name }}</p>
+                      company_name|default:'WYN Conferences' }}</p>
                   </td>
                 </tr>
 

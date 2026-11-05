@@ -65,13 +65,13 @@ conferences_data = [
     # ── WYN ─────────────────────────────────────────────────────────────
     {
         'company_name': 'WYN',
-        'conference_name': 'World Summit on Women in Science & Technology 2027',
-        'date': 'May 18–20, 2027',
-        'venue': 'Singapore',
+        'conference_name': 'NextGen Women Global Summit 2027',
+        'date': 'March 08–11, 2027',
+        'venue': 'Paris, France',
         'calendly_link': 'https://calendly.com/wynconferences',
-        'website_link': 'https://www.wynconferences.com',
+        'website_link': 'https://www.wynconferences.com/conference/wyn_wgs',
         'linkedin_link': 'https://www.linkedin.com/company/wyn-global-conferences/',
-        'theme': 'Shaping the Future Through Research & Innovation',
+        'theme': 'Inspiring the Next Generation of Women Leaders Worldwide',
     },
 
     # ── VOICETALKS ──────────────────────────────────────────────────────
@@ -134,6 +134,13 @@ def seed_conferences():
     ).delete()
     if deleted_next > 0:
         print(f"  [Removed] {deleted_next} outdated NEXT conference(s)")
+
+    # Clean up any WYN conferences that are not the new Paris summit
+    deleted_wyn, _ = Conference.objects.filter(company_name='WYN').exclude(
+        conference_name='NextGen Women Global Summit 2027'
+    ).delete()
+    if deleted_wyn > 0:
+        print(f"  [Removed] {deleted_wyn} outdated WYN conference(s)")
 
     for item in conferences_data:
         obj, created = Conference.objects.update_or_create(
