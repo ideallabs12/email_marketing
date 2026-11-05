@@ -47,16 +47,6 @@ conferences_data = [
         'linkedin_link': 'https://www.linkedin.com/company/prosummits/',
         'theme': 'Leading with Vision. Inspiring Global Influence',
     },
-    {
-        'company_name': 'PROSUMMITS',
-        'conference_name': 'NextGen Women of Influence Summit 2027',
-        'date': 'March 8–9, 2027',
-        'venue': 'New York, USA',
-        'calendly_link': 'https://calendly.com/prosummitsvirtual',
-        'website_link': 'https://prosummits.org/events/ngwi-summit-2027',
-        'linkedin_link': 'https://www.linkedin.com/company/prosummits/',
-        'theme': 'Empowering Voices, Inspiring Leadership, Driving Change',
-    },
 
     # ── ICON ────────────────────────────────────────────────────────────
     {
@@ -140,6 +130,13 @@ def seed_conferences():
     ).delete()
     if deleted_count > 0:
         print(f"  [Removed] {deleted_count} outdated WYNXTALKS conference(s)")
+
+    # Clean up any PROSUMMITS conferences that are not the current Paris summit
+    deleted_prosummits, _ = Conference.objects.filter(company_name='PROSUMMITS').exclude(
+        conference_name='Elite Women Leadership Summit 2027'
+    ).delete()
+    if deleted_prosummits > 0:
+        print(f"  [Removed] {deleted_prosummits} outdated PROSUMMITS conference(s)")
 
     for item in conferences_data:
         obj, created = Conference.objects.update_or_create(

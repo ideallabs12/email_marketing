@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, Mail, Users, FileText, ChevronLeft, ChevronRight, MailWarning, LogOut, X, Library, LayoutTemplate, BarChart3, Target, Search, Calendar, Layers } from 'lucide-react';
+import { Home, Mail, Users, FileText, ChevronLeft, ChevronRight, MailWarning, LogOut, X, Library, LayoutTemplate, BarChart3, Target, Search, Calendar, Layers, Building2 } from 'lucide-react';
 import { apiClient } from '@/services/apiClient';
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -110,9 +110,13 @@ export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: { mobileM
           <BarChart3 size={18} />
           {!isCollapsed && <span>Analytics</span>}
         </Link>
-        <Link href="/templates" title="Templates" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
+        <Link href="/templates" title="Templates" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'} ${pathname.startsWith('/templates') ? 'bg-foreground/10 text-foreground font-semibold' : ''}`}>
           <FileText size={18} />
           {!isCollapsed && <span>Templates</span>}
+        </Link>
+        <Link href="/conferences" title="Conferences" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'} ${pathname.startsWith('/conferences') ? 'bg-foreground/10 text-foreground font-semibold' : ''}`}>
+          <Building2 size={18} />
+          {!isCollapsed && <span>Conferences</span>}
         </Link>
 
         <Link href="/directory" title="User Directory" className={`flex items-center p-2 hover:bg-hover-bg hover:text-foreground rounded-md transition-colors font-medium ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>

@@ -16,6 +16,7 @@ docker compose exec backend python manage.py makemigrations
 docker compose exec backend python manage.py migrate
 docker compose exec backend python manage.py load_templates
 docker compose exec backend python seed_conferences.py
+docker compose exec backend python templates/invite_templates/seed_second_series_templates.py
 docker compose restart backend celery_worker celery_beat
 
 # 4. Clean up old unused Docker images to save disk space
