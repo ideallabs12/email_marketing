@@ -53,13 +53,13 @@ conferences_data = [
     # ── IDiAS ───────────────────────────────────────────────────────────
     {
         'company_name': 'IDiAS',
-        'conference_name': 'Global Healthcare & Leadership Congress 2027',
-        'date': 'April 14–16, 2027',
-        'venue': 'London, UK',
+        'conference_name': '13th International L.E.A.D Summit for Women: Leadership, Empowerment & Development',
+        'date': 'November 25–27, 2026',
+        'venue': 'Dubai, UAE',
         'calendly_link': 'https://calendly.com/idiasglobalconferences',
-        'website_link': 'https://www.idias.org',
+        'website_link': 'https://www.idias.org/events/13thlead-2026',
         'linkedin_link': 'https://www.linkedin.com/company/idias-global-conferences/',
-        'theme': 'Transforming Healthcare, Elevating Leaders',
+        'theme': 'Transforming Women’s Power : Toward a Re-Vision of Women Leadership',
     },
 
     # ── WYN ─────────────────────────────────────────────────────────────
@@ -155,6 +155,13 @@ def seed_conferences():
     ).delete()
     if deleted_icon > 0:
         print(f"  [Removed] {deleted_icon} outdated ICON conference(s)")
+
+    # Clean up any IDiAS conferences that are not the new LEAD summit
+    deleted_idias, _ = Conference.objects.filter(company_name='IDiAS').exclude(
+        conference_name='13th International L.E.A.D Summit for Women: Leadership, Empowerment & Development'
+    ).delete()
+    if deleted_idias > 0:
+        print(f"  [Removed] {deleted_idias} outdated IDiAS conference(s)")
 
     for item in conferences_data:
         obj, created = Conference.objects.update_or_create(
