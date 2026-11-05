@@ -64,12 +64,16 @@ def seed():
     # Company-specific details for realistic previews and links
     company_details = {
         'NEXT': {
-            'conference_name': 'NEXT Leadership Summit 2027',
-            'conference_theme': 'Leading with Vision. Inspiring Global Influence',
-            'conference_website': 'https://nextpremierconferences.com',
-            'website_url': 'https://nextpremierconferences.com',
+            'conference_name': 'NEXT Premier League Conferences on the 2nd Women Power – Leadership Congress',
+            'conference_theme': 'Your Voice. Your Vision. Your Global Impact',
+            'conference_date': 'March 11–13, 2027',
+            'conference_venue': 'Paris, France',
+            'conference_website': 'https://www.nextconferences.org/conference/wplc_paris',
+            'website_url': 'https://www.nextconferences.org',
             'linkedin_url': 'https://www.linkedin.com/company/next-premier-conferences/',
             'scheduling_link': 'https://calendly.com/nextpremierconferences/30min',
+            'company_name': 'NEXT Premier League Conferences',
+            'sender_name': 'Organizing Committee',
         },
         'PROSUMMITS': {
             'conference_name': 'Elite Women Leadership Summit 2027',

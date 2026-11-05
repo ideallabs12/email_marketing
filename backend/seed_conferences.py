@@ -17,23 +17,13 @@ conferences_data = [
     # ── NEXT ────────────────────────────────────────────────────────────
     {
         'company_name': 'NEXT',
-        'conference_name': 'NEXT Premier League Conference First',
-        'date': 'March 8–11, 2027',
+        'conference_name': 'NEXT Premier League Conferences on the 2nd Women Power – Leadership Congress',
+        'date': 'March 11–13, 2027',
         'venue': 'Paris, France',
         'calendly_link': 'https://calendly.com/nextpremierconferences/30min',
-        'website_link': 'https://www.nextconferences.org',
+        'website_link': 'https://www.nextconferences.org/conference/wplc_paris',
         'linkedin_link': 'https://www.linkedin.com/company/next-premier-conferences/',
-        'theme': 'Inspiring Global Innovation & Leadership',
-    },
-    {
-        'company_name': 'NEXT',
-        'conference_name': 'NEXT Premier League Conference Second',
-        'date': 'March 8–9, 2027',
-        'venue': 'New York, USA',
-        'calendly_link': 'https://calendly.com/nextpremierconferences/30min',
-        'website_link': 'https://www.nextconferences.org',
-        'linkedin_link': 'https://www.linkedin.com/company/next-premier-conferences/',
-        'theme': 'Empowering Voices, Inspiring Leadership, Driving Change',
+        'theme': 'Your Voice. Your Vision. Your Global Impact',
     },
 
     # ── PROSUMMITS ──────────────────────────────────────────────────────
@@ -137,6 +127,13 @@ def seed_conferences():
     ).delete()
     if deleted_prosummits > 0:
         print(f"  [Removed] {deleted_prosummits} outdated PROSUMMITS conference(s)")
+
+    # Clean up any NEXT conferences that are not the new Paris congress
+    deleted_next, _ = Conference.objects.filter(company_name='NEXT').exclude(
+        conference_name='NEXT Premier League Conferences on the 2nd Women Power – Leadership Congress'
+    ).delete()
+    if deleted_next > 0:
+        print(f"  [Removed] {deleted_next} outdated NEXT conference(s)")
 
     for item in conferences_data:
         obj, created = Conference.objects.update_or_create(
