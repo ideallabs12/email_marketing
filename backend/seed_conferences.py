@@ -41,13 +41,13 @@ conferences_data = [
     # ── ICON ────────────────────────────────────────────────────────────
     {
         'company_name': 'ICON',
-        'conference_name': "13th International Summit on Women's Leadership Excellence 2026",
-        'date': 'November 25–27, 2026',
-        'venue': 'Dubai, UAE',
+        'conference_name': 'International Conference on Leadership, Innovation, Future & Transformation (L.I.F.T)',
+        'date': 'March 08–11, 2027',
+        'venue': 'Paris, France',
         'calendly_link': 'https://calendly.com/iconglobalc',
-        'website_link': 'https://www.iconconferences.org',
+        'website_link': 'https://www.iconconferences.org/conference/she-2027',
         'linkedin_link': 'https://www.linkedin.com/company/icon-global-conferences/',
-        'theme': 'Rise: Next Level Strategies for Success',
+        'theme': 'Building future-ready leaders through innovation, transformation, and global collaboration',
     },
 
     # ── IDiAS ───────────────────────────────────────────────────────────
@@ -148,6 +148,13 @@ def seed_conferences():
     ).delete()
     if deleted_voicetalks > 0:
         print(f"  [Removed] {deleted_voicetalks} outdated VOICETALKS conference(s)")
+
+    # Clean up any ICON conferences that are not the new Paris conference
+    deleted_icon, _ = Conference.objects.filter(company_name='ICON').exclude(
+        conference_name='International Conference on Leadership, Innovation, Future & Transformation (L.I.F.T)'
+    ).delete()
+    if deleted_icon > 0:
+        print(f"  [Removed] {deleted_icon} outdated ICON conference(s)")
 
     for item in conferences_data:
         obj, created = Conference.objects.update_or_create(
