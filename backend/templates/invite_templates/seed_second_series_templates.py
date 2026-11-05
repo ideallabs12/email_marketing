@@ -73,7 +73,7 @@ def seed():
             'linkedin_url': 'https://www.linkedin.com/company/next-premier-conferences/',
             'scheduling_link': 'https://calendly.com/nextpremierconferences/30min',
             'company_name': 'NEXT Premier League Conferences',
-            'sender_name': 'Organizing Committee',
+            'sender_name': 'NEXT Premier League Conferences',
         },
         'PROSUMMITS': {
             'conference_name': 'Elite Women Leadership Summit 2027',
@@ -84,7 +84,7 @@ def seed():
             'website_url': 'https://prosummits.org',
             'linkedin_url': 'https://www.linkedin.com/company/prosummits/',
             'scheduling_link': 'https://calendly.com/prosummitsvirtual',
-            'sender_name': 'Venkatesh',
+            'sender_name': 'Prosummits Hybrid Conferences',
             'company_name': 'Prosummits Hybrid Conferences',
         },
         'ICON': {
@@ -109,7 +109,7 @@ def seed():
             'linkedin_url': 'https://www.linkedin.com/company/idias-global-conferences/',
             'scheduling_link': 'https://calendly.com/idiasglobalconferences',
             'company_name': 'i-DIAS Global Conferences',
-            'sender_name': 'Organizing Committee',
+            'sender_name': 'i-DIAS Global Conferences',
         },
         'WYN': {
             'conference_name': 'NextGen Women Global Summit 2027',
@@ -121,7 +121,7 @@ def seed():
             'linkedin_url': 'https://www.linkedin.com/company/wyn-global-conferences/',
             'scheduling_link': 'https://calendly.com/wynconferences',
             'company_name': 'WYN Conferences',
-            'sender_name': 'Organizing Committee',
+            'sender_name': 'WYN Conferences',
         },
         'WYNXTALKS': {
             'conference_name': "International Women's Day Conclave: A Global Movement for Women's Empowerment & Mental Wellbeing",
@@ -132,6 +132,8 @@ def seed():
             'website_url': 'https://www.wynxtalks.org',
             'linkedin_url': 'https://www.linkedin.com/company/wynxtalks/',
             'scheduling_link': 'https://calendly.com/wynxtalks/15min',
+            'company_name': 'WYNX Talks',
+            'sender_name': 'WYNX Talks',
         },
         'VOICETALKS': {
             'conference_name': 'VOICE Global Summit on Women Empowerment and Social Transformation',
@@ -143,7 +145,7 @@ def seed():
             'linkedin_url': 'https://www.linkedin.com/company/voicetalks',
             'scheduling_link': 'https://calendly.com/voicetalks',
             'company_name': 'VOICE Talks',
-            'sender_name': 'Program Manager',
+            'sender_name': 'VOICE Talks',
         },
         'SIGNATURE': {
             'conference_name': 'USA Signature Global Leadership Summit 2027',
@@ -154,6 +156,8 @@ def seed():
             'website_url': 'https://signaturetalks.org',
             'linkedin_url': 'https://www.linkedin.com/company/signature-global-conferences',
             'scheduling_link': 'https://calendly.com/usasignatureglobalconferences',
+            'company_name': 'USA Signature Global Conferences',
+            'sender_name': 'USA Signature Global Conferences',
             'physical_address': 'Parklane West, Menands, Albany, New York 12204, US',
         },
     }
