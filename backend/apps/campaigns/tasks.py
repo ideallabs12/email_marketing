@@ -1,5 +1,6 @@
 from celery import shared_task
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, get_connection
+import time
 from django.utils import timezone
 from django.utils.html import strip_tags
 import logging
@@ -137,16 +138,43 @@ def send_campaign_emails(self, campaign_id: int):
     from apps.contacts.models import UnsubscribedContact
     suppressed_emails = set(UnsubscribedContact.objects.values_list('email', flat=True))
 
-    contacts = campaign.target_list.contacts.filter(is_subscribed=True)
+    target_contacts = campaign.target_list.contacts.all()
     if campaign.target_batches.exists():
-        contacts = contacts.filter(batches__in=campaign.target_batches.all()).distinct()
+        target_contacts = target_contacts.filter(batches__in=campaign.target_batches.all()).distinct()
 
-    # ── SHIELD 1: PRE-FLIGHT GLOBAL SUPPRESSION FILTER ──
-    contacts = contacts.exclude(email__in=suppressed_emails)
-        
-    if not contacts.exists():
-        logger.info("Campaign %s: no subscribed contacts found for the given targets.", campaign_id)
-        campaign.status = 'failed'
+    contacts_to_send = []
+    for contact in target_contacts:
+        c_email = (contact.email or '').strip().lower()
+        if not contact.is_subscribed:
+            CampaignRecipientStatus.objects.update_or_create(
+                campaign=campaign,
+                contact=contact,
+                defaults={
+                    'status': 'unsubscribed',
+                    'error_message': 'Contact is marked as unsubscribed in list',
+                    'last_event_at': timezone.now(),
+                }
+            )
+            logger.info("Skipping contact %s (unsubscribed in contact list)", contact.email)
+            continue
+        if c_email in suppressed_emails:
+            CampaignRecipientStatus.objects.update_or_create(
+                campaign=campaign,
+                contact=contact,
+                defaults={
+                    'status': 'unsubscribed',
+                    'error_message': 'Suppressed: Contact is on global unsubscribe suppression list',
+                    'last_event_at': timezone.now(),
+                }
+            )
+            logger.info("Skipping contact %s (in global suppression list)", contact.email)
+            continue
+        contacts_to_send.append(contact)
+
+    if not contacts_to_send:
+        logger.info("Campaign %s: no eligible contacts found to send.", campaign_id)
+        campaign.status = 'sent' if target_contacts.exists() else 'failed'
+        campaign.sent_at = timezone.now()
         campaign.save()
         return
 
@@ -157,9 +185,15 @@ def send_campaign_emails(self, campaign_id: int):
     else:
         layout_template += campaign.template.body
 
+    connection = get_connection()
+    try:
+        connection.open()
+    except Exception as conn_err:
+        logger.warning("Could not pre-open SMTP connection: %s", conn_err)
+
     sent_count = 0
     failed_count = 0
-    for contact in contacts:
+    for contact in contacts_to_send:
         try:
             context = {}
             if isinstance(campaign.template.variables, dict):
@@ -303,9 +337,21 @@ def send_campaign_emails(self, campaign_id: int):
                     'X-Priority': '3',
                     'Importance': 'Normal',
                 },
+                connection=connection,
             )
             email.attach_alternative(html_content, 'text/html')
-            email.send(fail_silently=False)
+
+            try:
+                email.send(fail_silently=False)
+            except Exception as send_err:
+                logger.warning("Initial send failed for %s (%s). Reconnecting to SMTP...", contact.email, send_err)
+                try:
+                    connection = get_connection()
+                    connection.open()
+                    email.connection = connection
+                    email.send(fail_silently=False)
+                except Exception as retry_err:
+                    raise retry_err
 
             sent_at = timezone.now()
             CampaignRecipientStatus.objects.update_or_create(
@@ -317,7 +363,10 @@ def send_campaign_emails(self, campaign_id: int):
                 },
             )
             sent_count += 1
-            logger.info("Sent to %s", contact.email)
+            logger.info("Successfully sent to %s", contact.email)
+
+            # 1-second pause between emails to avoid ESP rate-limiting
+            time.sleep(1)
         except Exception as error:
             failed_at = timezone.now()
             CampaignRecipientStatus.objects.update_or_create(
@@ -330,6 +379,11 @@ def send_campaign_emails(self, campaign_id: int):
             )
             failed_count += 1
             logger.error("Failed to send to %s: %s", contact.email, error)
+
+    try:
+        connection.close()
+    except Exception:
+        pass
 
     campaign.status = 'sent'
     campaign.sent_at = timezone.now()

@@ -93,7 +93,7 @@ conferences_data = [
         'date': 'March 08-12, 2027',
         'venue': 'Paris, France',
         'calendly_link': 'https://calendly.com/wynxtalks/15min',
-        'website_link': 'https://www.wynxtalks.org',
+        'website_link': 'https://www.wynxtalks.com',
         'linkedin_link': 'https://www.linkedin.com/company/wynxtalks/',
         'theme': 'Empowering Voices, Breaking Barriers, Shaping the Future',
     },
