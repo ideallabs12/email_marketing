@@ -77,13 +77,13 @@ conferences_data = [
     # ── VOICETALKS ──────────────────────────────────────────────────────
     {
         'company_name': 'VOICETALKS',
-        'conference_name': 'VoiceTalks Global Thought Leadership Forum 2027',
-        'date': 'June 10–12, 2027',
-        'venue': 'Amsterdam, Netherlands',
+        'conference_name': 'VOICE Global Summit on Women Empowerment and Social Transformation',
+        'date': 'March 11–13, 2027',
+        'venue': 'Paris, France',
         'calendly_link': 'https://calendly.com/voicetalks',
-        'website_link': 'https://www.voicetalks.org',
+        'website_link': 'https://www.voicetalks.org/conference/voicewest',
         'linkedin_link': 'https://www.linkedin.com/company/voicetalks/',
-        'theme': 'Amplifying Voices That Change The World',
+        'theme': 'Women Empowerment and Social Transformation',
     },
 
     # ── WYNXTALKS ───────────────────────────────────────────────────────
@@ -141,6 +141,13 @@ def seed_conferences():
     ).delete()
     if deleted_wyn > 0:
         print(f"  [Removed] {deleted_wyn} outdated WYN conference(s)")
+
+    # Clean up any VOICETALKS conferences that are not the new Paris summit
+    deleted_voicetalks, _ = Conference.objects.filter(company_name='VOICETALKS').exclude(
+        conference_name='VOICE Global Summit on Women Empowerment and Social Transformation'
+    ).delete()
+    if deleted_voicetalks > 0:
+        print(f"  [Removed] {deleted_voicetalks} outdated VOICETALKS conference(s)")
 
     for item in conferences_data:
         obj, created = Conference.objects.update_or_create(
