@@ -137,7 +137,7 @@ def seed():
         },
         'VOICETALKS': {
             'conference_name': 'VOICE Global Summit on Women Empowerment and Social Transformation',
-            'conference_theme': 'Women Empowerment and Social Transformation',
+            'conference_theme': 'Empowering Women, Transforming Societies, and Leading Global Change',
             'conference_date': 'March 11–13, 2027',
             'conference_venue': 'Paris, France',
             'conference_website': 'https://www.voicetalks.org/conference/voicewest',

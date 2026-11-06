@@ -83,7 +83,7 @@ conferences_data = [
         'calendly_link': 'https://calendly.com/voicetalks',
         'website_link': 'https://www.voicetalks.org/conference/voicewest',
         'linkedin_link': 'https://www.linkedin.com/company/voicetalks/',
-        'theme': 'Women Empowerment and Social Transformation',
+        'theme': 'Empowering Women, Transforming Societies, and Leading Global Change',
     },
 
     # ── WYNXTALKS ───────────────────────────────────────────────────────
